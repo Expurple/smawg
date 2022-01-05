@@ -5,9 +5,12 @@ Python backend for
 board game,
 designed for writing third-party AIs and clients around it.
 
+It has a bundled CLI client for interactive use
+and easy interoperability with other programming languages.
+
 ### Features:
 
-* API for performing in-game actions and getting current stats.
+* High level API for performing in-game actions and getting current stats.
 * Automatic maintainance of game state (manages tokens, calculates score, etc).
 * Automatic checks for violation of the rules.
 * Support for custom maps, races, powers and other constants/resources.
@@ -25,7 +28,6 @@ designed for writing third-party AIs and clients around it.
 * More tests.
 * Callback slots for AIs.
 * In-house AI and GUI examples.
-* CLI for easy interoperability with AIs and GUIs written in other languages.
 * Support for plugins with new ability types ???
 
 
@@ -42,7 +44,16 @@ if you wish to [contribute](#Contributing).
 
 # Usage
 
-Minimal example of a normal 2-player game:
+## As a CLI app
+
+Generally, it's invoked as `python3 -m smallworld.cli`
+
+A simple example would be
+`python3 -m smallworld.cli --players=2 examples/tiny_data.json`
+
+It should guide you through the usage.
+
+## As a library
 
 ```python
 import json
@@ -50,9 +61,14 @@ import json
 from smallworld.engine import Data, Game
 
 
+# If you want, you can directly construct `data_json` dict
+# instead of reading from file.
 with open('some/path/to/data.json') as data_file:
     data_json = json.load(data_file)
+
 data = Data(data_json)
+
+# Provide different arguments, if needed.
 game = Game(data, n_players=2)
 # Call `game` methods to perform actions.
 # Read `game` properties to monitor the game state.
