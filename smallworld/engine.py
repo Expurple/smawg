@@ -163,7 +163,7 @@ class Game:
         self.n_turns = data.n_turns
         self.current_turn: int = 0
         self.combos = self._regenerate_combos_view()
-        self.players = [Player(coins=self._n_combos) for _ in range(n_players)]
+        self.players = [Player(self._n_combos - 1) for _ in range(n_players)]
         self._current_player_id: int = 0
         self._current_player = self.players[self._current_player_id]
         self.roll_dice = dice_roll_func
