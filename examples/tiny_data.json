@@ -1,0 +1,54 @@
+{
+    "max_n_players": 2,
+    "n_selectable_combos": 2,
+    "n_turns": 3,
+    "abilities": [
+        {
+            "name": "DummyAbility",
+            "n_tokens": 4
+        },
+        {
+            "name": "DummyAbility",
+            "n_tokens": 4
+        },
+        {
+            "name": "DummyAbility",
+            "n_tokens": 4
+        },
+        {
+            "name": "DummyAbility",
+            "n_tokens": 4
+        },
+        {
+            "name": "DummyAbility",
+            "n_tokens": 4
+        }
+    ],
+    "races": [
+        {
+            "name": "DummyRace",
+            "n_tokens": 5,
+            "max_n_tokens": 10
+        },
+        {
+            "name": "DummyRace",
+            "n_tokens": 5,
+            "max_n_tokens": 10
+        },
+        {
+            "name": "DummyRace",
+            "n_tokens": 5,
+            "max_n_tokens": 10
+        },
+        {
+            "name": "DummyRace",
+            "n_tokens": 5,
+            "max_n_tokens": 10
+        },
+        {
+            "name": "DummyRace",
+            "n_tokens": 5,
+            "max_n_tokens": 10
+        }
+    ]
+}
