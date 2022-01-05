@@ -16,11 +16,13 @@ class Data:
 
     def __init__(self, json: dict) -> None:
         '''Construct strongly typed `Data` from json object.'''
+        assert isinstance(json["min_n_players"], int)
         assert isinstance(json["max_n_players"], int)
         assert isinstance(json["n_selectable_combos"], int)
         assert isinstance(json["n_turns"], int)
         assert isinstance(json["abilities"], list)
         assert isinstance(json["races"], list)
+        self.min_n_players: int = json["min_n_players"]
         self.max_n_players: int = json["max_n_players"]
         self.n_selectable_combos: int = json["n_selectable_combos"]
         self.n_turns: int = json["n_turns"]
@@ -154,7 +156,10 @@ class Game:
 
         Provide custom `dice_roll_func` to get pre-determined (or even
         dynamically decided) dice roll results.'''
-        assert 2 <= n_players <= data.max_n_players
+        if not data.min_n_players <= n_players <= data.max_n_players:
+            msg = f"Invalid number of players: {n_players} (expected " \
+                  f"between {data.min_n_players} and {data.max_n_players})"
+            raise RulesViolation(msg)
         if shuffle_data:
             data = shuffle(data)
         self._abilities = data.abilities

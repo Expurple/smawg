@@ -1,4 +1,5 @@
 {
+    "min_n_players": 2,
     "max_n_players": 2,
     "n_selectable_combos": 2,
     "n_turns": 3,
