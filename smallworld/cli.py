@@ -1,3 +1,6 @@
+'''CLI client for Small World engine.
+See https://github.com/expurple/smallworld for more info.'''
+
 import json
 import readline
 from argparse import ArgumentParser, Namespace
