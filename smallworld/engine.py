@@ -169,8 +169,8 @@ class Game:
         self.current_turn: int = 0
         self.combos = self._regenerate_combos_view()
         self.players = [Player(self._n_combos - 1) for _ in range(n_players)]
-        self._current_player_id: int = 0
-        self._current_player = self.players[self._current_player_id]
+        self.current_player_id: int = 0
+        self._current_player = self.players[self.current_player_id]
         self.roll_dice = dice_roll_func
 
     @check(require_active=True)
@@ -227,10 +227,10 @@ class Game:
         self.combos = self._regenerate_combos_view()
 
     def _switch_player(self) -> None:
-        self._current_player_id += 1
-        if self._current_player_id == len(self.players):
-            self._current_player_id = 0
+        self.current_player_id += 1
+        if self.current_player_id == len(self.players):
+            self.current_player_id = 0
             self.current_turn += 1
-        self._current_player = self.players[self._current_player_id]
+        self._current_player = self.players[self.current_player_id]
         self._current_player.acted_on_this_turn = False
         self._current_player.declined_on_this_turn = False
