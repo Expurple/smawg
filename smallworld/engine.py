@@ -2,10 +2,11 @@
 See https://github.com/expurple/smallworld for more info.'''
 
 import random
+from collections import defaultdict
 from copy import deepcopy
 from functools import wraps
 from itertools import islice
-from typing import Callable, Optional
+from typing import Callable, Mapping, Optional
 
 
 # -------------------------- "dumb" data objects ------------------------------
@@ -114,6 +115,10 @@ def roll_dice() -> int:
 
 # --------------------- the Small World engine itself -------------------------
 
+def do_nothing(*args, **kwargs):
+    pass
+
+
 class RulesViolation(Exception):
     pass
 
@@ -148,14 +153,20 @@ class Game:
     modified.'''
 
     def __init__(self, data: Data, n_players: int, shuffle_data: bool = True,
-                 dice_roll_func: Callable[[], int] = roll_dice) -> None:
+                 dice_roll_func: Callable[[], int] = roll_dice,
+                 hooks: Mapping[str, Callable] = dict()
+                 ) -> None:
         '''Initialize the game state for `n_players`, based on `data`.
 
         Provide `shuffle_data=False` to preserve the known order of races and
         powers.
 
         Provide custom `dice_roll_func` to get pre-determined (or even
-        dynamically decided) dice roll results.'''
+        dynamically decided) dice roll results.
+
+        Provide optional `hooks` to automatically fire on certain events.
+        For detailed info, see `docs/hooks.md`'''
+
         if not data.min_n_players <= n_players <= data.max_n_players:
             msg = f"Invalid number of players: {n_players} (expected " \
                   f"between {data.min_n_players} and {data.max_n_players})"
@@ -172,6 +183,9 @@ class Game:
         self.current_player_id: int = 0
         self._current_player = self.players[self.current_player_id]
         self.roll_dice = dice_roll_func
+        self._hooks: Mapping[str, Callable] \
+            = defaultdict(lambda: do_nothing, **hooks)
+        self._hooks["on_turn_start"](self)
 
     @check(require_active=True)
     def decline(self) -> None:
@@ -203,7 +217,12 @@ class Game:
         if self._current_player.needs_to_pick_combo():
             raise RulesViolation("You need to select a new race+ability combo "
                                  "before ending this turn")
+        self._hooks["on_turn_end"](self)
         self._switch_player()
+        if self.current_turn < self.n_turns:
+            self._hooks["on_turn_start"](self)
+        else:
+            self._hooks["on_game_end"](self)
 
     def _regenerate_combos_view(self) -> list[Combo]:
         ra = zip(self._races, self._abilities)

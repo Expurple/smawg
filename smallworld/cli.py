@@ -4,7 +4,7 @@ See https://github.com/expurple/smallworld for more info.'''
 import json
 import readline
 from argparse import ArgumentParser, Namespace
-from typing import Optional
+from typing import Callable, Optional
 
 from smallworld.engine import Game, Data, RulesViolation
 
@@ -53,16 +53,18 @@ def parse_args() -> Namespace:
     return parser.parse_args()
 
 
-def init_game(args: Namespace) -> Game:
+def init_game(args: Namespace, hooks: dict[str, Callable]) -> Game:
     '''Construct `Game` with respect to command line `args`.'''
     with open(args.data_file) as data_file:
         data_json = json.load(data_file)
     data = Data(data_json)
     if args.read_dice:
         return Game(data, args.players, not args.no_shuffle,
-                    lambda: int(input("Enter the result of the dice roll: ")))
+                    lambda: int(input("Enter the result of the dice roll: ")),
+                    hooks=hooks)
     else:
-        return Game(data, args.players, not args.no_shuffle)
+        return Game(data, args.players, not args.no_shuffle,
+                    hooks=hooks)
 
 
 class InvalidCommand(ValueError):
@@ -72,14 +74,23 @@ class InvalidCommand(ValueError):
 class Client:
     '''Handles console IO.'''
 
-    def __init__(self, args) -> None:
-        self.game = init_game(args)
+    def __init__(self, args: Namespace) -> None:
+        # This print originally was in `run()`, but now `init_game()` prints
+        # because of `Game` hooks, and this print needs to be above that...
+        print(DESCRIPTION + '\n' + HELP_SUGGESTION)
+
+        def on_turn_start(game: Game) -> None:
+            print(f"Player {game.current_player_id} starts turn "
+                  f"{game.current_turn}/{game.n_turns}.")
+
+        def on_game_end(game: Game) -> None:
+            print(f"{game.n_turns} turns have passed, the game is over.")
+
+        hooks = {f.__name__: f for f in [on_turn_start, on_game_end]}
+        self.game = init_game(args, hooks)
 
     def run(self) -> None:
         '''Interpret user commands until stopped by `'quit'`, ^C or ^D.'''
-        print(DESCRIPTION)
-        print('')
-        print(HELP_SUGGESTION)
         try:
             self._run_main_loop()
         except (EOFError, KeyboardInterrupt):

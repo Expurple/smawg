@@ -11,6 +11,7 @@ and easy interoperability with other programming languages.
 ### Features:
 
 * High level API for performing in-game actions and getting current stats.
+    * Imperatively or by setting hooks.
 * Automatic maintainance of game state (manages tokens, calculates score, etc).
 * Automatic checks for violation of the rules.
 * Support for custom maps, races, powers and other constants/resources.
@@ -26,7 +27,6 @@ and easy interoperability with other programming languages.
 
 * Better documentation for code and JSONs.
 * More tests.
-* Callback slots for AIs.
 * In-house AI and GUI examples.
 * Support for plugins with new ability types ???
 
@@ -53,7 +53,7 @@ A simple example would be
 
 It should guide you through the usage.
 
-## As a library
+## As a library, imperative-style
 
 ```python
 import json
@@ -74,6 +74,16 @@ game = Game(data, n_players=2)
 # Read `game` properties to monitor the game state.
 # See `help(Game)` for more info.
 ```
+
+## As a library, hooks-style
+
+Currently, the only example of using `Game` hooks is
+[smallworld/cli.py](./smallworld/cli.py)
+
+But these hooks are only observing, and the majority of the work is still just
+imperative method calls.
+
+This situation will probably change in the future.
 
 
 # Contributing
