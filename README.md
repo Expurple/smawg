@@ -8,10 +8,10 @@ designed for writing third-party AIs and clients around it.
 It has a bundled CLI client for interactive use
 and easy interoperability with other programming languages.
 
-### Features:
+## Features:
 
 * High level API for performing in-game actions and getting current stats.
-    * Imperatively or by setting hooks.
+    * Imperatively or by setting hooks on game events.
 * Automatic maintainance of game state (manages tokens, calculates score, etc).
 * Automatic checks for violation of the rules.
 * Support for custom maps, races, powers and other constants/resources.
@@ -19,7 +19,7 @@ and easy interoperability with other programming languages.
 
 ### **Missing essential features** (in progress):
 
-* A bunch of core mechanics: attacking, redeployment, rewarding, etc.
+* A bunch of core mechanics: attacking, redeploying, rewarding, etc.
 * Example JSONs with full sets of races and abilities, full maps, etc.
 * Implementation of unique race abilities.
 
@@ -33,10 +33,9 @@ and easy interoperability with other programming languages.
 
 # Requirements
 
-* Python 3.9+ (other versions not tested).
+* Python 3.9+ (tested only on 3.9).
 
-No additional libraries or tools are required to use the engine and run
-tests/examples.
+No additional libraries or tools are required to use `engine` and `cli`.
 
 Although, you'll need `mypy` and `flake8`,
 if you wish to [contribute](#Contributing).
@@ -75,6 +74,8 @@ game = Game(data, n_players=2)
 # See `help(Game)` for more info.
 ```
 
+You can also find a "real world" example in [cli.py](./smallworld/cli.py)
+
 ## As a library, hooks-style
 
 Refer to [docs/hooks.md](./docs/hooks.md)
@@ -84,7 +85,7 @@ Refer to [docs/hooks.md](./docs/hooks.md)
 
 # Contributing
 
-Any contributions are welcome, but [missing featues](#smallworld) should be
+Any contributions are welcome, but [missing featues](##Features) should be
 prioritized.
 
 Before submitting, please make sure that:
