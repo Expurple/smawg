@@ -5,49 +5,49 @@
     "n_turns": 3,
     "abilities": [
         {
-            "name": "DummyAbility",
+            "name": "Ability0",
             "n_tokens": 4
         },
         {
-            "name": "DummyAbility",
+            "name": "Ability1",
             "n_tokens": 4
         },
         {
-            "name": "DummyAbility",
+            "name": "Ability2",
             "n_tokens": 4
         },
         {
-            "name": "DummyAbility",
+            "name": "Ability3",
             "n_tokens": 4
         },
         {
-            "name": "DummyAbility",
+            "name": "Ability4",
             "n_tokens": 4
         }
     ],
     "races": [
         {
-            "name": "DummyRace",
+            "name": "Race0",
             "n_tokens": 5,
             "max_n_tokens": 10
         },
         {
-            "name": "DummyRace",
+            "name": "Race1",
             "n_tokens": 5,
             "max_n_tokens": 10
         },
         {
-            "name": "DummyRace",
+            "name": "Race2",
             "n_tokens": 5,
             "max_n_tokens": 10
         },
         {
-            "name": "DummyRace",
+            "name": "Race3",
             "n_tokens": 5,
             "max_n_tokens": 10
         },
         {
-            "name": "DummyRace",
+            "name": "Race4",
             "n_tokens": 5,
             "max_n_tokens": 10
         }
