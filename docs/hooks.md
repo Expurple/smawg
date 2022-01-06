@@ -44,3 +44,8 @@ game = Game(some, other, args, hooks=hooks)
 
 You can find another example of hook definition in
 [smallworld/cli.py](../smallworld/cli.py)
+
+Hooks there are only observing, and the majority of the work is still just
+imperative method calls.
+
+This situation will probably change in the future.

@@ -77,13 +77,9 @@ game = Game(data, n_players=2)
 
 ## As a library, hooks-style
 
-Currently, the only example of using `Game` hooks is
-[smallworld/cli.py](./smallworld/cli.py)
+Refer to [docs/hooks.md](./docs/hooks.md)
 
-But these hooks are only observing, and the majority of the work is still just
-imperative method calls.
 
-This situation will probably change in the future.
 
 
 # Contributing
