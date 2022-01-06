@@ -33,13 +33,13 @@ and easy interoperability with other programming languages.
 
 # Requirements
 
-* Python 3.9+ (tested only on 3.9).
+* Python 3.9+ (currently, only 3.9 is tested)
+* [tabulate](https://github.com/astanin/python-tabulate) (required by `cli`)
 
-No additional libraries or tools are required to use `engine` and `cli`.
+If you need `cli`, [tabulate](https://github.com/astanin/python-tabulate)
+can be installed with `pip install --user -r requirements.txt`
 
-Although, you'll need `mypy` and `flake8`,
-if you wish to [contribute](#Contributing).
-
+`engine` by itself doesn't require any dependencies.
 
 # Usage
 

@@ -6,6 +6,8 @@ import readline
 from argparse import ArgumentParser, Namespace
 from typing import Callable, Optional
 
+from tabulate import tabulate
+
 from smallworld.engine import Game, Data, RulesViolation
 
 
@@ -127,21 +129,18 @@ class Client:
             raise InvalidCommand(f"Unknown command: '{command}'.")
 
     def _command_show_players(self) -> None:
-        def print_row(*values):
-            print("{:^6}  {:^14}  {:^11}  {:^11}  {:>5}".format(*values))
-
         headers = ['Player', 'Active ability', 'Active race', 'Declined race',
                    'Coins']
-        print_row(*headers)
-        print_row(*['-' * len(h) for h in headers])
+        rows = []
         for i, p in enumerate(self.game.players):
-            print_row(
+            rows.append([
                 i,
                 p.active_ability.name if p.active_ability else '-',
                 p.active_race.name if p.active_race else '-',
                 p.decline_race.name if p.decline_race else '-',
                 p.coins
-            )
+            ])
+        print(tabulate(rows, headers, stralign='center', numalign='center'))
 
     def _command_race(self, args: list[str]) -> None:
         if len(args) == 0:
