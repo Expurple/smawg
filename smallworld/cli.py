@@ -11,12 +11,12 @@ from tabulate import tabulate
 from smallworld.engine import Game, Data, RulesViolation
 
 
-DESCRIPTION = '''\
-Small World CLI
-For more info, visit https://github.com/expurple/smallworld'''
-
+TITLE = 'Small World CLI'
+OPTIONS_SUGGESTION = 'Run with -h to see available options.'
 HELP_SUGGESTION = "Type 'help' to see available commands."
-
+VISIT_HOME_PAGE = 'For more info, visit https://github.com/expurple/smallworld'
+START_SCREEN = '\n'.join([TITLE, OPTIONS_SUGGESTION, HELP_SUGGESTION,
+                          VISIT_HOME_PAGE, ''])  # '' for extra newline
 HELP = '''\
 Available commands:
     help          show this message
@@ -40,7 +40,7 @@ def autocomplete(text: str, state: int) -> Optional[str]:
 
 
 def parse_args() -> Namespace:
-    parser = ArgumentParser(description=DESCRIPTION)
+    parser = ArgumentParser(description=TITLE, epilog=VISIT_HOME_PAGE)
     parser.add_argument('data_file',
                         help='path to data.json')
     parser.add_argument('-p', '--players',
@@ -81,7 +81,7 @@ class Client:
     def __init__(self, args: Namespace) -> None:
         # This print originally was in `run()`, but now `init_game()` prints
         # because of `Game` hooks, and this print needs to be above that...
-        print(DESCRIPTION + '\n\n' + HELP_SUGGESTION)
+        print(START_SCREEN)
 
         def on_turn_start(game: Game) -> None:
             print(f"Player {game.current_player_id} starts turn "
@@ -129,7 +129,7 @@ class Client:
         elif command == 'quit':
             exit(0)
         else:
-            raise InvalidCommand(f"Unknown command: '{command}'.")
+            raise InvalidCommand(f"'{command}'.")
 
     def _command_show_players(self) -> None:
         headers = ['Player', 'Active ability', 'Active race', 'Declined race',
