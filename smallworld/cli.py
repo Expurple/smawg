@@ -18,6 +18,7 @@ HELP_SUGGESTION = "Type 'help' to see available commands."
 HELP = '''\
 Available commands:
     help          show this message
+    show-players  show player stats
     race <index>  pick race+ability combo by index
     decline       enter decline
     end           end turn
@@ -77,7 +78,7 @@ class Client:
     def __init__(self, args: Namespace) -> None:
         # This print originally was in `run()`, but now `init_game()` prints
         # because of `Game` hooks, and this print needs to be above that...
-        print(DESCRIPTION + '\n' + HELP_SUGGESTION)
+        print(DESCRIPTION + '\n\n' + HELP_SUGGESTION)
 
         def on_turn_start(game: Game) -> None:
             print(f"Player {game.current_player_id} starts turn "
@@ -108,12 +109,14 @@ class Client:
                 print(f"Rules violated: {e.args[0]}")
 
     def _interpret(self, command: str, args: list[str]) -> None:
-        if command in ('help', 'decline', 'end', 'quit') and len(args) > 0:
+        if command in COMMANDS and command != 'race' and len(args) > 0:
             raise InvalidCommand(f"'{command}' does not accept any arguments.")
         if command == 'help':
             print(HELP)
+        elif command == 'show-players':
+            self._command_show_players()
         elif command == 'race':
-            self._interpret_race(args)
+            self._command_race(args)
         elif command == 'decline':
             self.game.decline()
         elif command == 'end':
@@ -123,7 +126,24 @@ class Client:
         else:
             raise InvalidCommand(f"Unknown command: '{command}'.")
 
-    def _interpret_race(self, args: list[str]) -> None:
+    def _command_show_players(self) -> None:
+        def print_row(*values):
+            print("{:^6}  {:^14}  {:^11}  {:^11}  {:>5}".format(*values))
+
+        headers = ['Player', 'Active ability', 'Active race', 'Declined race',
+                   'Coins']
+        print_row(*headers)
+        print_row(*['-' * len(h) for h in headers])
+        for i, p in enumerate(self.game.players):
+            print_row(
+                i,
+                p.active_ability.name if p.active_ability else '-',
+                p.active_race.name if p.active_race else '-',
+                p.decline_race.name if p.decline_race else '-',
+                p.coins
+            )
+
+    def _command_race(self, args: list[str]) -> None:
         if len(args) == 0:
             raise InvalidCommand('You need to provide a race index.')
         try:
