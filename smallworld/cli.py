@@ -21,6 +21,7 @@ HELP = '''\
 Available commands:
     help          show this message
     show-players  show player stats
+    show-combos   show available combos
     race <index>  pick race+ability combo by index
     decline       enter decline
     end           end turn
@@ -117,6 +118,8 @@ class Client:
             print(HELP)
         elif command == 'show-players':
             self._command_show_players()
+        elif command == 'show-combos':
+            self._command_show_combos()
         elif command == 'race':
             self._command_race(args)
         elif command == 'decline':
@@ -142,6 +145,12 @@ class Client:
             ])
         print(tabulate(rows, headers, stralign='center', numalign='center'))
 
+    def _command_show_combos(self) -> None:
+        headers = ['Price', 'Coins you get', 'Ability', 'Race']
+        rows = [(i, c.coins, c.ability.name, c.race.name)
+                for i, c in enumerate(self.game.combos)]
+        print(tabulate(rows, headers, stralign='center', numalign='center'))
+
     def _command_race(self, args: list[str]) -> None:
         if len(args) == 0:
             raise InvalidCommand('You need to provide a race index.')
@@ -153,6 +162,7 @@ class Client:
 
 
 if __name__ == "__main__":
+    readline.set_completer_delims(' ')
     readline.set_completer(autocomplete)
     readline.parse_and_bind("tab: complete")
     args = parse_args()
