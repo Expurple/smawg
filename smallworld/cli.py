@@ -146,8 +146,9 @@ class Client:
         print(tabulate(rows, headers, stralign='center', numalign='center'))
 
     def _command_show_combos(self) -> None:
-        headers = ['Price', 'Coins you get', 'Ability', 'Race']
-        rows = [(i, c.coins, c.ability.name, c.race.name)
+        headers = ['Price', 'Coins you get', 'Ability', 'Race',
+                   'Tokens you get']
+        rows = [(i, c.coins, c.ability.name, c.race.name, c.base_n_tokens)
                 for i, c in enumerate(self.game.combos)]
         print(tabulate(rows, headers, stralign='center', numalign='center'))
 
