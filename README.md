@@ -26,7 +26,8 @@ and easy interoperability with other programming languages.
 ### Future plans:
 
 * Better documentation for code and JSONs.
-* More tests.
+* Add tests.
+* Options for more machine-readable CLI output.
 * In-house AI and GUI examples.
 * Support for plugins with new ability types ???
 
