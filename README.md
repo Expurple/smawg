@@ -46,10 +46,14 @@ can be installed with `pip install --user -r requirements.txt`
 
 ## As a CLI app
 
-Generally, it's invoked as `python3 -m smallworld.cli`
+Currently there's no installer, so you'll need to install files manually or
+invoke the module directly:
+* (from the repo) `python3 -m smallworld.cli`
+* (from anywhere)
+    `PYTHONPATH="path/to/repo:$PYTHONPATH" path/to/repo/smallworld/cli.py`
 
-A simple example would be
-`python3 -m smallworld.cli --players=2 examples/tiny_data.json`
+A simple example set of options would be
+* `python3 -m smallworld.cli --players=2 examples/tiny_data.json`
 
 It should guide you through the usage.
 
