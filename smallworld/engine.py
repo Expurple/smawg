@@ -191,7 +191,8 @@ class Game:
         self._n_combos = data.n_selectable_combos
         self.n_turns = data.n_turns
         self.current_turn: int = 0
-        self.combos = self._regenerate_combos_view()
+        visible_ra = islice(zip(self._races, self._abilities), self._n_combos)
+        self.combos = [Combo(r, a) for r, a in visible_ra]
         self.players = [Player(self._n_combos - 1) for _ in range(n_players)]
         self.current_player_id: int = 0
         self._current_player = self.players[self.current_player_id]
@@ -238,11 +239,6 @@ class Game:
         else:
             self._hooks["on_game_end"](self)
 
-    def _regenerate_combos_view(self) -> list[Combo]:
-        ra = zip(self._races, self._abilities)
-        visible_ra = islice(ra, self._n_combos)
-        return [Combo(r, a) for r, a in visible_ra]
-
     def _pay_for_combo(self, combo_index: int) -> None:
         combos_above = self.combos[:combo_index]
         coins_getting = sum(c.coins for c in combos_above)
@@ -254,10 +250,14 @@ class Game:
         self.combos[combo_index].coins = 0
 
     def _rotate_combos(self, combo_index: int) -> None:
-        r, a = self._races.pop(combo_index), self._abilities.pop(combo_index)
-        self._races.append(r)
-        self._abilities.append(a)
-        self.combos = self._regenerate_combos_view()
+        chosen_race = self._races.pop(combo_index)
+        chosen_ability = self._abilities.pop(combo_index)
+        self._races.append(chosen_race)
+        self._abilities.append(chosen_ability)
+        self.combos.pop(combo_index)
+        next_combo = Combo(self._races[self._n_combos-1],
+                           self._abilities[self._n_combos-1])
+        self.combos.append(next_combo)
 
     def _switch_player(self) -> None:
         self.current_player_id += 1
