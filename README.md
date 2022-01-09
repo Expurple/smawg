@@ -24,7 +24,7 @@ and easy interoperability with other programming languages.
 
 ### Future plans:
 
-* Installer, tests, better documentation for code and JSONs.
+* Installer, more tests, better documentation for code and JSONs.
 * JSONs with full sets of races and abilities, original maps, etc.
 * Options for more machine-readable CLI output.
 * In-house AI and GUI examples.
@@ -85,6 +85,14 @@ You can also find a "real world" example in [cli.py](./smallworld/cli.py)
 Refer to [docs/hooks.md](./docs/hooks.md)
 
 
+# Testing
+
+Tests in [smallworld/tests/](smallworld/tests)
+use the standard `unittest` module.
+
+You can run them by executing
+* `python3 -m unittest discover`
+* or any other test runner that supports `unittest` format.
 
 
 # Contributing
@@ -96,6 +104,8 @@ Before submitting, please make sure that:
 * Your code uses type hinting.
 * `mypy` doesn't report any errors (when run with default options).
 * `flake8` doesn't report any errors (when run with default options).
+* New features are tested.
+* All tests pass.
 
 The easiest way to do that is to configure a pre-commit hook.
 
