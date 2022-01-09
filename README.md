@@ -102,8 +102,8 @@ prioritized.
 
 Before submitting, please make sure that:
 * Your code uses type hinting.
-* `mypy` doesn't report any errors (when run with default options).
-* `flake8` doesn't report any errors (when run with default options).
+* `mypy --config-file= .` doesn't report any errors.
+* `flake8 --isolated .` doesn't report any errors.
 * New features are tested.
 * All tests pass.
 

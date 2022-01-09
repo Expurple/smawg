@@ -4,11 +4,11 @@ cat > .git/hooks/pre-commit << EOF
 #!/bin/sh
 
 echo 'Running mypy:'
-mypy . || exit 1
+mypy --config-file= . || exit 1
 echo
 
 echo 'Running flake8:'
-flake8 . || exit 1
+flake8 --isolated . || exit 1
 echo
 
 echo 'Running all tests with unittest:'
