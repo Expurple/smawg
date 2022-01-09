@@ -12,20 +12,18 @@ from smallworld.engine import Game, Data, RulesViolation
 
 
 TITLE = 'Small World CLI'
-OPTIONS_SUGGESTION = 'Run with -h to see available options.'
 HELP_SUGGESTION = "Type 'help' to see available commands."
 VISIT_HOME_PAGE = 'For more info, visit https://github.com/expurple/smallworld'
-START_SCREEN = '\n'.join([TITLE, OPTIONS_SUGGESTION, HELP_SUGGESTION,
-                          VISIT_HOME_PAGE, ''])  # '' for extra newline
+START_SCREEN = '\n'.join([TITLE, HELP_SUGGESTION, VISIT_HOME_PAGE, ''])
 HELP = '''\
 Available commands:
-    help          show this message
-    show-players  show player stats
-    show-combos   show available combos
-    combo <index> pick race+ability combo by index
-    decline       enter decline
-    end-turn      end your turn and give control to the next player
-    quit          quit game
+    help            show this message
+    show-players    show player stats
+    show-combos     show available combos
+    combo <index>   pick race+ability combo by index
+    decline         enter decline
+    end-turn        end your turn and give control to the next player
+    quit            quit game
 
 Press Tab for autocompletion.'''
 
@@ -44,6 +42,7 @@ def parse_args() -> Namespace:
     parser.add_argument('data_file',
                         help='path to data.json')
     parser.add_argument('-p', '--players',
+                        metavar='<num>',
                         type=int,
                         required=True,
                         help='specify the number of players')
