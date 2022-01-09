@@ -129,6 +129,7 @@ def create_tokens_supply(races: list[Race]):
 
 
 def do_nothing(*args, **kwargs):
+    '''Empty placeholder for missing hooks.'''
     pass
 
 
@@ -136,8 +137,8 @@ class RulesViolation(Exception):
     pass
 
 
-def check(require_active: bool = False):
-    '''Adds boilerplate assertions to `Game` methods.'''
+def check_rules(require_active: bool = False):
+    '''Adds boilerplate rule checks to public `Game` methods.'''
     def decorator(game_method: Callable):
         @wraps(game_method)
         def wrapper(*args, **kwargs):
@@ -149,7 +150,7 @@ def check(require_active: bool = False):
             if require_active and self._current_player.is_in_decline():
                 msg = "To do this, you need to control an active race"
                 raise RulesViolation(msg)
-            # And then just evecute the wrapped method
+            # And then just execute the wrapped method
             return game_method(*args, **kwargs)
         return wrapper
     return decorator
@@ -202,7 +203,7 @@ class Game:
             = defaultdict(lambda: do_nothing, **hooks)
         self._hooks["on_turn_start"](self)
 
-    @check(require_active=True)
+    @check_rules(require_active=True)
     def decline(self) -> None:
         '''Put your active race in decline state.'''
         if self._current_player.acted_on_this_turn:
@@ -211,10 +212,9 @@ class Game:
             raise RulesViolation(msg)
         self._current_player.decline()
 
-    @check()
+    @check_rules()
     def select_combo(self, combo_index: int) -> None:
-        '''Pick the combo at specified `combo_index` as your new active
-        race.'''
+        '''Pick the combo at specified `combo_index` as active.'''
         if not self._current_player.is_in_decline():
             raise RulesViolation("You need to decline first")
         if self._current_player.declined_on_this_turn:
@@ -225,7 +225,7 @@ class Game:
         self._rotate_combos(combo_index)
         self._current_player.acted_on_this_turn = True
 
-    @check()
+    @check_rules()
     def end_turn(self) -> None:
         '''Receive coins for the passed turn and give control to the next
         player.'''
