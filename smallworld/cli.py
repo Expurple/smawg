@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
-'''CLI client for Small World engine.
-See https://github.com/expurple/smallworld for more info.'''
+"""CLI client for Small World engine.
+
+See https://github.com/expurple/smallworld for more info.
+"""
 
 
 import json
@@ -34,13 +36,17 @@ COMMANDS = [line.strip().split()[0] for line in HELP.splitlines()[1:-2]]
 
 
 def autocomplete(text: str, state: int) -> Optional[str]:
-    '''Command completer for `readline`.'''
+    """Command completer for `readline`."""
     results = [c for c in COMMANDS if c.startswith(text)]
     results.append(None)  # type:ignore
     return results[state]
 
 
 def parse_args() -> Namespace:
+    """Parse and return command line arguments.
+
+    On error, print usage and exit.
+    """
     parser = ArgumentParser(description=TITLE, epilog=VISIT_HOME_PAGE)
     parser.add_argument('data_file',
                         help='path to data.json')
@@ -60,7 +66,7 @@ def parse_args() -> Namespace:
 
 
 def init_game(args: Namespace, hooks: dict[str, Callable]) -> Game:
-    '''Construct `Game` with respect to command line `args`.'''
+    """Construct `Game` with respect to command line `args`."""
     with open(args.data_file) as data_file:
         data_json = json.load(data_file)
     data = Data(data_json)
@@ -74,13 +80,16 @@ def init_game(args: Namespace, hooks: dict[str, Callable]) -> Game:
 
 
 class InvalidCommand(ValueError):
+    """Exception thrown in `Client` when an invalid command is entered."""
+
     pass
 
 
 class Client:
-    '''Handles console IO.'''
+    """Handles console IO."""
 
     def __init__(self, args: Namespace) -> None:
+        """Construct `Client` with respect to command line `args`."""
         # This print originally was in `run()`, but now `init_game()` prints
         # because of `Game` hooks, and this print needs to be above that...
         print(START_SCREEN)
@@ -99,7 +108,7 @@ class Client:
         self.game = init_game(args, hooks)
 
     def run(self) -> None:
-        '''Interpret user commands until stopped by `'quit'`, ^C or ^D.'''
+        """Interpret user commands until stopped by `'quit'`, ^C or ^D."""
         try:
             self._run_main_loop()
         except (EOFError, KeyboardInterrupt):

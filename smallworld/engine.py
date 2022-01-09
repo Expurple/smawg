@@ -1,5 +1,7 @@
-'''Backend engine for Small World board game.
-See https://github.com/expurple/smallworld for more info.'''
+"""Backend engine for Small World board game.
+
+See https://github.com/expurple/smallworld for more info.
+"""
 
 import random
 from collections import defaultdict
@@ -12,11 +14,14 @@ from typing import Callable, Mapping, Optional
 # -------------------------- "dumb" data objects ------------------------------
 
 class Data:
-    '''Storage for immutable game properties: constants like the total amount
-    of turns, lists of available races and abilities, etc.'''
+    """Storage for immutable game properties.
+
+    Contains constants like the total amount of turns,
+    list of available races and abilities, etc.
+    """
 
     def __init__(self, json: dict) -> None:
-        '''Construct strongly typed `Data` from json object.'''
+        """Construct strongly typed `Data` from json object."""
         assert isinstance(json["min_n_players"], int)
         assert isinstance(json["max_n_players"], int)
         assert isinstance(json["n_selectable_combos"], int)
@@ -32,10 +37,10 @@ class Data:
 
 
 class Ability:
-    '''Immutable description of an ability (just like on a physical banner).'''
+    """Immutable description of an ability (just like on a physical banner)."""
 
     def __init__(self, json: dict) -> None:
-        '''Construct strongly typed `Ability` from json object.'''
+        """Construct strongly typed `Ability` from json object."""
         assert isinstance(json["name"], str)
         assert isinstance(json["n_tokens"], int)
         self.name: str = json["name"]
@@ -43,10 +48,10 @@ class Ability:
 
 
 class Race:
-    '''Immutable description of a race (just like on a physical banner).'''
+    """Immutable description of a race (just like on a physical banner)."""
 
     def __init__(self, json: dict) -> None:
-        '''Construct strongly typed `Race` from json object.'''
+        """Construct strongly typed `Race` from json object."""
         assert isinstance(json["name"], str)
         assert isinstance(json["n_tokens"], int)
         assert isinstance(json["max_n_tokens"], int)
@@ -56,11 +61,13 @@ class Race:
 
 
 class Combo:
-    '''Immutable pair of `Race` and `Ability` banners, with a few `coins`
-    dynamically thrown on top.'''
+    """Immutable pair of `Race` and `Ability` banners.
+
+    Also contains a mutable amount of `coins` put on top during the game.
+    """
 
     def __init__(self, race: Race, ability: Ability) -> None:
-        '''Construct a freshly revealed `Race`+`Ability` combo.'''
+        """Construct a freshly revealed `Race`+`Ability` combo."""
         self.race = race
         self.ability = ability
         self.base_n_tokens = race.n_tokens + ability.n_tokens
@@ -68,10 +75,10 @@ class Combo:
 
 
 class Player:
-    '''A bunch of "dumb" mutable stats, related to the same player.'''
+    """A bunch of "dumb" mutable stats, related to the same player."""
 
     def __init__(self, coins: int) -> None:
-        '''Initialize `Player` with an initial supply of `coins`.'''
+        """Initialize `Player` with an initial supply of `coins`."""
         self.active_race: Optional[Race] = None
         self.active_ability: Optional[Ability] = None
         self.decline_race: Optional[Race] = None
@@ -81,12 +88,15 @@ class Player:
         self.coins = coins
 
     def needs_to_pick_combo(self) -> bool:
+        """Check if `Player` must select a combo during the current turn."""
         return self.is_in_decline() and not self.declined_on_this_turn
 
     def is_in_decline(self) -> bool:
+        """Check if `Player` is in decline state."""
         return self.active_race is None
 
     def decline(self) -> None:
+        """Put `Player`'s active race in decline state."""
         self.decline_race = self.active_race
         self.decline_ability = self.active_ability
         self.active_race = None
@@ -94,20 +104,24 @@ class Player:
         self.declined_on_this_turn = True
 
     def set_active(self, combo: Combo) -> None:
+        """Set `Race` and `Ability` from the given `combo` as active."""
         self.active_race = combo.race
         self.active_ability = combo.ability
 
 
 class Token:
-    '''Dummy class for race tokens.'''
+    """Dummy class for race tokens."""
+
     pass
 
 
 # ------------------------ randomization utilities ----------------------------
 
 def shuffle(data: Data) -> Data:
-    '''Shuffles the game data (e.g. race order), just like you would in a
-    physical Small World game.'''
+    """Shuffle the order of `Race` and `Ability` banners in `data`.
+
+    Just like you would do in a physical Small World game.
+    """
     data = deepcopy(data)
     random.shuffle(data.races)
     random.shuffle(data.abilities)
@@ -115,13 +129,14 @@ def shuffle(data: Data) -> Data:
 
 
 def roll_dice() -> int:
-    '''Default function for random dice roll outcomes.'''
+    """Return a random dice roll result."""
     return random.choice((0, 0, 0, 1, 2, 3))
 
 
 # --------------------- the Small World engine itself -------------------------
 
 def create_tokens_supply(races: list[Race]):
+    """Gerenate a supply of `Token`s for each `Race` in `races`."""
     tokens_supply = dict[Race, list[Token]]()
     for race in races:
         tokens_supply[race] = [Token() for _ in range(race.max_n_tokens)]
@@ -129,23 +144,30 @@ def create_tokens_supply(races: list[Race]):
 
 
 def do_nothing(*args, **kwargs):
-    '''Empty placeholder for missing hooks.'''
+    """Empty placeholder for missing hooks."""
     pass
 
 
 class RulesViolation(Exception):
+    """Exception thrown from `Game` methods when rules are violated."""
+
     pass
 
 
 class GameEnded(RulesViolation):
-    MESSSAGE = "The game is over, you shouldn't do anything anymore"
+    """Exception thrown from `Game` methods when calling after the game end."""
 
     def __init__(self, *args) -> None:
-        super().__init__(GameEnded.MESSSAGE, *args)
+        """Construct an exception with default `GameEnded` message."""
+        msg = "The game is over, this action is not available anymore"
+        super().__init__(msg, *args)
 
 
 def check_rules(require_active: bool = False):
-    '''Adds boilerplate rule checks to public `Game` methods.'''
+    """Add boilerplate rule checks to public `Game` methods.
+
+    `require_active` specifies whether an action requires an active race.
+    """
     def decorator(game_method: Callable):
         @wraps(game_method)
         def wrapper(*args, **kwargs):
@@ -163,20 +185,21 @@ def check_rules(require_active: bool = False):
 
 
 class Game:
-    '''Encapsulates and manages the game state. Provides high-level API for
-    performing in-game actions and getting current stats.
+    """A single Small World game.
 
-    Methods represent in-game actions and throw `RulesViolation` when an
-    action violates the rules.
+    Provides methods for performing in-game actions.
+    Method calls automatically update the game state according to rules.
+    If an action violates the rules, `RulesViolation` is thrown.
 
-    Data members represent the game state and are designed to be read, but not
-    modified.'''
+    Data members represent the game state and are supposed to be read, but not
+    modified.
+    """
 
     def __init__(self, data: Data, n_players: int, shuffle_data: bool = True,
                  dice_roll_func: Callable[[], int] = roll_dice,
                  hooks: Mapping[str, Callable] = dict()
                  ) -> None:
-        '''Initialize the game state for `n_players`, based on `data`.
+        """Initialize the game state for `n_players`, based on `data`.
 
         Provide `shuffle_data=False` to preserve the known order of races and
         powers.
@@ -185,8 +208,8 @@ class Game:
         dynamically decided) dice roll results.
 
         Provide optional `hooks` to automatically fire on certain events.
-        For detailed info, see `docs/hooks.md`'''
-
+        For detailed info, see `docs/hooks.md`
+        """
         if not data.min_n_players <= n_players <= data.max_n_players:
             msg = f"Invalid number of players: {n_players} (expected " \
                   f"between {data.min_n_players} and {data.max_n_players})"
@@ -211,7 +234,7 @@ class Game:
 
     @check_rules(require_active=True)
     def decline(self) -> None:
-        '''Put your active race in decline state.'''
+        """Put your active race in decline state."""
         if self._current_player.acted_on_this_turn:
             msg = "You've already used your active race during this turn. " \
                   "You'll have to decline during the next turn"
@@ -220,7 +243,7 @@ class Game:
 
     @check_rules()
     def select_combo(self, combo_index: int) -> None:
-        '''Pick the combo at specified `combo_index` as active.'''
+        """Pick the combo at specified `combo_index` as active."""
         assert 0 <= combo_index < len(self.combos)
         if not self._current_player.is_in_decline():
             raise RulesViolation("You need to decline first")
@@ -234,8 +257,7 @@ class Game:
 
     @check_rules()
     def end_turn(self) -> None:
-        '''Receive coins for the passed turn and give control to the next
-        player.'''
+        """End current turn and give control to the next player."""
         if self._current_player.needs_to_pick_combo():
             raise RulesViolation("You need to select a new race+ability combo "
                                  "before ending this turn")

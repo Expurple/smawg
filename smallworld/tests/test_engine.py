@@ -1,4 +1,4 @@
-'''Tests for `smallworld.engine` module.'''
+"""Tests for `smallworld.engine` module."""
 
 from contextlib import nullcontext
 
@@ -7,10 +7,10 @@ from smallworld.tests.common import BaseTest, EXAMPLES_DIR
 
 
 class TestGame(BaseTest):
-    '''Tests for `smallworld.engine.Game` class.'''
+    """Tests for `smallworld.engine.Game` class."""
 
     def test_tiny_game_scenario(self):
-        '''Run a full game based on `tiny_game.json` and check every step.'''
+        """Run a full game based on `tiny_game.json` and check every step."""
         tiny_data = self.load_data(f"{EXAMPLES_DIR}/tiny_data.json")
         game = Game(tiny_data, n_players=2)
         self.assertBalances(game, [1, 1])
@@ -29,13 +29,13 @@ class TestGame(BaseTest):
         self.assertBalances(game, [0, 2])
 
     def assertBalances(self, game: Game, expected: list[int]):
-        '''Check if all player balances match the `expected`.'''
+        """Check if all player balances match the `expected`."""
         actual = [p.coins for p in game.players]
         msg = "Player has incorrect amount of coins"
         self.assertListEqual(actual, expected, msg=msg)
 
     def assertEnded(self, game: Game):
-        '''Check if `game` is in end state and behaves correctly.'''
+        """Check if `game` is in end state and behaves correctly."""
         self.assertEqual(game.current_turn, game.n_turns)
         with self.assertRaises(GameEnded):
             game.select_combo(0)

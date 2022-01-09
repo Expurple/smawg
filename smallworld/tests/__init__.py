@@ -1,1 +1,1 @@
-'''Tests for `smallworld` package.'''
+"""Tests for `smallworld` package."""
