@@ -157,6 +157,8 @@ class Client:
     def _command_combo(self, args: list[str]) -> None:
         if len(args) == 0:
             raise InvalidCommand('You need to provide a combo index.')
+        if len(args) > 1:
+            raise InvalidCommand("'combo' expects only one argument.")
         try:
             i = int(args[0])
             self.game.select_combo(i)
