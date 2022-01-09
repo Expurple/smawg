@@ -137,6 +137,13 @@ class RulesViolation(Exception):
     pass
 
 
+class GameEnded(RulesViolation):
+    MESSSAGE = "The game is over, you shouldn't do anything anymore"
+
+    def __init__(self, *args) -> None:
+        super().__init__(GameEnded.MESSSAGE, *args)
+
+
 def check_rules(require_active: bool = False):
     '''Adds boilerplate rule checks to public `Game` methods.'''
     def decorator(game_method: Callable):
@@ -145,8 +152,7 @@ def check_rules(require_active: bool = False):
             # Perform necessary checks
             self: "Game" = args[0]
             if self.current_turn >= self.n_turns:
-                msg = "The game is over, you shouldn't do anything anymore"
-                raise RulesViolation(msg)
+                raise GameEnded()
             if require_active and self._current_player.is_in_decline():
                 msg = "To do this, you need to control an active race"
                 raise RulesViolation(msg)
@@ -215,6 +221,7 @@ class Game:
     @check_rules()
     def select_combo(self, combo_index: int) -> None:
         '''Pick the combo at specified `combo_index` as active.'''
+        assert 0 <= combo_index < len(self.combos)
         if not self._current_player.is_in_decline():
             raise RulesViolation("You need to decline first")
         if self._current_player.declined_on_this_turn:
