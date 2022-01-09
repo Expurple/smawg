@@ -22,9 +22,9 @@ Available commands:
     help          show this message
     show-players  show player stats
     show-combos   show available combos
-    race <index>  pick race+ability combo by index
+    combo <index> pick race+ability combo by index
     decline       enter decline
-    end           end turn
+    end-turn      end your turn and give control to the next player
     quit          quit game
 
 Press Tab for autocompletion.'''
@@ -115,7 +115,7 @@ class Client:
                 print(f"Rules violated: {e.args[0]}")
 
     def _interpret(self, command: str, args: list[str]) -> None:
-        if command in COMMANDS and command != 'race' and len(args) > 0:
+        if command in COMMANDS and command != 'combo' and len(args) > 0:
             raise InvalidCommand(f"'{command}' does not accept any arguments.")
         if command == 'help':
             print(HELP)
@@ -123,11 +123,11 @@ class Client:
             self._command_show_players()
         elif command == 'show-combos':
             self._command_show_combos()
-        elif command == 'race':
-            self._command_race(args)
+        elif command == 'combo':
+            self._command_combo(args)
         elif command == 'decline':
             self.game.decline()
-        elif command == 'end':
+        elif command == 'end-turn':
             self.game.end_turn()
         elif command == 'quit':
             exit(0)
@@ -155,14 +155,14 @@ class Client:
                 for i, c in enumerate(self.game.combos)]
         print(tabulate(rows, headers, stralign='center', numalign='center'))
 
-    def _command_race(self, args: list[str]) -> None:
+    def _command_combo(self, args: list[str]) -> None:
         if len(args) == 0:
-            raise InvalidCommand('You need to provide a race index.')
+            raise InvalidCommand('You need to provide a combo index.')
         try:
             i = int(args[0])
             self.game.select_combo(i)
         except ValueError:
-            raise InvalidCommand(f"'{args[0]}' is not a valid race index.")
+            raise InvalidCommand(f"'{args[0]}' is not a valid combo index.")
 
 
 if __name__ == "__main__":
