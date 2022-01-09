@@ -222,7 +222,7 @@ class Game:
                                  "a new race during the next turn")
         self._pay_for_combo(combo_index)
         self._current_player.set_active(self.combos[combo_index])
-        self._rotate_combos(combo_index)
+        self._pop_combo(combo_index)
         self._current_player.acted_on_this_turn = True
 
     @check_rules()
@@ -240,21 +240,20 @@ class Game:
             self._hooks["on_game_end"](self)
 
     def _pay_for_combo(self, combo_index: int) -> None:
-        combos_above = self.combos[:combo_index]
-        coins_getting = sum(c.coins for c in combos_above)
+        coins_getting = self.combos[combo_index].coins
         if combo_index > self._current_player.coins + coins_getting:
             raise RulesViolation("Not enough coins, select a different race")
         self._current_player.coins += coins_getting - combo_index
-        for combo in combos_above:
+        for combo in self.combos[:combo_index]:
             combo.coins += 1
         self.combos[combo_index].coins = 0
 
-    def _rotate_combos(self, combo_index: int) -> None:
-        chosen_race = self._races.pop(combo_index)
-        chosen_ability = self._abilities.pop(combo_index)
+    def _pop_combo(self, index: int) -> None:
+        chosen_race = self._races.pop(index)
+        chosen_ability = self._abilities.pop(index)
         self._races.append(chosen_race)
         self._abilities.append(chosen_ability)
-        self.combos.pop(combo_index)
+        self.combos.pop(index)
         next_combo = Combo(self._races[self._n_combos-1],
                            self._abilities[self._n_combos-1])
         self.combos.append(next_combo)
