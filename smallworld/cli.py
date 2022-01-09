@@ -88,7 +88,10 @@ class Client:
                   f"{game.current_turn}/{game.n_turns}.")
 
         def on_game_end(game: Game) -> None:
+            self._command_show_players()
+            print('')
             print(f"{game.n_turns} turns have passed, the game is over.")
+            print("You can take a final look around and type 'quit' to quit.")
 
         hooks = {f.__name__: f for f in [on_turn_start, on_game_end]}
         self.game = init_game(args, hooks)
