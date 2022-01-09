@@ -19,14 +19,13 @@ and easy interoperability with other programming languages.
 
 ### **Missing essential features** (in progress):
 
-* A bunch of core mechanics: attacking, redeploying, rewarding, etc.
-* Example JSONs with full sets of races and abilities, full maps, etc.
+* A lot of core concepts: maps, attacking, redeploying, rewarding...
 * Implementation of unique race abilities.
 
 ### Future plans:
 
-* Better documentation for code and JSONs.
-* Add tests.
+* Installer, tests, better documentation for code and JSONs.
+* JSONs with full sets of races and abilities, original maps, etc.
 * Options for more machine-readable CLI output.
 * In-house AI and GUI examples.
 * Support for plugins with new ability types ???
