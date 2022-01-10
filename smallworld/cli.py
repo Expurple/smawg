@@ -80,7 +80,7 @@ def init_game(args: Namespace, hooks: dict[str, Callable]) -> Game:
 
 
 class InvalidCommand(ValueError):
-    """Exception thrown in `Client` when an invalid command is entered."""
+    """Exception raised in `Client` when an invalid command is entered."""
 
     pass
 

@@ -143,19 +143,19 @@ def create_tokens_supply(races: list[Race]):
     return tokens_supply
 
 
-def do_nothing(*args, **kwargs):
-    """Empty placeholder for missing hooks."""
+def do_nothing(*args, **kwargs) -> None:
+    """Just accept any arguments and do nothing."""
     pass
 
 
 class RulesViolation(Exception):
-    """Exception thrown from `Game` methods when rules are violated."""
+    """Exception raised from `Game` methods when rules are violated."""
 
     pass
 
 
 class GameEnded(RulesViolation):
-    """Exception thrown from `Game` methods when calling after the game end."""
+    """Exception raised from `Game` methods when calling after the game end."""
 
     def __init__(self, *args) -> None:
         """Construct an exception with default `GameEnded` message."""
@@ -185,30 +185,27 @@ def check_rules(require_active: bool = False):
 
 
 class Game:
-    """A single Small World game.
+    """A single Small World game. Provides methods for in-game actions.
 
-    Provides methods for performing in-game actions.
-    Method calls automatically update the game state according to rules.
-    If an action violates the rules, `RulesViolation` is thrown.
+    Method calls automatically update `Game` state according to the rules,
+    or raise exceptions if the call violates the rules.
 
-    Data members represent the game state and are supposed to be read, but not
-    modified.
+    Data members representing the game state are supposed to be read-only.
     """
 
     def __init__(self, data: Data, n_players: int, shuffle_data: bool = True,
                  dice_roll_func: Callable[[], int] = roll_dice,
-                 hooks: Mapping[str, Callable] = dict()
-                 ) -> None:
+                 hooks: Mapping[str, Callable] = dict()) -> None:
         """Initialize the game state for `n_players`, based on `data`.
 
-        Provide `shuffle_data=False` to preserve the known order of races and
-        powers.
+        Provide `shuffle_data=False` to preserve
+        the known order of races and powers.
 
-        Provide custom `dice_roll_func` to get pre-determined (or even
-        dynamically decided) dice roll results.
+        Provide custom `dice_roll_func` to get pre-determined
+        (or even dynamically decided) dice roll results.
 
         Provide optional `hooks` to automatically fire on certain events.
-        For detailed info, see `docs/hooks.md`
+        For details, see `docs/hooks.md`
         """
         if not data.min_n_players <= n_players <= data.max_n_players:
             msg = f"Invalid number of players: {n_players} (expected " \
@@ -234,16 +231,33 @@ class Game:
 
     @check_rules(require_active=True)
     def decline(self) -> None:
-        """Put your active race in decline state."""
+        """Put player's active race in decline state.
+
+        Exceptions raised:
+        * `RulesViolation` - if the player is already in decline
+            or has already used his active race during this turn.
+        * `GameEnded` - if this method is called after the game has ended.
+        """
         if self._current_player.acted_on_this_turn:
             msg = "You've already used your active race during this turn. " \
-                  "You'll have to decline during the next turn"
+                  "You can only decline during the next turn"
             raise RulesViolation(msg)
         self._current_player.decline()
 
     @check_rules()
     def select_combo(self, combo_index: int) -> None:
-        """Pick the combo at specified `combo_index` as active."""
+        """Select the combo at specified `combo_index` as active.
+
+        During that:
+        * The player gets all coins that have been put on that combo.
+        * Puts 1 coin on each combo above that (`combo_index` coins in total).
+        * Then, the next combo is revealed.
+
+        Exceptions raised:
+        * `RulesViolation` - if the player is not in decline, or has
+            just declined during this turn, or doesn't have enough coins.
+        * `GameEnded` - if this method is called after the game has ended.
+        """
         assert 0 <= combo_index < len(self.combos)
         if not self._current_player.is_in_decline():
             raise RulesViolation("You need to decline first")
@@ -257,7 +271,20 @@ class Game:
 
     @check_rules()
     def end_turn(self) -> None:
-        """End current turn and give control to the next player."""
+        """End current player's turn and give control to the next player.
+
+        This action:
+        * Fires `"on_turn_end"` hook.
+        * Then updates `current_player_id`.
+        * If that was the last player, increments `current_turn`.
+        * Then fires `"on_turn_start"` or `"on_game_end"` hook,
+            depending on `current_turn`.
+
+        Exceptions raised:
+        * `RulesViolation` - if the current player must select a new combo
+        during the current turn and haven't done that yet.
+        * `GameEnded` - if this method is called after the game has ended.
+        """
         if self._current_player.needs_to_pick_combo():
             raise RulesViolation("You need to select a new race+ability combo "
                                  "before ending this turn")
@@ -269,6 +296,14 @@ class Game:
             self._hooks["on_game_end"](self)
 
     def _pay_for_combo(self, combo_index: int) -> None:
+        """Perform coin transactions needed to obtain the specified combo.
+
+        The current player:
+        * Gets all coins that have been put on the specified combo.
+        * Puts 1 coin on each combo above that (`combo_index` coins in total).
+
+        If the player doesn't have enough coins, `RulesViolation` is raised.
+        """
         coins_getting = self.combos[combo_index].coins
         if combo_index > self._current_player.coins + coins_getting:
             raise RulesViolation("Not enough coins, select a different race")
@@ -278,6 +313,10 @@ class Game:
         self.combos[combo_index].coins = 0
 
     def _pop_combo(self, index: int) -> None:
+        """Remove the specified combo from the list of available combos.
+
+        Then, append a new combo to the list.
+        """
         chosen_race = self._races.pop(index)
         chosen_ability = self._abilities.pop(index)
         self._races.append(chosen_race)
@@ -288,6 +327,10 @@ class Game:
         self.combos.append(next_combo)
 
     def _switch_player(self) -> None:
+        """Switch `_current_player` to the next player.
+
+        Update `current_player_id` and `current_turn` accordingly.
+        """
         self.current_player_id += 1
         if self.current_player_id == len(self.players):
             self.current_player_id = 0
