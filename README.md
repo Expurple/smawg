@@ -110,7 +110,7 @@ Before submitting, please make sure that:
 
 The easiest way to do that is to configure a pre-commit hook.
 
-On *nix systems, you can do that by executing `./add-pre-commit-hook.sh`
+On *nix systems, you can do that by executing `bin/add-pre-commit-hook.sh`
 
 
 # Contacts
