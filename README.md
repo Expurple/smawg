@@ -24,7 +24,7 @@ and easy interoperability with other programming languages.
 
 ### Future plans:
 
-* Installer, more tests, better documentation for code and JSONs.
+* More tests, better documentation for code and JSONs.
 * JSONs with full sets of races and abilities, original maps, etc.
 * Options for more machine-readable CLI output.
 * In-house AI and GUI examples.
@@ -34,22 +34,22 @@ and easy interoperability with other programming languages.
 # Requirements
 
 * Python 3.9+ (currently, only 3.9 is tested)
-* [tabulate](https://github.com/astanin/python-tabulate) (required by `cli`)
+* [tabulate](https://github.com/astanin/python-tabulate) (for `smallworld.cli`)
 
-If you need `cli`, [tabulate](https://github.com/astanin/python-tabulate)
-can be installed with `pip install --user -r requirements.txt`
 
-`engine` by itself doesn't require any dependencies.
+# Installation
+
+* `git clone https://github.com/Expurple/smallworld.git`
+* `cd smallworld/`
+* `pip install --user .`
+
 
 # Usage
 
 ## As a CLI app
 
-Currently there's no installer, so you'll need to install files manually or
-invoke the module directly:
-* (from the repo) `python3 -m smallworld.cli`
-* (from anywhere)
-    `PYTHONPATH="path/to/repo:$PYTHONPATH" path/to/repo/smallworld/cli.py`
+Generally, it's invoked as
+* `python3 -m smallworld.cli`
 
 A simple example set of options would be
 * `python3 -m smallworld.cli --players=2 examples/tiny_data.json`
