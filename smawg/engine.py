@@ -185,18 +185,24 @@ def check_rules(require_active: bool = False):
 
 
 class Game:
-    """A single Small World game. Provides methods for in-game actions.
+    """High-level representation of a single Small World game.
+
+    Provides:
+    * Flexible configuration on construction (see `__init__`).
+    * API for performing in-game actions (as methods).
+    * Access to the game state (as readonly properties).
 
     Method calls automatically update `Game` state according to the rules,
     or raise exceptions if the call violates the rules.
-
-    Data members representing the game state are supposed to be read-only.
     """
 
     def __init__(self, data: Data, n_players: int, shuffle_data: bool = True,
                  dice_roll_func: Callable[[], int] = roll_dice,
                  hooks: Mapping[str, Callable] = dict()) -> None:
         """Initialize the game state for `n_players`, based on `data`.
+
+        When initialization is finished, the object is ready to be used by
+        player 0 and `"on_turn_start"` hook is fired immediately, if provided.
 
         Provide `shuffle_data=False` to preserve
         the known order of races and powers.
@@ -216,18 +222,46 @@ class Game:
         self._abilities = data.abilities
         self._races = data.races
         self._n_combos = data.n_selectable_combos
-        self.n_turns = data.n_turns
-        self.current_turn: int = 0
+        self._n_turns = data.n_turns
+        self._current_turn: int = 0
         visible_ra = islice(zip(self._races, self._abilities), self._n_combos)
-        self.combos = [Combo(r, a) for r, a in visible_ra]
-        self.players = [Player(self._n_combos - 1) for _ in range(n_players)]
-        self.current_player_id: int = 0
+        self._combos = [Combo(r, a) for r, a in visible_ra]
+        self._players = [Player(self._n_combos - 1) for _ in range(n_players)]
+        self._current_player_id: int = 0
         self._current_player = self.players[self.current_player_id]
-        self.tokens_supply = create_tokens_supply(self._races)
-        self.roll_dice = dice_roll_func
+        self._tokens_supply = create_tokens_supply(self._races)
+        self._roll_dice = dice_roll_func
         self._hooks: Mapping[str, Callable] \
             = defaultdict(lambda: do_nothing, **hooks)
         self._hooks["on_turn_start"](self)
+
+    @property
+    def n_turns(self) -> int:
+        """The total number of turns in the `Game`.
+
+        After the last turn is finished, the `Game` ends.
+        """
+        return self._n_turns
+
+    @property
+    def current_turn(self) -> int:
+        """The number of the current turn (starting on `0`)."""
+        return self._current_turn
+
+    @property
+    def combos(self) -> list[Combo]:
+        """The list of race+ability combos available to be selected."""
+        return self._combos
+
+    @property
+    def players(self) -> list[Player]:
+        """Stats for every player, accessed with a 0-based player_id."""
+        return self._players
+
+    @property
+    def current_player_id(self) -> int:
+        """0-based index of the current active player in `players`."""
+        return self._current_player_id
 
     @check_rules(require_active=True)
     def decline(self) -> None:
@@ -281,7 +315,7 @@ class Game:
             depending on `current_turn`.
 
         Exceptions raised:
-        * `RulesViolation` - if the current player must select a new combo
+        * `RulesViolation` - if the player must select a new combo
         during the current turn and haven't done that yet.
         * `GameEnded` - if this method is called after the game has ended.
         """
@@ -331,10 +365,10 @@ class Game:
 
         Update `current_player_id` and `current_turn` accordingly.
         """
-        self.current_player_id += 1
+        self._current_player_id += 1
         if self.current_player_id == len(self.players):
-            self.current_player_id = 0
-            self.current_turn += 1
+            self._current_player_id = 0
+            self._current_turn += 1
         self._current_player = self.players[self.current_player_id]
         self._current_player.acted_on_this_turn = False
         self._current_player.declined_on_this_turn = False
