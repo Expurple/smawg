@@ -97,6 +97,9 @@ You can run them by executing
 
 # Contributing
 
+This slould install dev dependencies and get you ready:
+* `pip install --user .[dev]`
+
 Any contributions are welcome, but [missing featues](##Features) should be
 prioritized.
 
