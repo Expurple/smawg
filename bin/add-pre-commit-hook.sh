@@ -8,7 +8,7 @@ mypy --config-file= smawg/ || exit 1
 echo
 
 echo 'Running flake8:'
-flake8 --isolated smawg/ || exit 1
+flake8 --config=setup.cfg smawg/ || exit 1
 echo
 
 echo 'Running all tests with unittest:'

@@ -322,8 +322,8 @@ class Game:
         self._races.append(chosen_race)
         self._abilities.append(chosen_ability)
         self.combos.pop(index)
-        next_combo = Combo(self._races[self._n_combos-1],
-                           self._abilities[self._n_combos-1])
+        next_combo = Combo(self._races[self._n_combos - 1],
+                           self._abilities[self._n_combos - 1])
         self.combos.append(next_combo)
 
     def _switch_player(self) -> None:
