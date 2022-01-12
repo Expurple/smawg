@@ -2,8 +2,9 @@
 
 from contextlib import nullcontext
 
+from smallworld import _EXAMPLES_DIR
 from smallworld.engine import Game, GameEnded
-from smallworld.tests.common import BaseTest, EXAMPLES_DIR
+from smallworld.tests.common import BaseTest
 
 
 class TestGame(BaseTest):
@@ -11,7 +12,7 @@ class TestGame(BaseTest):
 
     def test_tiny_game_scenario(self):
         """Run a full game based on `tiny_game.json` and check every step."""
-        tiny_data = self.load_data(f"{EXAMPLES_DIR}/tiny_data.json")
+        tiny_data = self.load_data(f"{_EXAMPLES_DIR}/tiny_data.json")
         game = Game(tiny_data, n_players=2)
         self.assertBalances(game, [1, 1])
         with nullcontext("Player 0, turn 0:"):
