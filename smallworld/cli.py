@@ -13,10 +13,11 @@ from typing import Callable, Optional
 
 from tabulate import tabulate
 
+from smallworld import VERSION
 from smallworld.engine import Game, Data, RulesViolation
 
 
-TITLE = 'Small World CLI'
+TITLE = f'Small World CLI v{VERSION}'
 HELP_SUGGESTION = "Type 'help' to see available commands."
 VISIT_HOME_PAGE = 'For more info, visit https://github.com/expurple/smallworld'
 START_SCREEN = '\n'.join([TITLE, HELP_SUGGESTION, VISIT_HOME_PAGE, ''])

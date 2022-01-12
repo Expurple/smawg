@@ -3,6 +3,8 @@
 See https://github.com/expurple/smallworld for more info.
 """
 
+import importlib.metadata
+from configparser import ConfigParser
 from pathlib import Path
 
 
@@ -41,5 +43,20 @@ If you've installed `smallworld` through `pip` or `setup.py`,
 you shouldn't use this.
 """
 
+VERSION: str
+"""The version of `smallworld` package as an `"x.y.z"` format string."""
+
+try:
+    # This will work if the package is installed (e.g. with `setup.py`, `pip`).
+    VERSION = importlib.metadata.version("smallworld")
+except importlib.metadata.PackageNotFoundError:
+    # If `smallworld` is not installed,
+    # Assume that we're in a repo and try to fall back on local `setup.cfg`:
+    cfg = ConfigParser()
+    cfg.read(f"{_REPO_DIR}/setup.cfg")
+    VERSION = cfg["metadata"]["version"]
+    del cfg
+
+
 # Clean up namespace
-del Path
+del ConfigParser, importlib, Path
