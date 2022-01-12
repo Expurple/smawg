@@ -2,7 +2,7 @@
 
 """CLI client for Small World engine.
 
-See https://github.com/expurple/smallworld for more info.
+See https://github.com/expurple/smawg for more info.
 """
 
 
@@ -13,13 +13,13 @@ from typing import Callable, Optional
 
 from tabulate import tabulate
 
-from smallworld import VERSION
-from smallworld.engine import Game, Data, RulesViolation
+from smawg import VERSION
+from smawg.engine import Game, Data, RulesViolation
 
 
 TITLE = f'Small World CLI v{VERSION}'
 HELP_SUGGESTION = "Type 'help' to see available commands."
-VISIT_HOME_PAGE = 'For more info, visit https://github.com/expurple/smallworld'
+VISIT_HOME_PAGE = 'For more info, visit https://github.com/expurple/smawg'
 START_SCREEN = '\n'.join([TITLE, HELP_SUGGESTION, VISIT_HOME_PAGE, ''])
 HELP = '''\
 Available commands:

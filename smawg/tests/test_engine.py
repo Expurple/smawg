@@ -1,14 +1,14 @@
-"""Tests for `smallworld.engine` module."""
+"""Tests for `smawg.engine` module."""
 
 from contextlib import nullcontext
 
-from smallworld import _EXAMPLES_DIR
-from smallworld.engine import Game, GameEnded
-from smallworld.tests.common import BaseTest
+from smawg import _EXAMPLES_DIR
+from smawg.engine import Game, GameEnded
+from smawg.tests.common import BaseTest
 
 
 class TestGame(BaseTest):
-    """Tests for `smallworld.engine.Game` class."""
+    """Tests for `smawg.engine.Game` class."""
 
     def test_tiny_game_scenario(self):
         """Run a full game based on `tiny_game.json` and check every step."""

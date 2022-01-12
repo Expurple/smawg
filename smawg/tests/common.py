@@ -1,9 +1,9 @@
-"""Objects used by other modules in `smallworld.tests`."""
+"""Objects used by other modules in `smawg.tests`."""
 
 import json
 import unittest
 
-from smallworld.engine import Data
+from smawg.engine import Data
 
 
 class BaseTest(unittest.TestCase):

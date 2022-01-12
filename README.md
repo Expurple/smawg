@@ -1,4 +1,4 @@
-# smallworld
+# smawg
 
 Python backend for
 [Small World](https://en.m.wikipedia.org/wiki/Small_World_(board_game))
@@ -34,13 +34,13 @@ and easy interoperability with other programming languages.
 # Requirements
 
 * Python 3.9+ (currently, only 3.9 is tested)
-* [tabulate](https://github.com/astanin/python-tabulate) (for `smallworld.cli`)
+* [tabulate](https://github.com/astanin/python-tabulate) (for `smawg.cli`)
 
 
 # Installation
 
-* `git clone https://github.com/Expurple/smallworld.git`
-* `cd smallworld/`
+* `git clone https://github.com/Expurple/smawg.git`
+* `cd smawg/`
 * `pip install --user .`
 
 
@@ -49,10 +49,10 @@ and easy interoperability with other programming languages.
 ## As a CLI app
 
 Generally, it's invoked as
-* `python3 -m smallworld.cli`
+* `python3 -m smawg.cli`
 
 A simple example set of options would be
-* `python3 -m smallworld.cli --players=2 examples/tiny_data.json`
+* `python3 -m smawg.cli --players=2 examples/tiny_data.json`
 
 It should guide you through the usage.
 
@@ -61,7 +61,7 @@ It should guide you through the usage.
 ```python
 import json
 
-from smallworld.engine import Data, Game
+from smawg.engine import Data, Game
 
 
 # If you want, you can directly construct `data_json` dict
@@ -78,7 +78,7 @@ game = Game(data, n_players=2)
 # See `help(Game)` for more info.
 ```
 
-You can also find a "real world" example in [cli.py](./smallworld/cli.py)
+You can also find a "real world" example in [cli.py](./smawg/cli.py)
 
 ## As a library, hooks-style
 
@@ -87,7 +87,7 @@ Refer to [docs/hooks.md](./docs/hooks.md)
 
 # Testing
 
-Tests in [smallworld/tests/](smallworld/tests)
+Tests in [smawg/tests/](smawg/tests)
 use the standard `unittest` module.
 
 You can run them by executing
@@ -102,8 +102,8 @@ prioritized.
 
 Before submitting, please make sure that:
 * Your code uses type hinting.
-* `mypy --config-file= smallworld/` doesn't report any errors.
-* `flake8 --isolated smallworld/` doesn't report any errors (with
+* `mypy --config-file= smawg/` doesn't report any errors.
+* `flake8 --isolated smawg/` doesn't report any errors (with
     [flake8-docstrings](https://pypi.org/project/flake8-docstrings/) installed).
 * New features are tested.
 * All tests pass.
@@ -115,7 +115,7 @@ On *nix systems, you can do that by executing `bin/add-pre-commit-hook.sh`
 
 # Contacts
 
-* **Home page** - [smallworld](https://github.com/expurple/smallworld)
+* **Home page** - [smawg](https://github.com/expurple/smawg)
 
 * **Author** - Dmitry Alexandrov <adk230@yandex.ru\>
 

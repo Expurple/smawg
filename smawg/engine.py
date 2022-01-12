@@ -1,6 +1,6 @@
 """Backend engine for Small World board game.
 
-See https://github.com/expurple/smallworld for more info.
+See https://github.com/expurple/smawg for more info.
 """
 
 import random
