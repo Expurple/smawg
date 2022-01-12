@@ -24,7 +24,6 @@ and easy interoperability with other programming languages.
 
 ### Future plans:
 
-* More tests, better documentation for code and JSONs.
 * JSONs with full sets of races and abilities, original maps, etc.
 * Options for more machine-readable CLI output.
 * In-house AI and GUI examples.
@@ -85,35 +84,29 @@ You can also find a "real world" example in [cli.py](./smawg/cli.py)
 Refer to [docs/hooks.md](./docs/hooks.md)
 
 
-# Testing
-
-Tests in [smawg/tests/](smawg/tests)
-use the standard `unittest` module.
-
-You can run them by executing
-* `python3 -m unittest discover`
-* or any other test runner that supports `unittest` format.
-
-
 # Contributing
 
-This slould install dev dependencies and get you ready:
+Feel free to open a
+[Github issue](https://github.com/Expurple/smawg/issues/new/choose)
+or contact me personally.
+
+If you wish to participate in development, this should get you started:
+* Fork this repo on Github.
+* `git clone git@github.com:YOUR-USERNAME/smawg.git`
+* `cd smawg/`
 * `pip install --user .[dev]`
+* `bin/add-pre-commit-hook.sh`
 
-Any contributions are welcome, but [missing featues](##Features) should be
-prioritized.
+Any contributions are welcome, but [missing featues](##Features:) and
+[open issues](https://github.com/Expurple/smawg/issues) should be prioritized.
 
-Before submitting, please make sure that:
-* Your code uses type hinting.
-* `mypy --config-file= smawg/` doesn't report any errors.
-* `flake8 --config=setup.cfg smawg/` doesn't report any errors (with
-    [flake8-docstrings](https://pypi.org/project/flake8-docstrings/) installed).
-* New features are tested.
-* All tests pass.
+Before submitting a pull request, please test and document your changes.
 
-The easiest way to do that is to configure a pre-commit hook.
+## Tests
 
-On *nix systems, you can do that by executing `bin/add-pre-commit-hook.sh`
+Can be run using the standard library's
+* `python3 -m unittest discover smawg/tests/`
+* or any other test runner that supports `unittest` format.
 
 
 # Contacts
