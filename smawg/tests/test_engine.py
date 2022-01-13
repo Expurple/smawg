@@ -37,7 +37,7 @@ class TestGame(BaseTest):
 
     def assertEnded(self, game: Game):
         """Check if `game` is in end state and behaves correctly."""
-        self.assertEqual(game.current_turn, game.n_turns)
+        self.assertTrue(game.has_ended)
         with self.assertRaises(GameEnded):
             game.select_combo(0)
         with self.assertRaises(GameEnded):

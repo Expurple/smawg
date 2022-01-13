@@ -173,7 +173,7 @@ def check_rules(require_active: bool = False):
         def wrapper(*args, **kwargs):
             # Perform necessary checks
             self: "Game" = args[0]
-            if self.current_turn >= self.n_turns:
+            if self.has_ended:
                 raise GameEnded()
             if require_active and self._current_player.is_in_decline():
                 msg = "To do this, you need to control an active race"
@@ -249,6 +249,14 @@ class Game:
         return self._current_turn
 
     @property
+    def has_ended(self) -> bool:
+        """Indicates whether the game has already ended.
+
+        If this is `True`, all methods raise `GameEnded`.
+        """
+        return self.current_turn >= self.n_turns
+
+    @property
     def combos(self) -> list[Combo]:
         """The list of race+ability combos available to be selected."""
         return self._combos
@@ -312,7 +320,7 @@ class Game:
         * Then updates `current_player_id`.
         * If that was the last player, increments `current_turn`.
         * Then fires `"on_turn_start"` or `"on_game_end"` hook,
-            depending on `current_turn`.
+            depending on whether `Game.has_ended`.
 
         Exceptions raised:
         * `RulesViolation` - if the player must select a new combo
@@ -324,10 +332,10 @@ class Game:
                                  "before ending this turn")
         self._hooks["on_turn_end"](self)
         self._switch_player()
-        if self.current_turn < self.n_turns:
-            self._hooks["on_turn_start"](self)
-        else:
+        if self.has_ended:
             self._hooks["on_game_end"](self)
+        else:
+            self._hooks["on_turn_start"](self)
 
     def _pay_for_combo(self, combo_index: int) -> None:
         """Perform coin transactions needed to obtain the specified combo.
