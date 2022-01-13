@@ -66,13 +66,12 @@ A simple example set of options would be
 
 It should guide you through the usage.
 
-## As a library, imperative-style
+## As a library
 
 ```python
 import json
 
 # These two classes are really everything you need from the library.
-#
 # If you're dealing with (possibly invalid) user input,
 # you might want to also import `RulesViolation` for catching it.
 from smawg.engine import Data, Game
@@ -85,19 +84,16 @@ with open('some/path/to/data.json') as data_file:
 
 data = Data(data_json)
 
-# Provide different arguments, if needed.
+# Provide different arguments or set hooks on game events, if needed.
+# See `docs/hooks.md` for more info about hooks.
 game = Game(data, n_players=2)
 # Call `game` methods to perform actions.
 # Read `game` properties to monitor the game state.
 # See `help(Game)` for more info.
 ```
 
-You can also find "real world" examples in
+You can also find "real world" usage examples in
 [cli.py](./smawg/cli.py) and [test_engine.py](./smawg/tests/test_engine.py)
-
-## As a library, hooks-style
-
-See [docs/hooks.md](./docs/hooks.md)
 
 
 # Contributing
