@@ -51,7 +51,7 @@ Generally, it's invoked as
 * `python3 -m smawg.cli`
 
 A simple example set of options would be
-* `python3 -m smawg.cli --players=2 examples/tiny_data.json`
+* `python3 -m smawg.cli --players=2 assets/tiny.json`
 
 It should guide you through the usage.
 

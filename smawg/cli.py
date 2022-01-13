@@ -54,8 +54,8 @@ def parse_args() -> Namespace:
     On error, print usage and exit.
     """
     parser = ArgumentParser(description=TITLE, epilog=VISIT_HOME_PAGE)
-    parser.add_argument('data_file',
-                        help='path to data.json')
+    parser.add_argument('assets_file',
+                        help='path to JSON file with assets')
     parser.add_argument('-p', '--players',
                         metavar='<num>',
                         type=int,

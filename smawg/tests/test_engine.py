@@ -5,7 +5,7 @@ This module can also be seen as a collection of usage examples.
 
 from contextlib import nullcontext
 
-from smawg import _EXAMPLES_DIR
+from smawg import _ASSETS_DIR
 from smawg.engine import Game, GameEnded
 from smawg.tests.common import BaseTest
 
@@ -14,8 +14,8 @@ class TestGame(BaseTest):
     """Tests for `smawg.engine.Game` class."""
 
     def test_tiny_game_scenario(self):
-        """Run a full game based on `tiny_game.json` and check every step."""
-        tiny_data = self.load_data(f"{_EXAMPLES_DIR}/tiny_data.json")
+        """Run a full game based on `tiny.json` and check every step."""
+        tiny_data = self.load_data(f"{_ASSETS_DIR}/tiny.json")
         game = Game(tiny_data, n_players=2)
         self.assertBalances(game, [1, 1])
         with nullcontext("Player 0, turn 0:"):

@@ -32,8 +32,8 @@ If you've installed `smawg` through `pip` or `setup.py`,
 you shouldn't use this.
 """
 
-_EXAMPLES_DIR = Path(f"{_REPO_DIR}/examples")
-"""Path to `examples/` directory in checked out `smawg` repository.
+_ASSETS_DIR = Path(f"{_REPO_DIR}/assets")
+"""Path to `assets/` directory in checked out `smawg` repository.
 
 This in an **unreliable** helper for development and testing.
 It only works correctly if you execute/import modules
