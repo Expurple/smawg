@@ -223,7 +223,7 @@ class Game:
         self._races = data.races
         self._n_combos = data.n_selectable_combos
         self._n_turns = data.n_turns
-        self._current_turn: int = 0
+        self._current_turn: int = 1
         visible_ra = islice(zip(self._races, self._abilities), self._n_combos)
         self._combos = [Combo(r, a) for r, a in visible_ra]
         self._players = [Player(self._n_combos - 1) for _ in range(n_players)]
@@ -245,7 +245,7 @@ class Game:
 
     @property
     def current_turn(self) -> int:
-        """The number of the current turn (starting on `0`)."""
+        """The number of the current turn (starting on `1`)."""
         return self._current_turn
 
     @property
@@ -254,7 +254,7 @@ class Game:
 
         If this is `True`, all methods raise `GameEnded`.
         """
-        return self.current_turn >= self.n_turns
+        return self.current_turn > self.n_turns
 
     @property
     def combos(self) -> list[Combo]:
