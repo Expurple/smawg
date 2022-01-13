@@ -13,7 +13,7 @@ _PACKAGE_DIR = Path(__file__).parent.resolve()
 
 This in an **unreliable** helper for development and testing.
 
-If you've a user and installed `smawg` through `pip` or `setup.py`,
+If you're a user and installed `smawg` through `pip` or `setup.py`,
 you should use this instead:
 ```
 import sysconfig
@@ -32,15 +32,12 @@ If you've installed `smawg` through `pip` or `setup.py`,
 you shouldn't use this.
 """
 
-_ASSETS_DIR = Path(f"{_REPO_DIR}/assets")
-"""Path to `assets/` directory in checked out `smawg` repository.
+_ASSETS_DIR = Path(f"{_PACKAGE_DIR}/assets")
+"""Path to `assets/` directory in the `smawg` package.
 
 This in an **unreliable** helper for development and testing.
-It only works correctly if you execute/import modules
-from a local `smawg` repository.
 
-If you've installed `smawg` through `pip` or `setup.py`,
-you shouldn't use this.
+You shouldn't use this.
 """
 
 VERSION: str

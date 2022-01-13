@@ -46,7 +46,7 @@ and easy interoperability with other programming languages.
 
 `smawg` usually gets static assets (like a list of races) from a JSON file.
 
-Currently, the only available set of assets is `assets/tiny.json`.
+Currently, the only available set of assets is `smawg/assets/tiny.json`.
 Its format is not yet documented, but you can take a look,
 it's pretty much self-explanatory.
 
@@ -62,7 +62,7 @@ Generally, it's invoked as
 * `python3 -m smawg.cli`
 
 A simple example set of options would be
-* `python3 -m smawg.cli --players=2 assets/tiny.json`
+* `python3 -m smawg.cli --players=2 smawg/assets/tiny.json`
 
 It should guide you through the usage.
 
