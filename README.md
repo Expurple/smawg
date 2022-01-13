@@ -60,6 +60,10 @@ It should guide you through the usage.
 ```python
 import json
 
+# These two classes are really everything you need from the library.
+#
+# If you're dealing with (possibly invalid) user input,
+# you might want to also import `RulesViolation` for catching it.
 from smawg.engine import Data, Game
 
 
@@ -77,11 +81,12 @@ game = Game(data, n_players=2)
 # See `help(Game)` for more info.
 ```
 
-You can also find a "real world" example in [cli.py](./smawg/cli.py)
+You can also find "real world" examples in
+[cli.py](./smawg/cli.py) and [test_engine.py](./smawg/tests/test_engine.py)
 
 ## As a library, hooks-style
 
-Refer to [docs/hooks.md](./docs/hooks.md)
+See [docs/hooks.md](./docs/hooks.md)
 
 
 # Contributing
