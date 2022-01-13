@@ -2,7 +2,12 @@
 
 """CLI client for Small World engine.
 
-See https://github.com/expurple/smawg for more info.
+The internals aren't stable
+and aren't supposed to be imported by anything but `smawg.tests`.
+
+Although, this module can serve as an example of how to use `smawg.engine`.
+
+See https://github.com/expurple/smawg for more info about the project.
 """
 
 

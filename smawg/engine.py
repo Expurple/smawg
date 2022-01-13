@@ -136,14 +136,14 @@ def roll_dice() -> int:
 # --------------------- the Small World engine itself -------------------------
 
 def create_tokens_supply(races: list[Race]):
-    """Gerenate a supply of `Token`s for each `Race` in `races`."""
+    """Generate a supply of `Token`s for each `Race` in `races`."""
     tokens_supply = dict[Race, list[Token]]()
     for race in races:
         tokens_supply[race] = [Token() for _ in range(race.max_n_tokens)]
     return tokens_supply
 
 
-def do_nothing(*args, **kwargs) -> None:
+def _do_nothing(*args, **kwargs) -> None:
     """Just accept any arguments and do nothing."""
     pass
 
@@ -163,7 +163,7 @@ class GameEnded(RulesViolation):
         super().__init__(msg, *args)
 
 
-def check_rules(require_active: bool = False):
+def _check_rules(require_active: bool = False):
     """Add boilerplate rule checks to public `Game` methods.
 
     `require_active` specifies whether an action requires an active race.
@@ -202,10 +202,10 @@ class Game:
         """Initialize the game state for `n_players`, based on `data`.
 
         When initialization is finished, the object is ready to be used by
-        player 0 and `"on_turn_start"` hook is fired immediately, if provided.
+        player 0. `"on_turn_start"` hook is fired immediately, if provided.
 
         Provide `shuffle_data=False` to preserve
-        the known order of races and powers.
+        the known order of races and ablities from `data`.
 
         Provide custom `dice_roll_func` to get pre-determined
         (or even dynamically decided) dice roll results.
@@ -232,7 +232,7 @@ class Game:
         self._tokens_supply = create_tokens_supply(self._races)
         self._roll_dice = dice_roll_func
         self._hooks: Mapping[str, Callable] \
-            = defaultdict(lambda: do_nothing, **hooks)
+            = defaultdict(lambda: _do_nothing, **hooks)
         self._hooks["on_turn_start"](self)
 
     @property
@@ -271,7 +271,7 @@ class Game:
         """0-based index of the current active player in `players`."""
         return self._current_player_id
 
-    @check_rules(require_active=True)
+    @_check_rules(require_active=True)
     def decline(self) -> None:
         """Put player's active race in decline state.
 
@@ -286,7 +286,7 @@ class Game:
             raise RulesViolation(msg)
         self._current_player.decline()
 
-    @check_rules()
+    @_check_rules()
     def select_combo(self, combo_index: int) -> None:
         """Select the combo at specified `combo_index` as active.
 
@@ -311,7 +311,7 @@ class Game:
         self._pop_combo(combo_index)
         self._current_player.acted_on_this_turn = True
 
-    @check_rules()
+    @_check_rules()
     def end_turn(self) -> None:
         """End current player's turn and give control to the next player.
 

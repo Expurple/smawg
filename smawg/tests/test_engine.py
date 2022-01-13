@@ -1,4 +1,7 @@
-"""Tests for `smawg.engine` module."""
+"""Tests for `smawg.engine` module.
+
+This module can also be seen as a collection of usage examples.
+"""
 
 from contextlib import nullcontext
 
