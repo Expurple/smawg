@@ -14,7 +14,7 @@ and easy interoperability with other programming languages.
     * Imperatively or by setting hooks on game events.
 * Automatic maintainance of game state (manages tokens, calculates score, etc).
 * Automatic checks for violation of the rules.
-* Support for custom maps, races, powers and other constants/resources.
+* Support for custom maps, races and other assets.
 * Deterministic or randomized outcomes.
 
 ### **Missing essential features** (in progress):
@@ -24,7 +24,6 @@ and easy interoperability with other programming languages.
 
 ### Future plans:
 
-* JSONs with full sets of races and abilities, original maps, etc.
 * Options for more machine-readable CLI output.
 * In-house AI and GUI examples.
 * Support for plugins with new ability types ???
@@ -41,6 +40,18 @@ and easy interoperability with other programming languages.
 * `git clone https://github.com/Expurple/smawg.git`
 * `cd smawg/`
 * `pip install --user .`
+
+
+# Assets
+
+`smawg` usually gets static assets (like a list of races) from a JSON file.
+
+Currently, the only available set of assets is `assets/tiny.json`.
+Its format is not yet documented, but you can take a look,
+it's pretty much self-explanatory.
+
+You can create and use your own asset files.
+You're not required to contribute them back, but I would appreciate it.
 
 
 # Usage
