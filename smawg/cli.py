@@ -73,7 +73,7 @@ def parse_args() -> Namespace:
 
 def init_game(args: Namespace, hooks: dict[str, Callable]) -> Game:
     """Construct `Game` with respect to command line `args`."""
-    with open(args.data_file) as data_file:
+    with open(args.assets_file) as data_file:
         data_json = json.load(data_file)
     data = Data(data_json)
     if args.read_dice:
