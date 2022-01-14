@@ -9,17 +9,7 @@ from pathlib import Path
 
 
 _PACKAGE_DIR = Path(__file__).parent.resolve()
-"""Path to `smawg` package.
-
-This in an **unreliable** helper for development and testing.
-
-If you're a user and installed `smawg` through `pip` or `setup.py`,
-you should use this instead:
-```
-import sysconfig
-smawg_package_dir = sysconfig.get_path("smawg")
-```
-"""
+"""Path to the currently used `smawg` package."""
 
 _REPO_DIR = _PACKAGE_DIR.parent
 """Path to checked out `smawg` repository.
@@ -33,12 +23,7 @@ you shouldn't use this.
 """
 
 _ASSETS_DIR = Path(f"{_PACKAGE_DIR}/assets")
-"""Path to `assets/` directory in the `smawg` package.
-
-This in an **unreliable** helper for development and testing.
-
-You shouldn't use this.
-"""
+"""Path to `assets/` directory in the currently used `smawg` package."""
 
 VERSION: str
 """The version of `smawg` package as an `"x.y.z"` format string."""

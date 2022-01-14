@@ -18,7 +18,7 @@ from typing import Callable, Optional
 
 from tabulate import tabulate
 
-from smawg import VERSION
+from smawg import _PACKAGE_DIR, VERSION
 from smawg.engine import Game, Data, RulesViolation
 
 
@@ -68,11 +68,17 @@ def parse_args() -> Namespace:
                         action='store_true',
                         help='read dice roll results from stdin instead of '
                              'generating randomly')
+    parser.add_argument('-r', '--relative-path',
+                        action='store_true',
+                        help='search for `assets_file` inside of `smawg` '
+                             'package directory')
     return parser.parse_args()
 
 
 def init_game(args: Namespace, hooks: dict[str, Callable]) -> Game:
     """Construct `Game` with respect to command line `args`."""
+    if args.relative_path:
+        args.assets_file = f"{_PACKAGE_DIR}/{args.assets_file}"
     with open(args.assets_file) as data_file:
         data_json = json.load(data_file)
     data = Data(data_json)
