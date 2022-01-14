@@ -18,15 +18,15 @@ class TestGame(BaseTest):
         tiny_data = self.load_data(f"{_ASSETS_DIR}/tiny.json")
         game = Game(tiny_data, n_players=2)
         self.assertBalances(game, [1, 1])
-        with nullcontext("Player 0, turn 0:"):
+        with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
             self.assertBalances(game, [0, 1])
             game.end_turn()
-        with nullcontext("Player 1, turn 0:"):
+        with nullcontext("Player 1, turn 1:"):
             game.select_combo(0)
             self.assertBalances(game, [0, 2])
             game.end_turn()
-        with nullcontext("Both players do nothing on turns 1-2:"):
+        with nullcontext("Both players do nothing on turns 2-3:"):
             for _ in range(4):
                 game.end_turn()
         self.assertEnded(game)
