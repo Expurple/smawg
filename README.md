@@ -32,6 +32,7 @@ and easy interoperability with other programming languages.
 # Requirements
 
 * Python 3.9+ (currently, only 3.9 is tested)
+* [jsonschema](https://github.com/Julian/jsonschema)
 * [tabulate](https://github.com/astanin/python-tabulate) (for `smawg.cli`)
 
 

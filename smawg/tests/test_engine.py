@@ -5,9 +5,41 @@ This module can also be seen as a collection of usage examples.
 
 from contextlib import nullcontext
 
+import jsonschema.exceptions
+
 from smawg import _ASSETS_DIR
-from smawg.engine import Game, GameEnded
+from smawg.engine import Ability, Game, GameEnded
 from smawg.tests.common import BaseTest
+
+
+class TestAbility(BaseTest):
+    """Tests for `smawg.engine.Ability` class."""
+
+    def test_valid_json(self):
+        """Check if `Ability.__init__` propetly parses the given json."""
+        ability = Ability({"name": "Some Name", "n_tokens": 4})
+        self.assertEqual(ability.name, "Some Name")
+        self.assertEqual(ability.n_tokens, 4)
+
+    def test_invalid_jsons(self):
+        """Check if `Ability.__init__` raises when given invalid jsons."""
+        # Missing "name" and "n_tokens"
+        self.assertInvalid({"random keys": "and values"})
+        self.assertInvalid({})
+        # Missing "name"
+        self.assertInvalid({"n_tokens": "4"})
+        # Missing "n_tokens"
+        self.assertInvalid({"name": "Some Name"})
+        # Invalid type of "n_tokens"
+        self.assertInvalid({"name": "Some Name", "n_tokens": None})
+        self.assertInvalid({"name": "Some Name", "n_tokens": "4"})
+        # Invalid value of "n_tokens"
+        self.assertInvalid({"name": "Some Name", "n_tokens": -4})
+
+    def assertInvalid(self, json: dict):
+        """Check if `Ability.__init__` raises when given this `json`."""
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            _ = Ability(json)
 
 
 class TestGame(BaseTest):

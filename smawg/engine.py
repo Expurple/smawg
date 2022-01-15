@@ -3,12 +3,23 @@
 See https://github.com/expurple/smawg for more info.
 """
 
+import json
 import random
 from collections import defaultdict
 from copy import deepcopy
 from functools import wraps
 from itertools import islice
 from typing import Callable, Mapping, Optional
+
+import jsonschema
+
+from smawg import _PACKAGE_DIR
+
+
+# ------------------------ JSON schemas for assets ----------------------------
+
+with open(f"{_PACKAGE_DIR}/assets_schema/ability.json") as file:
+    ABILITY_SCHEMA = json.load(file)
 
 
 # -------------------------- "dumb" data objects ------------------------------
@@ -40,9 +51,12 @@ class Ability:
     """Immutable description of an ability (just like on a physical banner)."""
 
     def __init__(self, json: dict) -> None:
-        """Construct strongly typed `Ability` from json object."""
-        assert isinstance(json["name"], str)
-        assert isinstance(json["n_tokens"], int)
+        """Construct strongly typed `Ability` from json object.
+
+        Raise `jsonschema.exceptions.ValidationError`
+        if `json` doesn't match `assets_schema/ability.json`.
+        """
+        jsonschema.validate(json, ABILITY_SCHEMA)
         self.name: str = json["name"]
         self.n_tokens: int = json["n_tokens"]
 
