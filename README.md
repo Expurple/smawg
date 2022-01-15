@@ -33,7 +33,7 @@ and easy interoperability with other programming languages.
 
 * Python 3.9+ (currently, only 3.9 is tested)
 * [jsonschema](https://github.com/Julian/jsonschema)
-* [tabulate](https://github.com/astanin/python-tabulate) (for `smawg.cli`)
+* [tabulate](https://github.com/astanin/python-tabulate)
 
 
 # Installation
@@ -47,7 +47,8 @@ and easy interoperability with other programming languages.
 
 `smawg` usually gets static assets (like a list of races) from a JSON file.
 
-Currently, the only available set of assets is `smawg/assets/tiny.json`.
+Currently, the only available set of assets is
+[smawg/assets/tiny.json](smawg/assets/tiny.json).
 
 For documentation, see the JSON schema in
 [smawg/assets_schema/assets.json](smawg/assets_schema/assets.json).
@@ -81,14 +82,15 @@ from smawg.engine import Data, Game
 
 # If you want, you can directly construct `data_json` dict
 # instead of reading from file.
-with open('some/path/to/data.json') as data_file:
-    data_json = json.load(data_file)
+with open('some/path/to/assets.json') as assets_file:
+    data_json = json.load(assets_file)
 
 data = Data(data_json)
 
 # Provide different arguments or set hooks on game events, if needed.
 # See `docs/hooks.md` for more info about hooks.
 game = Game(data, n_players=2)
+
 # Call `game` methods to perform actions.
 # Read `game` properties to monitor the game state.
 # See `help(Game)` for more info.
