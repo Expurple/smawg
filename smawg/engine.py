@@ -18,6 +18,10 @@ from smawg import _PACKAGE_DIR
 
 # ------------------------ JSON schemas for assets ----------------------------
 
+
+with open(f"{_PACKAGE_DIR}/assets_schema/assets.json") as file:
+    ASSETS_SCHEMA: dict = json.load(file)
+
 with open(f"{_PACKAGE_DIR}/assets_schema/ability.json") as file:
     ABILITY_SCHEMA: dict = json.load(file)
 
@@ -35,13 +39,12 @@ class Data:
     """
 
     def __init__(self, json: dict) -> None:
-        """Construct strongly typed `Data` from json object."""
-        assert isinstance(json["min_n_players"], int)
-        assert isinstance(json["max_n_players"], int)
-        assert isinstance(json["n_selectable_combos"], int)
-        assert isinstance(json["n_turns"], int)
-        assert isinstance(json["abilities"], list)
-        assert isinstance(json["races"], list)
+        """Construct strongly typed `Data` from json object.
+
+        Raise `jsonschema.exceptions.ValidationError`
+        if `json` doesn't match `assets_schema/assets.json`.
+        """
+        jsonschema.validate(json, ASSETS_SCHEMA)
         self.min_n_players: int = json["min_n_players"]
         self.max_n_players: int = json["max_n_players"]
         self.n_selectable_combos: int = json["n_selectable_combos"]

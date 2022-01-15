@@ -48,8 +48,9 @@ and easy interoperability with other programming languages.
 `smawg` usually gets static assets (like a list of races) from a JSON file.
 
 Currently, the only available set of assets is `smawg/assets/tiny.json`.
-Its format is not yet documented, but you can take a look,
-it's pretty much self-explanatory.
+
+For documentation, see the JSON schema in
+[smawg/assets_schema/assets.json](smawg/assets_schema/assets.json).
 
 You can create and use your own asset files.
 You're not required to contribute them back, but I would appreciate it.

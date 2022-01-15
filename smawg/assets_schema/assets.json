@@ -1,0 +1,59 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "assets.json",
+    "title": "Assets",
+    "description": "A set of game assets and constants for `smawg`.",
+    "type": "object",
+    "properties": {
+        "$schema": {
+            "description": "An optional reference to `smawg/assets_schema/assets.json`. Useful for your editor.",
+            "type": "string"
+        },
+        "name": {
+            "description": "An optional name of this particular set of assets.",
+            "type": "string"
+        },
+        "description": {
+            "description": "An optional description of this particular set of assets.",
+            "type": "string"
+        },
+        "min_n_players": {
+            "description": "The maximum allowed number of players in this particular game setup.",
+            "type": "integer",
+            "minimum": 2
+        },
+        "max_n_players": {
+            "description": "The minimum allowed number of players in this particular game setup.",
+            "type": "integer",
+            "minimum": 2
+        },
+        "n_selectable_combos": {
+            "description": "The number of revealed combos at any given time, each available for players to select.",
+            "type": "integer",
+            "minimum": 1
+        },
+        "n_turns": {
+            "description": "The number of turns, after which the game ends.",
+            "type": "integer",
+            "minimum": 1
+        },
+        "abilities": {
+            "description": "A list of abilities available in the game.",
+            "type": "array",
+            "items": {"$id": "ability.json"}
+        },
+        "races": {
+            "description": "A list of races available in the game.",
+            "type": "array",
+            "items": {"$id": "race.json"}
+        }
+    },
+    "required": [
+        "min_n_players",
+        "max_n_players",
+        "n_selectable_combos",
+        "n_turns",
+        "abilities",
+        "races"
+    ]
+}

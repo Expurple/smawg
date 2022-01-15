@@ -1,4 +1,8 @@
 {
+    "$schema": "../assets_schema/assets.json",
+    "name": "Tiny",
+    "description": "A bare minimum working set of assets.",
+
     "min_n_players": 2,
     "max_n_players": 2,
     "n_selectable_combos": 2,
