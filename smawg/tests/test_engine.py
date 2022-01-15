@@ -8,7 +8,7 @@ from contextlib import nullcontext
 import jsonschema.exceptions
 
 from smawg import _ASSETS_DIR
-from smawg.engine import Ability, Game, GameEnded
+from smawg.engine import Ability, Game, GameEnded, Race
 from smawg.tests.common import BaseTest
 
 
@@ -27,11 +27,12 @@ class TestAbility(BaseTest):
         self.assertInvalid({"random keys": "and values"})
         self.assertInvalid({})
         # Missing "name"
-        self.assertInvalid({"n_tokens": "4"})
+        self.assertInvalid({"n_tokens": 4})
         # Missing "n_tokens"
         self.assertInvalid({"name": "Some Name"})
         # Invalid type of "n_tokens"
         self.assertInvalid({"name": "Some Name", "n_tokens": None})
+        self.assertInvalid({"name": "Some Name", "n_tokens": 4.5})
         self.assertInvalid({"name": "Some Name", "n_tokens": "4"})
         # Invalid value of "n_tokens"
         self.assertInvalid({"name": "Some Name", "n_tokens": -4})
@@ -40,6 +41,43 @@ class TestAbility(BaseTest):
         """Check if `Ability.__init__` raises when given this `json`."""
         with self.assertRaises(jsonschema.exceptions.ValidationError):
             _ = Ability(json)
+
+
+class TestRace(BaseTest):
+    """Tests for `smawg.engine.Race` class."""
+
+    INVALID_JSONS = [
+        # Missing required properties
+        {"random keys": "and values"},
+        {},
+        {"n_tokens": 4, "max_n_tokens": 9},
+        {"name": "Some Name", "max_n_tokens": 9},
+        {"name": "Some Name", "n_tokens": 4},
+        # Invalid types
+        {"name": None, "n_tokens": 4, "max_n_tokens": 9},
+        {"name": "Some Name", "n_tokens": 4.5, "max_n_tokens": 9},
+        {"name": "Some Name", "n_tokens": 4, "max_n_tokens": None},
+        # Invalid values
+        {"name": "Some Name", "n_tokens": -4, "max_n_tokens": 9},
+        {"name": "Some Name", "n_tokens": 4, "max_n_tokens": -9}
+    ]
+
+    def test_valid_json(self):
+        """Check if `Race.__init__` propetly parses the given json."""
+        race = Race({"name": "Some Name", "n_tokens": 4, "max_n_tokens": 9})
+        self.assertEqual(race.name, "Some Name")
+        self.assertEqual(race.n_tokens, 4)
+        self.assertEqual(race.max_n_tokens, 9)
+
+    def test_invalid_jsons(self):
+        """Check if `Race.__init__` raises when given invalid jsons."""
+        for json in TestRace.INVALID_JSONS:
+            self.assertInvalid(json)
+
+    def assertInvalid(self, json: dict):
+        """Check if `Race.__init__` raises when given this `json`."""
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            _ = Race(json)
 
 
 class TestGame(BaseTest):

@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "title": "Race",
+    "description": "In-game race (like on a physical race banner).",
+    "type": "object",
+    "properties": {
+        "name": {
+            "description": "The displayed name of the race.",
+            "type": "string"
+        },
+        "n_tokens": {
+            "description": "The base number of race tokens the player gets, regardless of the ability.",
+            "type": "integer",
+            "minimum": 1
+        },
+        "max_n_tokens": {
+            "description": "The total number of race tokens in the storage.",
+            "type": "integer",
+            "minimum": 1
+        }
+    },
+    "required": ["name", "n_tokens", "max_n_tokens"]
+}

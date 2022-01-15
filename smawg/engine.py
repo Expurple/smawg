@@ -19,7 +19,10 @@ from smawg import _PACKAGE_DIR
 # ------------------------ JSON schemas for assets ----------------------------
 
 with open(f"{_PACKAGE_DIR}/assets_schema/ability.json") as file:
-    ABILITY_SCHEMA = json.load(file)
+    ABILITY_SCHEMA: dict = json.load(file)
+
+with open(f"{_PACKAGE_DIR}/assets_schema/race.json") as file:
+    RACE_SCHEMA: dict = json.load(file)
 
 
 # -------------------------- "dumb" data objects ------------------------------
@@ -65,10 +68,12 @@ class Race:
     """Immutable description of a race (just like on a physical banner)."""
 
     def __init__(self, json: dict) -> None:
-        """Construct strongly typed `Race` from json object."""
-        assert isinstance(json["name"], str)
-        assert isinstance(json["n_tokens"], int)
-        assert isinstance(json["max_n_tokens"], int)
+        """Construct strongly typed `Race` from json object.
+
+        Raise `jsonschema.exceptions.ValidationError`
+        if `json` doesn't match `assets_schema/race.json`.
+        """
+        jsonschema.validate(json, RACE_SCHEMA)
         self.name: str = json["name"]
         self.n_tokens: int = json["n_tokens"]
         self.max_n_tokens: int = json["max_n_tokens"]
