@@ -218,23 +218,30 @@ class Game:
     or raise exceptions if the call violates the rules.
     """
 
-    def __init__(self, data: Data, n_players: int, shuffle_data: bool = True,
+    def __init__(self, assets: dict, n_players: int, shuffle_data: bool = True,
                  dice_roll_func: Callable[[], int] = roll_dice,
                  hooks: Mapping[str, Callable] = dict()) -> None:
-        """Initialize the game state for `n_players`, based on `data`.
+        """Initialize a game for `n_players`, with given `assets`.
 
         When initialization is finished, the object is ready to be used by
         player 0. `"on_turn_start"` hook is fired immediately, if provided.
 
         Provide `shuffle_data=False` to preserve
-        the known order of races and ablities from `data`.
+        the known order of races and ablities in `assets`.
 
         Provide custom `dice_roll_func` to get pre-determined
         (or even dynamically decided) dice roll results.
 
         Provide optional `hooks` to automatically fire on certain events.
         For details, see `docs/hooks.md`
+
+        Exceptions raised:
+        * `jsonschema.exceptions.ValidationError` -
+            if `assets` dict doesn't match `assets_schema/assets.json`.
+        * `RulesViolation` -
+            if `n_players` doesn't respect the limits specified in `assets`.
         """
+        data = Data(assets)
         if not data.min_n_players <= n_players <= data.max_n_players:
             msg = f"Invalid number of players: {n_players} (expected " \
                   f"between {data.min_n_players} and {data.max_n_players})"

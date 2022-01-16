@@ -74,22 +74,19 @@ It should guide you through the usage.
 ```python
 import json
 
-# These two classes are really everything you need from the library.
 # If you're dealing with (possibly invalid) user input,
 # you might want to also import `RulesViolation` for catching it.
-from smawg.engine import Data, Game
+from smawg.engine import Game
 
 
-# If you want, you can directly construct `data_json` dict
+# If you want, you can directly construct `assets` dict
 # instead of reading from file.
 with open('some/path/to/assets.json') as assets_file:
-    data_json = json.load(assets_file)
-
-data = Data(data_json)
+    assets = json.load(assets_file)
 
 # Provide different arguments or set hooks on game events, if needed.
 # See `docs/hooks.md` for more info about hooks.
-game = Game(data, n_players=2)
+game = Game(assets, n_players=2)
 
 # Call `game` methods to perform actions.
 # Read `game` properties to monitor the game state.

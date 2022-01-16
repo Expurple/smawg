@@ -10,7 +10,7 @@ from contextlib import nullcontext
 import jsonschema.exceptions
 
 from smawg import _ASSETS_DIR
-from smawg.engine import Ability, Data, Game, GameEnded, Race
+from smawg.engine import Ability, Game, GameEnded, Race
 
 
 class TestAbility(unittest.TestCase):
@@ -88,8 +88,7 @@ class TestGame(unittest.TestCase):
         """Run a full game based on `tiny.json` and check every step."""
         with open(f"{_ASSETS_DIR}/tiny.json") as file:
             assets = json.load(file)
-        tiny_data = Data(assets)
-        game = Game(tiny_data, n_players=2)
+        game = Game(assets, n_players=2)
         self.assertBalances(game, [1, 1])
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
