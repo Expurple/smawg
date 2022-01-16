@@ -3,16 +3,17 @@
 This module can also be seen as a collection of usage examples.
 """
 
+import json
+import unittest
 from contextlib import nullcontext
 
 import jsonschema.exceptions
 
 from smawg import _ASSETS_DIR
-from smawg.engine import Ability, Game, GameEnded, Race
-from smawg.tests.common import BaseTest
+from smawg.engine import Ability, Data, Game, GameEnded, Race
 
 
-class TestAbility(BaseTest):
+class TestAbility(unittest.TestCase):
     """Tests for `smawg.engine.Ability` class."""
 
     def test_valid_json(self):
@@ -43,7 +44,7 @@ class TestAbility(BaseTest):
             _ = Ability(json)
 
 
-class TestRace(BaseTest):
+class TestRace(unittest.TestCase):
     """Tests for `smawg.engine.Race` class."""
 
     INVALID_JSONS = [
@@ -71,8 +72,8 @@ class TestRace(BaseTest):
 
     def test_invalid_jsons(self):
         """Check if `Race.__init__` raises when given invalid jsons."""
-        for json in TestRace.INVALID_JSONS:
-            self.assertInvalid(json)
+        for j in TestRace.INVALID_JSONS:
+            self.assertInvalid(j)
 
     def assertInvalid(self, json: dict):
         """Check if `Race.__init__` raises when given this `json`."""
@@ -80,12 +81,14 @@ class TestRace(BaseTest):
             _ = Race(json)
 
 
-class TestGame(BaseTest):
+class TestGame(unittest.TestCase):
     """Tests for `smawg.engine.Game` class."""
 
     def test_tiny_game_scenario(self):
         """Run a full game based on `tiny.json` and check every step."""
-        tiny_data = self.load_data(f"{_ASSETS_DIR}/tiny.json")
+        with open(f"{_ASSETS_DIR}/tiny.json") as file:
+            assets = json.load(file)
+        tiny_data = Data(assets)
         game = Game(tiny_data, n_players=2)
         self.assertBalances(game, [1, 1])
         with nullcontext("Player 0, turn 1:"):
