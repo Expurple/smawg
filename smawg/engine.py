@@ -31,28 +31,6 @@ with open(f"{_PACKAGE_DIR}/assets_schema/race.json") as file:
 
 # -------------------------- "dumb" data objects ------------------------------
 
-class Data:
-    """Storage for immutable game properties.
-
-    Contains constants like the total amount of turns,
-    list of available races and abilities, etc.
-    """
-
-    def __init__(self, json: dict) -> None:
-        """Construct strongly typed `Data` from json object.
-
-        Raise `jsonschema.exceptions.ValidationError`
-        if `json` doesn't match `assets_schema/assets.json`.
-        """
-        jsonschema.validate(json, ASSETS_SCHEMA)
-        self.min_n_players: int = json["min_n_players"]
-        self.max_n_players: int = json["max_n_players"]
-        self.n_selectable_combos: int = json["n_selectable_combos"]
-        self.n_turns: int = json["n_turns"]
-        self.abilities = [Ability(obj) for obj in json["abilities"]]
-        self.races = [Race(obj) for obj in json["races"]]
-
-
 class Ability:
     """Immutable description of an ability (just like on a physical banner)."""
 
@@ -139,15 +117,15 @@ class Token:
 
 # ------------------------ randomization utilities ----------------------------
 
-def shuffle(data: Data) -> Data:
-    """Shuffle the order of `Race` and `Ability` banners in `data`.
+def shuffle(assets: dict) -> dict:
+    """Shuffle the order of `Race` and `Ability` banners in `assets`.
 
     Just like you would do in a physical Small World game.
     """
-    data = deepcopy(data)
-    random.shuffle(data.races)
-    random.shuffle(data.abilities)
-    return data
+    assets = deepcopy(assets)
+    random.shuffle(assets["races"])
+    random.shuffle(assets["abilities"])
+    return assets
 
 
 def roll_dice() -> int:
@@ -241,17 +219,18 @@ class Game:
         * `RulesViolation` -
             if `n_players` doesn't respect the limits specified in `assets`.
         """
-        data = Data(assets)
-        if not data.min_n_players <= n_players <= data.max_n_players:
+        jsonschema.validate(assets, ASSETS_SCHEMA)
+        if not assets["min_n_players"] <= n_players <= assets["max_n_players"]:
             msg = f"Invalid number of players: {n_players} (expected " \
-                  f"between {data.min_n_players} and {data.max_n_players})"
+                  f'between {assets["min_n_players"]} ' \
+                  f'and {assets["max_n_players"]})'
             raise RulesViolation(msg)
         if shuffle_data:
-            data = shuffle(data)
-        self._abilities = data.abilities
-        self._races = data.races
-        self._n_combos = data.n_selectable_combos
-        self._n_turns = data.n_turns
+            assets = shuffle(assets)
+        self._abilities = [Ability(a) for a in assets["abilities"]]
+        self._races = [Race(r) for r in assets["races"]]
+        self._n_combos: int = assets["n_selectable_combos"]
+        self._n_turns: int = assets["n_turns"]
         self._current_turn: int = 1
         visible_ra = islice(zip(self._races, self._abilities), self._n_combos)
         self._combos = [Combo(r, a) for r, a in visible_ra]
