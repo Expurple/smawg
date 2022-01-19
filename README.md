@@ -129,11 +129,11 @@ Can be run using the standard library's
 * **Author** - Dmitry Alexandrov <adk230@yandex.ru\>
 
 
-# Licence
+# License
 
 Copyright (c) 2022 Dmitry Alexandrov.
 
-Licensed under [GPL v.3](./LICENSE)
+Licensed under [GPL v.3 or later](./LICENSE)
 
 This copyright only applies to the code and other documents in this repository,
 **not** the concept, title or any other property of the original game.
