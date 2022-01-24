@@ -13,19 +13,19 @@ from typing import Callable, Mapping, Optional
 
 import jsonschema
 
-from smawg import _PACKAGE_DIR
+from smawg import _SCHEMA_DIR
 
 
 # ------------------------ JSON schemas for assets ----------------------------
 
 
-with open(f"{_PACKAGE_DIR}/assets_schema/assets.json") as file:
+with open(f"{_SCHEMA_DIR}/assets.json") as file:
     ASSETS_SCHEMA: dict = json.load(file)
 
-with open(f"{_PACKAGE_DIR}/assets_schema/ability.json") as file:
+with open(f"{_SCHEMA_DIR}/ability.json") as file:
     ABILITY_SCHEMA: dict = json.load(file)
 
-with open(f"{_PACKAGE_DIR}/assets_schema/race.json") as file:
+with open(f"{_SCHEMA_DIR}/race.json") as file:
     RACE_SCHEMA: dict = json.load(file)
 
 

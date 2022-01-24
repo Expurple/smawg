@@ -25,6 +25,9 @@ you shouldn't use this.
 _ASSETS_DIR = Path(f"{_PACKAGE_DIR}/assets")
 """Path to `assets/` directory in the currently used `smawg` package."""
 
+_SCHEMA_DIR = Path(f"{_PACKAGE_DIR}/assets_schema")
+"""Path to `assets_schema/` directory in the currently used `smawg` package."""
+
 VERSION: str
 """The version of `smawg` package as an `"x.y.z"` format string."""
 
