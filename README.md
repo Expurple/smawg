@@ -29,6 +29,12 @@ and easy interoperability with other programming languages.
 * Support for plugins with new ability types ???
 
 
+# Releases
+
+The latest available release is 0.1.0,
+see [CHANGELOG.md](./CHANGELOG.md) for more info.
+
+
 # Requirements
 
 * Python 3.9+ (currently, only 3.9 is tested)
