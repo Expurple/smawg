@@ -95,7 +95,7 @@ class Player:
         """Check if `Player` is in decline state."""
         return self.active_race is None
 
-    def decline(self) -> None:
+    def _decline(self) -> None:
         """Put `Player`'s active race in decline state."""
         self.decline_race = self.active_race
         self.decline_ability = self.active_ability
@@ -103,7 +103,7 @@ class Player:
         self.active_ability = None
         self.declined_on_this_turn = True
 
-    def set_active(self, combo: Combo) -> None:
+    def _set_active(self, combo: Combo) -> None:
         """Set `Race` and `Ability` from the given `combo` as active."""
         self.active_race = combo.race
         self.active_ability = combo.ability
@@ -135,7 +135,7 @@ def roll_dice() -> int:
 
 # --------------------- the Small World engine itself -------------------------
 
-def create_tokens_supply(races: list[Race]):
+def _create_tokens_supply(races: list[Race]):
     """Generate a supply of `Token`s for each `Race` in `races`."""
     tokens_supply = dict[Race, list[Token]]()
     for race in races:
@@ -237,7 +237,7 @@ class Game:
         self._players = [Player(self._n_combos - 1) for _ in range(n_players)]
         self._current_player_id: int = 0
         self._current_player = self.players[self.current_player_id]
-        self._tokens_supply = create_tokens_supply(self._races)
+        self._tokens_supply = _create_tokens_supply(self._races)
         self._roll_dice = dice_roll_func
         self._hooks: Mapping[str, Callable] \
             = defaultdict(lambda: _do_nothing, **hooks)
@@ -292,7 +292,7 @@ class Game:
             msg = "You've already used your active race during this turn. " \
                   "You can only decline during the next turn"
             raise RulesViolation(msg)
-        self._current_player.decline()
+        self._current_player._decline()
 
     @_check_rules()
     def select_combo(self, combo_index: int) -> None:
@@ -315,7 +315,7 @@ class Game:
             raise RulesViolation("You need to finish your turn now and select "
                                  "a new race during the next turn")
         self._pay_for_combo(combo_index)
-        self._current_player.set_active(self.combos[combo_index])
+        self._current_player._set_active(self.combos[combo_index])
         self._pop_combo(combo_index)
         self._current_player.acted_on_this_turn = True
 
