@@ -1,0 +1,39 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "map.json",
+    "title": "Map",
+    "description": "Machine-readable, graph-like representation of the game map.",
+    "type": "object",
+    "properties": {
+        "tiles": {
+            "description": "A list of map tiles (nodes in the graph).",
+            "type": "array",
+            "items": {
+                "description": "One tile on a map.",
+                "type": "object",
+                "properties": {
+                    "is_at_map_border": {
+                        "description": "Whether a tile is located at the map's border.",
+                        "type": "boolean"
+                    }
+                },
+                "required": ["is_at_map_border"]
+            }
+        },
+        "tile_borders": {
+            "description": "A list of borders between adjacent tiles (edges in the graph).",
+            "type": "array",
+            "items": {
+                "description": "A pair of two adjacent tiles on the map.",
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                    "description": "Zero-based index of the tile.",
+                    "type": "integer"
+                }
+            }
+        }
+    },
+    "required": ["tiles", "tile_borders"]
+}

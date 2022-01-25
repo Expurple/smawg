@@ -46,7 +46,8 @@
             "description": "A list of races available in the game.",
             "type": "array",
             "items": {"$ref": "race.json"}
-        }
+        },
+        "map": {"$ref": "map.json"}
     },
     "required": [
         "min_n_players",
@@ -54,6 +55,7 @@
         "n_selectable_combos",
         "n_turns",
         "abilities",
-        "races"
+        "races",
+        "map"
     ]
 }

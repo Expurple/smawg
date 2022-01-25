@@ -40,7 +40,8 @@ class TestSchemaValidation(unittest.TestCase):
         """
         invalid_values = [
             ("races", [{"not a": "race"}]),
-            ("abilities", [{"not a": "ability"}])
+            ("abilities", [{"not a": "ability"}]),
+            ("map", [{"not a": "map"}])
         ]
         with open(f"{_ASSETS_DIR}/tiny.json") as assets_file:
             assets = json.load(assets_file)
