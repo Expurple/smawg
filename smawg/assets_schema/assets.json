@@ -40,12 +40,12 @@
         "abilities": {
             "description": "A list of abilities available in the game.",
             "type": "array",
-            "items": {"$id": "ability.json"}
+            "items": {"$ref": "ability.json"}
         },
         "races": {
             "description": "A list of races available in the game.",
             "type": "array",
-            "items": {"$id": "race.json"}
+            "items": {"$ref": "race.json"}
         }
     },
     "required": [

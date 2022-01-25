@@ -31,8 +31,7 @@ and easy interoperability with other programming languages.
 
 # Releases
 
-The latest available release is 0.1.0,
-see [CHANGELOG.md](./CHANGELOG.md) for more info.
+See [CHANGELOG.md](./CHANGELOG.md)
 
 
 # Requirements

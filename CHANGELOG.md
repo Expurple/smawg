@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 \-
 
+## [0.1.1] - 2021-01-25
+### Fixed
+- Validation of `"races"` and `"abilities"` objects in asset files.
+
 ## [0.1.0] - 2021-01-24
 ### Added
-- JSON chema for asset files.
+- JSON schema for asset files.
 - A minimal asset file, which specifies:
     - The number of players.
     - The number of available race+ability combos.

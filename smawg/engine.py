@@ -18,6 +18,11 @@ from smawg import _SCHEMA_DIR
 
 # ------------------------ JSON schemas for assets ----------------------------
 
+_JS_REF_RESOLVER = jsonschema.RefResolver(f"file://{_SCHEMA_DIR}/", None)
+"""Fixes references to local schemas.
+
+Should be used in every `jsonschema.validate()` call.
+"""
 
 with open(f"{_SCHEMA_DIR}/assets.json") as file:
     ASSETS_SCHEMA: dict = json.load(file)
@@ -40,7 +45,7 @@ class Ability:
         Raise `jsonschema.exceptions.ValidationError`
         if `json` doesn't match `assets_schema/ability.json`.
         """
-        jsonschema.validate(json, ABILITY_SCHEMA)
+        jsonschema.validate(json, ABILITY_SCHEMA, resolver=_JS_REF_RESOLVER)
         self.name: str = json["name"]
         self.n_tokens: int = json["n_tokens"]
 
@@ -54,7 +59,7 @@ class Race:
         Raise `jsonschema.exceptions.ValidationError`
         if `json` doesn't match `assets_schema/race.json`.
         """
-        jsonschema.validate(json, RACE_SCHEMA)
+        jsonschema.validate(json, RACE_SCHEMA, resolver=_JS_REF_RESOLVER)
         self.name: str = json["name"]
         self.n_tokens: int = json["n_tokens"]
         self.max_n_tokens: int = json["max_n_tokens"]
@@ -219,7 +224,7 @@ class Game:
         * `RulesViolation` -
             if `n_players` doesn't respect the limits specified in `assets`.
         """
-        jsonschema.validate(assets, ASSETS_SCHEMA)
+        jsonschema.validate(assets, ASSETS_SCHEMA, resolver=_JS_REF_RESOLVER)
         if not assets["min_n_players"] <= n_players <= assets["max_n_players"]:
             msg = f"Invalid number of players: {n_players} (expected " \
                   f'between {assets["min_n_players"]} ' \
