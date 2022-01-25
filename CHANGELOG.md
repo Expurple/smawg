@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Schema and example of a `"map"` asset.
 
+### Removed
+- Dead code related to tokens (including empty "public" class `Token`).
+
 ## [0.1.1] - 2021-01-25
 ### Fixed
 - Validation of `"races"` and `"abilities"` objects in asset files.

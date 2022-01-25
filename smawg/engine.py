@@ -114,12 +114,6 @@ class Player:
         self.active_ability = combo.ability
 
 
-class Token:
-    """Dummy class for race tokens."""
-
-    pass
-
-
 # ------------------------ randomization utilities ----------------------------
 
 def shuffle(assets: dict) -> dict:
@@ -139,14 +133,6 @@ def roll_dice() -> int:
 
 
 # --------------------- the Small World engine itself -------------------------
-
-def _create_tokens_supply(races: list[Race]):
-    """Generate a supply of `Token`s for each `Race` in `races`."""
-    tokens_supply = dict[Race, list[Token]]()
-    for race in races:
-        tokens_supply[race] = [Token() for _ in range(race.max_n_tokens)]
-    return tokens_supply
-
 
 def _do_nothing(*args, **kwargs) -> None:
     """Just accept any arguments and do nothing."""
@@ -242,7 +228,6 @@ class Game:
         self._players = [Player(self._n_combos - 1) for _ in range(n_players)]
         self._current_player_id: int = 0
         self._current_player = self.players[self.current_player_id]
-        self._tokens_supply = _create_tokens_supply(self._races)
         self._roll_dice = dice_roll_func
         self._hooks: Mapping[str, Callable] \
             = defaultdict(lambda: _do_nothing, **hooks)
