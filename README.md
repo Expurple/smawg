@@ -19,8 +19,7 @@ and easy interoperability with other programming languages.
 
 ### **Missing essential features** (in progress):
 
-* A lot of core concepts: abandoning regions, using reinrofcements, getting
-    coin rewards...
+* A lot of core concepts: abandoning regions, using reinrofcements...
 * Implementation of unique race abilities.
 
 ### Future plans:

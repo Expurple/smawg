@@ -91,22 +91,20 @@ class TestGame(unittest.TestCase):
             cls.TINY_ASSETS = json.load(file)
 
     def test_tiny_game_scenario(self):
-        """Run a full game based on `tiny.json` and check every step.
+        """Run a full game based on `tiny.json` asssets.
 
-        No rule violations are attempted, except after the game has ended.
+        Make sure that valid gameplay doesn't raise any exceptions.
+        Then, check if all `Game` methods raise `GameEnded` after the game end.
         """
         game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
-        self.assertBalances(game, [1, 1])
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
-            self.assertBalances(game, [0, 1])
             game.conquer(0)
             game.conquer(1)
             game.conquer(2)
             game.end_turn()
         with nullcontext("Player 1, turn 1:"):
             game.select_combo(0)
-            self.assertBalances(game, [0, 2])
             game.conquer(3)
             game.conquer(4)
             # Can't conquer other players' regions yet.
@@ -116,7 +114,6 @@ class TestGame(unittest.TestCase):
             for _ in range(4):
                 game.end_turn()
         self.assertEnded(game)
-        self.assertBalances(game, [0, 2])
 
     def test_deploy_functionality(self):
         """Check if `Game.deploy()` behaves as expected when used correctly."""
@@ -169,6 +166,28 @@ class TestGame(unittest.TestCase):
         game.conquer(CHOSEN_REGION)
         game.deploy(game._current_player.tokens_on_hand, CHOSEN_REGION)
         game.end_turn()
+
+    def test_coin_rewards(self):
+        """Check if coin rewards work as expected."""
+        game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        self.assertBalances(game, [1, 1])  # Initial coin balances
+        game.select_combo(1)
+        self.assertBalances(game, [0, 1])  # Paid for combo
+        game.conquer(0)
+        game.conquer(1)
+        game.conquer(2)
+        game.end_turn()
+        self.assertBalances(game, [3, 1])  # Reward for active regions
+        game.select_combo(0)
+        self.assertBalances(game, [3, 2])  # Combo 0 had a coin from player 0
+        game.conquer(3)
+        game.conquer(4)
+        game.deploy(3, 4)
+        game.end_turn()
+        self.assertBalances(game, [3, 4])  # Reward for active regions
+        game.decline()
+        game.end_turn()
+        self.assertBalances(game, [6, 4])  # Reward for decline regions
 
     def assertBalances(self, game: Game, expected: list[int]):
         """Check if all player balances match the `expected`."""

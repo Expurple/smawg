@@ -376,6 +376,7 @@ class Game:
         """End current player's turn and give control to the next player.
 
         This action:
+        * Atomatically calculates and pays coin rewards for the passed turn.
         * Fires `"on_turn_end"` hook.
         * Then updates `current_player_id`.
         * If that was the last player, increments `current_turn`.
@@ -395,6 +396,7 @@ class Game:
         if tokens_on_hand > 0 and self._current_player.acted_on_this_turn:
             raise RulesViolation("You need to deploy remaining "
                                  f"{tokens_on_hand} tokens on hand")
+        self._reward_coins_for_turn()
         self._hooks["on_turn_end"](self)
         self._switch_player()
         if self.has_ended:
@@ -433,6 +435,11 @@ class Game:
         next_combo = Combo(self._races[self._n_combos - 1],
                            self._abilities[self._n_combos - 1])
         self.combos.append(next_combo)
+
+    def _reward_coins_for_turn(self) -> None:
+        """Calculate and pay victory coins for the passed turn."""
+        self._current_player.coins += len(self._current_player.active_regions)
+        self._current_player.coins += len(self._current_player.decline_regions)
 
     def _switch_player(self) -> None:
         """Switch `_current_player` to the next player.
