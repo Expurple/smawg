@@ -88,6 +88,11 @@ class Player:
         self.active_ability: Optional[Ability] = None
         self.decline_race: Optional[Race] = None
         self.decline_ability: Optional[Ability] = None
+        self.active_regions = dict[int, int]()
+        """Dict of controlled regions, in form of `{region: n_tokens}`."""
+        self.decline_regions = set[int]()
+        """A set of regions controlled by a single declined race token."""
+        self.tokens_on_hand = 0
         self.acted_on_this_turn: bool = False
         self.declined_on_this_turn: bool = False
         self.coins = coins
@@ -100,18 +105,32 @@ class Player:
         """Check if `Player` is in decline state."""
         return self.active_race is None
 
+    def _is_owning(self, region: int) -> bool:
+        """Check if `Player` owns the given `region`."""
+        return region in self.active_regions or region in self.decline_regions
+
     def _decline(self) -> None:
         """Put `Player`'s active race in decline state."""
+        self.decline_regions = set(self.active_regions)
+        self.active_regions.clear()
+        self.tokens_on_hand = 0
         self.decline_race = self.active_race
         self.decline_ability = self.active_ability
         self.active_race = None
         self.active_ability = None
         self.declined_on_this_turn = True
 
+    def _pick_up_tokens(self) -> None:
+        """Pick up available tokens, leaving 1 token in each owned region."""
+        for region in self.active_regions:
+            self.tokens_on_hand += self.active_regions[region] - 1
+            self.active_regions[region] = 1
+
     def _set_active(self, combo: Combo) -> None:
         """Set `Race` and `Ability` from the given `combo` as active."""
         self.active_race = combo.race
         self.active_ability = combo.ability
+        self.tokens_on_hand = combo.base_n_tokens
 
 
 # ------------------------ randomization utilities ----------------------------
@@ -309,6 +328,49 @@ class Game:
         self._pop_combo(combo_index)
         self._current_player.acted_on_this_turn = True
 
+    @_check_rules(require_active=True)
+    def conquer(self, region: int) -> None:
+        """Conquer the given map `region`.
+
+        Exceptions raised:
+        * `RulesViolation` - if the player attempts to:
+            * Conquer a region occupied by their own active race.
+            * Conquer without having enough tokens at hand.
+        * `GameEnded` - if this method is called after the game has ended.
+        """
+        if region in self._current_player.active_regions:
+            raise RulesViolation("Can't conquer your own region")
+        if any(p._is_owning(region) for p in self.players):
+            raise NotImplementedError()
+        tokens_required = 3
+        tokens_on_hand = self._current_player.tokens_on_hand
+        if tokens_on_hand < tokens_required:
+            msg = f"Not enough tokens on hand (you have {tokens_on_hand}, " \
+                  f"but need {tokens_required})"
+            raise RulesViolation(msg)
+        self._current_player.tokens_on_hand -= tokens_required
+        self._current_player.active_regions[region] = tokens_required
+        self._current_player.acted_on_this_turn = True
+
+    @_check_rules(require_active=True)
+    def deploy(self, n_tokens: int, region: int) -> None:
+        """Deploy `n_tokens` from hand to the specified own `region`.
+
+        Exceptions raised:
+        * `RulesViolation` - if the player:
+            * Doesn't control the specified `region` with his active race.
+            * Doesn't have `n_tokens` on hand.
+        * `GameEnded` - if this method is called after the game has ended.
+        """
+        if region not in self._current_player.active_regions:
+            raise RulesViolation("Can only deploy to owned region")
+        tokens_on_hand = self._current_player.tokens_on_hand
+        if n_tokens > tokens_on_hand:
+            msg = f"Not enough tokens on hand (you have {tokens_on_hand})"
+            raise RulesViolation(msg)
+        self._current_player.tokens_on_hand -= n_tokens
+        self._current_player.active_regions[region] += n_tokens
+
     @_check_rules()
     def end_turn(self) -> None:
         """End current player's turn and give control to the next player.
@@ -321,18 +383,24 @@ class Game:
             depending on whether `Game.has_ended`.
 
         Exceptions raised:
-        * `RulesViolation` - if the player must select a new combo
-        during the current turn and haven't done that yet.
+        * `RulesViolation` - if the player:
+            * Must select a new combo and haven't done that yet.
+            * Must deploy tokens from hand and haven't done that yet.
         * `GameEnded` - if this method is called after the game has ended.
         """
         if self._current_player.needs_to_pick_combo():
             raise RulesViolation("You need to select a new race+ability combo "
                                  "before ending this turn")
+        tokens_on_hand = self._current_player.tokens_on_hand
+        if tokens_on_hand > 0 and self._current_player.acted_on_this_turn:
+            raise RulesViolation("You need to deploy remaining "
+                                 f"{tokens_on_hand} tokens on hand")
         self._hooks["on_turn_end"](self)
         self._switch_player()
         if self.has_ended:
             self._hooks["on_game_end"](self)
         else:
+            self._current_player._pick_up_tokens()
             self._hooks["on_turn_start"](self)
 
     def _pay_for_combo(self, combo_index: int) -> None:

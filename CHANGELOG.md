@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Schema and example of a `"map"` asset.
+- The mechanic of conquering regions and deploying leftover tokens,
+    **but without**:
+    - Support for conquering non-empty regions.
+    - Checking region location (map border for 1st conquest, adjacency for
+        later conquests).
+    - Reinforcements dice.
+    - Redeployment step after.
+    - Ability to abandon regions.
+    - Earning coins.
+- Corresponding `cli` commands: `show-regions`, `conquer`, `deploy`.
+- Column "Tokens on hand" for `cli` command `show-players`.
 
 ### Removed
 - Dead code related to tokens (including empty "public" class `Token`).
