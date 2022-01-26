@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Schema and example of a `"map"` asset.
+- Schema and example of a `"map"` asset (without support for unique regions or
+    Lost Tribes).
 - The mechanic of conquering regions and earning coins, **but without**:
     - Support for conquering non-empty regions.
     - Checking region location (map border for 1st conquest, adjacency for
@@ -14,7 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Reinforcements dice.
     - Redeployment step after.
     - Ability to abandon regions.
-- Corresponding `cli` commands: `show-regions`, `conquer`, `deploy`.
+- Related `Game` methods: `conquer()`, `deploy()`
+- Related `Player` attributes: `active_regions`, `decline_regions`,
+    `tokens_on_hand`
+- Related `cli` commands: `show-regions`, `conquer`, `deploy`.
 - Column "Tokens on hand" for `cli` command `show-players`.
 
 ### Removed
