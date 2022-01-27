@@ -22,11 +22,11 @@ from smawg import _PACKAGE_DIR, VERSION
 from smawg.engine import Game, RulesViolation
 
 
-TITLE = f'Small World CLI v{VERSION}'
+TITLE = f"Small World CLI v{VERSION}"
 HELP_SUGGESTION = "Type 'help' to see available commands."
-VISIT_HOME_PAGE = 'For more info, visit https://github.com/expurple/smawg'
-START_SCREEN = '\n'.join([TITLE, HELP_SUGGESTION, VISIT_HOME_PAGE, ''])
-HELP = '''\
+VISIT_HOME_PAGE = "For more info, visit https://github.com/expurple/smawg"
+START_SCREEN = "\n".join([TITLE, HELP_SUGGESTION, VISIT_HOME_PAGE, ""])
+HELP = """\
 Available commands:
     help                   show this message
     show-combos            show available combos
@@ -39,7 +39,7 @@ Available commands:
     end-turn               end turn and give control to the next player
     quit                   quit game
 
-Press Tab for autocompletion.'''
+Press Tab for autocompletion."""
 
 COMMANDS = [line.strip().split()[0] for line in HELP.splitlines()[1:-2]]
 COMMANDS_WITHOUT_ARGS = [c for c in COMMANDS if c not in
@@ -59,24 +59,24 @@ def parse_args() -> Namespace:
     On error, print usage and exit.
     """
     parser = ArgumentParser(description=TITLE, epilog=VISIT_HOME_PAGE)
-    parser.add_argument('assets_file',
-                        help='path to JSON file with assets')
-    parser.add_argument('-p', '--players',
-                        metavar='<num>',
+    parser.add_argument("assets_file",
+                        help="path to JSON file with assets")
+    parser.add_argument("-p", "--players",
+                        metavar="<num>",
                         type=int,
                         required=True,
-                        help='specify the number of players')
-    parser.add_argument('-s', '--no-shuffle',
-                        action='store_true',
+                        help="specify the number of players")
+    parser.add_argument("-s", "--no-shuffle",
+                        action="store_true",
                         help="don't shuffle data from json")
-    parser.add_argument('-d', '--read-dice',
-                        action='store_true',
-                        help='read dice roll results from stdin instead of '
-                             'generating randomly')
-    parser.add_argument('-r', '--relative-path',
-                        action='store_true',
-                        help='search for `assets_file` inside of `smawg` '
-                             'package directory')
+    parser.add_argument("-d", "--read-dice",
+                        action="store_true",
+                        help="read dice roll results from stdin instead of "
+                             "generating randomly")
+    parser.add_argument("-r", "--relative-path",
+                        action="store_true",
+                        help="search for `assets_file` inside of `smawg` "
+                             "package directory")
     return parser.parse_args()
 
 
@@ -116,7 +116,7 @@ class Client:
 
         def on_game_end(game: Game) -> None:
             self._command_show_players()
-            print('')
+            print("")
             print(f"{game.n_turns} turns have passed, the game is over.")
             print("You can take a final look around and type 'quit' to quit.")
 
@@ -133,7 +133,7 @@ class Client:
     def _run_main_loop(self) -> None:
         while True:
             try:
-                command, *args = input('> ').strip().split()
+                command, *args = input("> ").strip().split()
                 self._interpret(command, args)
             except InvalidCommand as e:
                 print(f"Invalid command: {e.args[0]}")
@@ -144,71 +144,71 @@ class Client:
     def _interpret(self, command: str, args: list[str]) -> None:
         if command in COMMANDS_WITHOUT_ARGS and len(args) > 0:
             raise InvalidCommand(f"'{command}' does not accept any arguments.")
-        if command == 'help':
+        if command == "help":
             print(HELP)
-        elif command == 'show-combos':
+        elif command == "show-combos":
             self._command_show_combos()
-        elif command == 'show-players':
+        elif command == "show-players":
             self._command_show_players()
-        elif command == 'show-regions':
+        elif command == "show-regions":
             self._command_show_regions(args)
-        elif command == 'combo':
+        elif command == "combo":
             self._command_combo(args)
-        elif command == 'conquer':
+        elif command == "conquer":
             self._command_conquer(args)
-        elif command == 'deploy':
+        elif command == "deploy":
             self._command_deploy(args)
-        elif command == 'decline':
+        elif command == "decline":
             self.game.decline()
-        elif command == 'end-turn':
+        elif command == "end-turn":
             self.game.end_turn()
-        elif command == 'quit':
+        elif command == "quit":
             exit(0)
         else:
             raise InvalidCommand(f"'{command}'.")
 
     def _command_show_players(self) -> None:
-        headers = ['Player', 'Active ability', 'Active race', 'Declined race',
-                   'Tokens on hand', 'Coins']
+        headers = ["Player", "Active ability", "Active race", "Declined race",
+                   "Tokens on hand", "Coins"]
         rows = []
         for i, p in enumerate(self.game.players):
             rows.append([
                 i,
-                p.active_ability.name if p.active_ability else '-',
-                p.active_race.name if p.active_race else '-',
-                p.decline_race.name if p.decline_race else '-',
+                p.active_ability.name if p.active_ability else "-",
+                p.active_race.name if p.active_race else "-",
+                p.decline_race.name if p.decline_race else "-",
                 p.tokens_on_hand,
                 p.coins
             ])
-        print(tabulate(rows, headers, stralign='center', numalign='center'))
+        print(tabulate(rows, headers, stralign="center", numalign="center"))
 
     def _command_show_combos(self) -> None:
-        headers = ['Price', 'Coins you get', 'Ability', 'Race',
-                   'Tokens you get']
+        headers = ["Price", "Coins you get", "Ability", "Race",
+                   "Tokens you get"]
         rows = [(i, c.coins, c.ability.name, c.race.name, c.base_n_tokens)
                 for i, c in enumerate(self.game.combos)]
-        print(tabulate(rows, headers, stralign='center', numalign='center'))
+        print(tabulate(rows, headers, stralign="center", numalign="center"))
 
     def _command_show_regions(self, args: list[str]) -> None:
         if len(args) == 0:
-            raise InvalidCommand('You need to provide a player index.')
+            raise InvalidCommand("You need to provide a player index.")
         if len(args) > 1:
             raise InvalidCommand("'show-regions' expects only one argument.")
         try:
             i = int(args[0])
         except ValueError:
             raise InvalidCommand(f"'{args[0]}' is not a valid player index.")
-        headers = ['Region', 'Tokens', 'Type']
+        headers = ["Region", "Tokens", "Type"]
         rows = []
         for r, t in self.game.players[i].active_regions.items():
             rows.append([r, t, "Active"])
         for r in self.game.players[i].decline_regions:
             rows.append([r, 1, "Declined"])
-        print(tabulate(rows, headers, stralign='center', numalign='center'))
+        print(tabulate(rows, headers, stralign="center", numalign="center"))
 
     def _command_combo(self, args: list[str]) -> None:
         if len(args) == 0:
-            raise InvalidCommand('You need to provide a combo index.')
+            raise InvalidCommand("You need to provide a combo index.")
         if len(args) > 1:
             raise InvalidCommand("'combo' expects only one argument.")
         try:
@@ -219,7 +219,7 @@ class Client:
 
     def _command_conquer(self, args: list[str]) -> None:
         if len(args) == 0:
-            raise InvalidCommand('You need to provide a region index.')
+            raise InvalidCommand("You need to provide a region index.")
         if len(args) > 1:
             raise InvalidCommand("'conquer' expects only one argument.")
         try:
@@ -230,7 +230,7 @@ class Client:
 
     def _command_deploy(self, args: list[str]) -> None:
         if len(args) < 2:
-            msg = 'You need to provide a number of tokens and a region index.'
+            msg = "You need to provide a number of tokens and a region index."
             raise InvalidCommand(msg)
         if len(args) > 2:
             raise InvalidCommand("'deploy' expects only 2 arguments.")
@@ -247,7 +247,7 @@ class Client:
 
 
 if __name__ == "__main__":
-    readline.set_completer_delims(' ')
+    readline.set_completer_delims(" ")
     readline.set_completer(autocomplete)
     readline.parse_and_bind("tab: complete")
     args = parse_args()
