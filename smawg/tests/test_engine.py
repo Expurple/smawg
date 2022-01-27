@@ -115,6 +115,66 @@ class TestGame(unittest.TestCase):
                 game.end_turn()
         self.assertEnded(game)
 
+    def test_decline_exceptions(self):
+        """Check if `Game.decline()` raises expected exceptions.
+
+        This doesn't include `GameEnded`, which is tested separately for
+        convenience.
+        """
+        game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        with self.assertRaises(RulesViolation):
+            game.decline()  # There's no active race yet.
+        game.select_combo(0)
+        with self.assertRaises(RulesViolation):
+            game.decline()  # Just got a new race during this turn.
+        game.conquer(0)
+        game.deploy(6, 0)
+        game.end_turn()
+        game.select_combo(0)
+        game.conquer(1)
+        game.deploy(6, 1)
+        game.end_turn()
+        game.conquer(3)
+        with self.assertRaises(RulesViolation):
+            game.decline()  # Already used the active race during this turn.
+
+    def test_select_combo_exceptions(self):
+        """Check if `Game.select_combo()` raises expected exceptions.
+
+        This doesn't include `GameEnded`, which is tested separately for
+        convenience.
+        """
+        game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        game.select_combo(0)
+        with self.assertRaises(RulesViolation):
+            game.select_combo(0)  # The player isn't in decline.
+        game.conquer(0)
+        game.deploy(6, 0)
+        game.end_turn()
+        game.select_combo(0)
+        game.conquer(1)
+        game.deploy(6, 1)
+        game.end_turn()
+        game.decline()
+        with self.assertRaises(RulesViolation):
+            game.select_combo(0)  # Player has just declined during this turn.
+
+    def test_conquer_exceptions(self):
+        """Check if `Game.conquer()` raises expected exceptions.
+
+        This doesn't include `GameEnded`, which is tested separately for
+        convenience.
+        """
+        game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        game.select_combo(0)
+        game.conquer(0)
+        with self.assertRaises(RulesViolation):
+            game.conquer(0)  # Attempt to conquer own region.
+        game.conquer(1)
+        game.conquer(2)
+        with self.assertRaises(RulesViolation):
+            game.conquer(3)  # Not enough tokens on hand.
+
     def test_deploy_functionality(self):
         """Check if `Game.deploy()` behaves as expected when used correctly."""
         game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
