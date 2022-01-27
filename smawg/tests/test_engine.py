@@ -111,7 +111,10 @@ class TestGame(unittest.TestCase):
             game.deploy(game._current_player.tokens_on_hand, 3)
             game.end_turn()
         with nullcontext("Both players do nothing on turns 2-3:"):
-            for _ in range(4):
+            for _ in range(2):
+                game.deploy(game._current_player.tokens_on_hand, 0)
+                game.end_turn()
+                game.deploy(game._current_player.tokens_on_hand, 3)
                 game.end_turn()
         self.assertEnded(game)
 

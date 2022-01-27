@@ -21,8 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Related `cli` commands: `show-regions`, `conquer`, `deploy`.
 - Column "Tokens on hand" for `cli` command `show-players`.
 
+### Changed
+- More useful error message when attempting to `decline()` while already in
+    Decline.
+
 ### Removed
 - Dead code related to tokens (including empty "public" class `Token`).
+- `Player` members that shouldn't have been public and got refactored out:
+    - Methods `is_in_decline()` and `needs_to_pick_combo()`.
+    - Attributes `acted_on_this_turn` and `declined_on_this_turn`.
 
 ## [0.1.1] - 2021-01-25
 ### Fixed

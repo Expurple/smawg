@@ -7,6 +7,7 @@ import json
 import random
 from collections import defaultdict
 from copy import deepcopy
+from enum import Enum
 from functools import wraps
 from itertools import islice
 from typing import Callable, Mapping, Optional
@@ -93,17 +94,7 @@ class Player:
         self.decline_regions = set[int]()
         """A set of regions controlled by a single declined race token."""
         self.tokens_on_hand = 0
-        self.acted_on_this_turn: bool = False
-        self.declined_on_this_turn: bool = False
         self.coins = coins
-
-    def needs_to_pick_combo(self) -> bool:
-        """Check if `Player` must select a combo during the current turn."""
-        return self.is_in_decline() and not self.declined_on_this_turn
-
-    def is_in_decline(self) -> bool:
-        """Check if `Player` is in decline state."""
-        return self.active_race is None
 
     def _is_owning(self, region: int) -> bool:
         """Check if `Player` owns the given `region`."""
@@ -118,7 +109,6 @@ class Player:
         self.decline_ability = self.active_ability
         self.active_race = None
         self.active_ability = None
-        self.declined_on_this_turn = True
 
     def _pick_up_tokens(self) -> None:
         """Pick up available tokens, leaving 1 token in each owned region."""
@@ -173,6 +163,22 @@ class GameEnded(RulesViolation):
         super().__init__(msg, *args)
 
 
+class _TurnStage(Enum):
+    """The current stage of the player's turn.
+
+    Determines, which actions (`Game` method calls) are allowed.
+    """
+
+    SELECT_COMBO = 0
+    """Just started a turn without an active race and must pick a new one."""
+    CAN_DECLINE = 1
+    """Just started a turn with an existing active race and can decline."""
+    DECLINED = 2
+    """Just declined and must `end_turn()` now."""
+    ACTIVE = 3
+    """Selected/used an active race during the turn and can't decline now."""
+
+
 def _check_rules(require_active: bool = False):
     """Add boilerplate rule checks to public `Game` methods.
 
@@ -185,7 +191,7 @@ def _check_rules(require_active: bool = False):
             self: "Game" = args[0]
             if self.has_ended:
                 raise GameEnded()
-            if require_active and self._current_player.is_in_decline():
+            if require_active and self._current_player.active_race is None:
                 msg = "To do this, you need to control an active race"
                 raise RulesViolation(msg)
             # And then just execute the wrapped method
@@ -248,6 +254,7 @@ class Game:
         self._current_player_id: int = 0
         self._current_player = self.players[self.current_player_id]
         self._roll_dice = dice_roll_func
+        self._turn_stage = _TurnStage.SELECT_COMBO
         self._hooks: Mapping[str, Callable] \
             = defaultdict(lambda: _do_nothing, **hooks)
         self._hooks["on_turn_start"](self)
@@ -297,11 +304,14 @@ class Game:
             or has already used his active race during this turn.
         * `GameEnded` - if this method is called after the game has ended.
         """
-        if self._current_player.acted_on_this_turn:
+        if self._turn_stage in (_TurnStage.SELECT_COMBO, _TurnStage.DECLINED):
+            raise RulesViolation("You're already in Decline")
+        if self._turn_stage == _TurnStage.ACTIVE:
             msg = "You've already used your active race during this turn. " \
                   "You can only decline during the next turn"
             raise RulesViolation(msg)
         self._current_player._decline()
+        self._turn_stage = _TurnStage.DECLINED
 
     @_check_rules()
     def select_combo(self, combo_index: int) -> None:
@@ -318,15 +328,15 @@ class Game:
         * `GameEnded` - if this method is called after the game has ended.
         """
         assert 0 <= combo_index < len(self.combos)
-        if not self._current_player.is_in_decline():
+        if self._turn_stage in (_TurnStage.CAN_DECLINE, _TurnStage.ACTIVE):
             raise RulesViolation("You need to decline first")
-        if self._current_player.declined_on_this_turn:
+        if self._turn_stage == _TurnStage.DECLINED:
             raise RulesViolation("You need to finish your turn now and select "
                                  "a new race during the next turn")
         self._pay_for_combo(combo_index)
         self._current_player._set_active(self.combos[combo_index])
         self._pop_combo(combo_index)
-        self._current_player.acted_on_this_turn = True
+        self._turn_stage = _TurnStage.ACTIVE
 
     @_check_rules(require_active=True)
     def conquer(self, region: int) -> None:
@@ -350,7 +360,7 @@ class Game:
             raise RulesViolation(msg)
         self._current_player.tokens_on_hand -= tokens_required
         self._current_player.active_regions[region] = tokens_required
-        self._current_player.acted_on_this_turn = True
+        self._turn_stage = _TurnStage.ACTIVE
 
     @_check_rules(require_active=True)
     def deploy(self, n_tokens: int, region: int) -> None:
@@ -370,6 +380,7 @@ class Game:
             raise RulesViolation(msg)
         self._current_player.tokens_on_hand -= n_tokens
         self._current_player.active_regions[region] += n_tokens
+        self._turn_stage = _TurnStage.ACTIVE
 
     @_check_rules()
     def end_turn(self) -> None:
@@ -389,13 +400,15 @@ class Game:
             * Must deploy tokens from hand and haven't done that yet.
         * `GameEnded` - if this method is called after the game has ended.
         """
-        if self._current_player.needs_to_pick_combo():
+        if self._turn_stage == _TurnStage.SELECT_COMBO:
             raise RulesViolation("You need to select a new race+ability combo "
                                  "before ending this turn")
         tokens_on_hand = self._current_player.tokens_on_hand
-        if tokens_on_hand > 0 and self._current_player.acted_on_this_turn:
-            raise RulesViolation("You need to deploy remaining "
-                                 f"{tokens_on_hand} tokens on hand")
+        if tokens_on_hand > 0:
+            msg = f"You need to use remaining {tokens_on_hand} tokens on hand"
+            if self._turn_stage == _TurnStage.CAN_DECLINE:
+                msg += " or decline"
+            raise RulesViolation(msg)
         self._reward_coins_for_turn()
         self._hooks["on_turn_end"](self)
         self._switch_player()
@@ -444,12 +457,15 @@ class Game:
     def _switch_player(self) -> None:
         """Switch `_current_player` to the next player.
 
-        Update `current_player_id` and `current_turn` accordingly.
+        Update `_turn_stage`, `current_player_id` and `current_turn`
+        accordingly.
         """
         self._current_player_id += 1
         if self.current_player_id == len(self.players):
             self._current_player_id = 0
             self._current_turn += 1
         self._current_player = self.players[self.current_player_id]
-        self._current_player.acted_on_this_turn = False
-        self._current_player.declined_on_this_turn = False
+        if self._current_player.active_race is None:
+            self._turn_stage = _TurnStage.SELECT_COMBO
+        else:
+            self._turn_stage = _TurnStage.CAN_DECLINE
