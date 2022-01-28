@@ -148,6 +148,10 @@ class TestGame(unittest.TestCase):
         convenience.
         """
         game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        for combo in [-10, -1, len(game.combos), 999]:
+            # "combo_index must be between 0 and {len(game.combos)}"
+            with self.assertRaises(ValueError):
+                game.select_combo(combo)
         game.select_combo(0)
         with self.assertRaises(RulesViolation):
             game.select_combo(0)  # The player isn't in decline.
@@ -170,6 +174,10 @@ class TestGame(unittest.TestCase):
         """
         game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
         game.select_combo(0)
+        for region in [-10, -1, len(TestGame.TINY_ASSETS["map"]["tiles"]), 99]:
+            # "region must be between 0 and {len(assets["map"]["tiles"])}"
+            with self.assertRaises(ValueError):
+                game.conquer(region)
         game.conquer(0)
         with self.assertRaises(RulesViolation):
             game.conquer(0)  # Attempt to conquer own region.
@@ -211,6 +219,14 @@ class TestGame(unittest.TestCase):
         with self.assertRaises(RulesViolation):
             # Not enough tokens on hand.
             game.deploy(game._current_player.tokens_on_hand + 1, CHOSEN_REGION)
+        for n_tokens in [-99, -1, 0]:
+            # "n_tokens must be greater then 0"
+            with self.assertRaises(ValueError):
+                game.deploy(n_tokens, CHOSEN_REGION)
+        for region in [-10, -1, len(TestGame.TINY_ASSETS["map"]["tiles"]), 99]:
+            # "region must be between 0 and {len(assets["map"]["tiles"])}"
+            with self.assertRaises(ValueError):
+                game.deploy(1, region)
 
     def test_end_turn_exceptions(self):
         """Check if `Game.end_turn()` raises expected exceptions.

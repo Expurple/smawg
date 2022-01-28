@@ -138,10 +138,20 @@ class Client:
             except InvalidCommand as e:
                 print(f"Invalid command: {e.args[0]}")
                 print(HELP_SUGGESTION)
+            except ValueError as e:
+                print(f"Invalid argument: {e.args[0]}")
             except RulesViolation as e:
                 print(f"Rules violated: {e.args[0]}")
 
     def _interpret(self, command: str, args: list[str]) -> None:
+        """Interpret and execute the given `command`.
+
+        Raise:
+        * `InvalidCommand` - if an unkown `command` or wrong number of `args`
+            is given.
+        * `ValueError` - if some argument has invalid type or value.
+        * `RulesViolation` - if given command violates the game rules.
+        """
         if command in COMMANDS_WITHOUT_ARGS and len(args) > 0:
             raise InvalidCommand(f"'{command}' does not accept any arguments.")
         if command == "help":
@@ -197,7 +207,7 @@ class Client:
         try:
             i = int(args[0])
         except ValueError:
-            raise InvalidCommand(f"'{args[0]}' is not a valid player index.")
+            raise ValueError(f"'{args[0]}' is not an integer")
         headers = ["Region", "Tokens", "Type"]
         rows = []
         for r, t in self.game.players[i].active_regions.items():
@@ -213,9 +223,9 @@ class Client:
             raise InvalidCommand("'combo' expects only one argument.")
         try:
             i = int(args[0])
-            self.game.select_combo(i)
         except ValueError:
-            raise InvalidCommand(f"'{args[0]}' is not a valid combo index.")
+            raise ValueError(f"'{args[0]}' is not an integer")
+        self.game.select_combo(i)
 
     def _command_conquer(self, args: list[str]) -> None:
         if len(args) == 0:
@@ -224,9 +234,9 @@ class Client:
             raise InvalidCommand("'conquer' expects only one argument.")
         try:
             i = int(args[0])
-            self.game.conquer(i)
         except ValueError:
-            raise InvalidCommand(f"'{args[0]}' is not a valid region index.")
+            raise ValueError(f"'{args[0]}' is not an integer.")
+        self.game.conquer(i)
 
     def _command_deploy(self, args: list[str]) -> None:
         if len(args) < 2:
@@ -237,12 +247,11 @@ class Client:
         try:
             n = int(args[0])
         except ValueError:
-            msg = f"'{args[0]}' is not a valid number of tokens."
-            raise InvalidCommand(msg)
+            raise ValueError(f"'{args[0]}' is not an integer.")
         try:
             region = int(args[1])
         except ValueError:
-            raise InvalidCommand(f"'{args[1]}' is not a valid region index.")
+            raise ValueError(f"'{args[1]}' is not an integer.")
         self.game.deploy(n, region)
 
 

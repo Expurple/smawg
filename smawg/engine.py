@@ -243,6 +243,7 @@ class Game:
             raise RulesViolation(msg)
         if shuffle_data:
             assets = shuffle(assets)
+        self._regions: list[dict] = assets["map"]["tiles"]
         self._abilities = [Ability(a) for a in assets["abilities"]]
         self._races = [Race(r) for r in assets["races"]]
         self._n_combos: int = assets["n_selectable_combos"]
@@ -323,11 +324,14 @@ class Game:
         * Then, the next combo is revealed.
 
         Exceptions raised:
+        * `ValueError` - if not `0 <= combo_index < len(combos)`.
         * `RulesViolation` - if the player is not in decline, or has
             just declined during this turn, or doesn't have enough coins.
         * `GameEnded` - if this method is called after the game has ended.
         """
-        assert 0 <= combo_index < len(self.combos)
+        if not 0 <= combo_index < len(self.combos):
+            msg = f"combo_index must be between 0 and {len(self.combos)}"
+            raise ValueError(msg)
         if self._turn_stage in (_TurnStage.CAN_DECLINE, _TurnStage.ACTIVE):
             raise RulesViolation("You need to decline first")
         if self._turn_stage == _TurnStage.DECLINED:
@@ -343,11 +347,15 @@ class Game:
         """Conquer the given map `region`.
 
         Exceptions raised:
+        * `ValueError` - if not `0 <= region < len(assets["map"]["tiles"])`.
         * `RulesViolation` - if the player attempts to:
             * Conquer a region occupied by their own active race.
             * Conquer without having enough tokens at hand.
         * `GameEnded` - if this method is called after the game has ended.
         """
+        if not 0 <= region < len(self._regions):
+            msg = f"region must be between 0 and {len(self._regions)}"
+            raise ValueError(msg)
         if region in self._current_player.active_regions:
             raise RulesViolation("Can't conquer your own region")
         if any(p._is_owning(region) for p in self.players):
@@ -367,11 +375,19 @@ class Game:
         """Deploy `n_tokens` from hand to the specified own `region`.
 
         Exceptions raised:
+        * `ValueError`:
+            * if `n_tokens < 1`
+            * if not `0 <= region < len(assets["map"]["tiles"])`.
         * `RulesViolation` - if the player:
             * Doesn't control the specified `region` with his active race.
             * Doesn't have `n_tokens` on hand.
         * `GameEnded` - if this method is called after the game has ended.
         """
+        if n_tokens < 1:
+            raise ValueError("n_tokens must be greater then 0")
+        if not 0 <= region < len(self._regions):
+            msg = f"region must be between 0 and {len(self._regions)}"
+            raise ValueError(msg)
         if region not in self._current_player.active_regions:
             raise RulesViolation("Can only deploy to owned region")
         tokens_on_hand = self._current_player.tokens_on_hand

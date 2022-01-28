@@ -22,8 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Column "Tokens on hand" for `cli` command `show-players`.
 
 ### Changed
+- `select_combo()` now validates `combo_index` and raises `ValueError`.
 - More useful error message when attempting to `decline()` while already in
     Decline.
+- Tweaked `cli` error messages.
 
 ### Removed
 - Dead code related to tokens (including empty "public" class `Token`).
