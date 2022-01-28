@@ -55,11 +55,28 @@ See [CHANGELOG.md](./CHANGELOG.md)
 Currently, the only available set of assets is
 [smawg/assets/tiny.json](smawg/assets/tiny.json).
 
+You can create and use your own asset files.
+You're not required to contribute them back, but I would appreciate it.
+
 For documentation, see the JSON schema in
 [smawg/assets_schema/assets.json](smawg/assets_schema/assets.json).
 
-You can create and use your own asset files.
-You're not required to contribute them back, but I would appreciate it.
+The schema doesn't specify a visual layout for game maps.
+I imagine the map from `tiny.json` as `1)`, but it may be as well represented
+as something like `2)` or `3)` and it will still work properly,
+because functionally it's the same map:
+```
+    1)               2)               3)
++-------+        +-------+        +--------+
+| 0 | 1 |        | 1 ^ 0 |        | 4 |  3 |
+|   ^   |        |  / \  |        |   ^    |
+|  / \  |        |-< 2 >-|        |  / \   |
+|-< 2 >-|        |  \ /  |        |-< 2 >--|
+|  \ /  |        |   v   |        |  \ /   |
+|   v   |        | 4 | 3 |        |   v    |
+| 3 | 4 |        |   |   |        | 1 |  0 |
++-------+        +-------+        +--------+
+```
 
 
 # Usage
