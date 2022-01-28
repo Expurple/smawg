@@ -148,6 +148,28 @@ def _do_nothing(*args, **kwargs) -> None:
     pass
 
 
+def _borders(borders_from_json: list[list[int]]) -> list[set[int]]:
+    """Transform a list of region pairs into a list of sets for each region.
+
+    Example:
+    ```
+    >>> _borders([[0, 1], [1, 2]])
+    [
+        {1},    # Neighbors of region 0
+        {0, 2}, # Neighbors of region 1
+        {1}     # Neighbors of region 2
+    ]
+    ```
+    """
+    # This assumes that every region is listed in `borders_from_json`.
+    n_regions = max(max(pair) for pair in borders_from_json) + 1
+    borders = [set[int]() for _ in range(n_regions)]
+    for region1, region2 in borders_from_json:
+        borders[region1].add(region2)
+        borders[region2].add(region1)
+    return borders
+
+
 class RulesViolation(Exception):
     """Exception raised from `Game` methods when rules are violated."""
 
@@ -244,6 +266,7 @@ class Game:
         if shuffle_data:
             assets = shuffle(assets)
         self._regions: list[dict] = assets["map"]["tiles"]
+        self._borders = _borders(assets["map"]["tile_borders"])
         self._abilities = [Ability(a) for a in assets["abilities"]]
         self._races = [Race(r) for r in assets["races"]]
         self._n_combos: int = assets["n_selectable_combos"]
@@ -350,6 +373,7 @@ class Game:
         * `ValueError` - if not `0 <= region < len(assets["map"]["tiles"])`.
         * `RulesViolation` - if the player attempts to:
             * Do the first conquest of a new race not at the map border.
+            * Conquer a region that isn't adjacent to any owned regions.
             * Conquer a region occupied by their own active race.
             * Conquer without having enough tokens at hand.
         * `GameEnded` - if this method is called after the game has ended.
@@ -363,6 +387,11 @@ class Game:
             raise RulesViolation(msg)
         if region in self._current_player.active_regions:
             raise RulesViolation("Can't conquer your own region")
+        has_adjacent = any(region in self._borders[own]
+                           for own in self._current_player.active_regions)
+        if len(self._current_player.active_regions) > 0 and not has_adjacent:
+            msg = "The region must be adjacent to any of your active regions"
+            raise RulesViolation(msg)
         if any(p._is_owning(region) for p in self.players):
             raise NotImplementedError()
         tokens_required = 3

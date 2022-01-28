@@ -185,6 +185,8 @@ class TestGame(unittest.TestCase):
         game.conquer(0)
         with self.assertRaises(RulesViolation):
             game.conquer(0)  # Attempt to conquer own region.
+        with self.assertRaises(RulesViolation):
+            game.conquer(4)  # Attempt to conquer non-adjacent region.
         game.conquer(1)
         game.conquer(2)
         with self.assertRaises(RulesViolation):
