@@ -204,10 +204,7 @@ class Client:
             raise InvalidCommand("You need to provide a player index.")
         if len(args) > 1:
             raise InvalidCommand("'show-regions' expects only one argument.")
-        try:
-            i = int(args[0])
-        except ValueError:
-            raise ValueError(f"'{args[0]}' is not an integer")
+        i = self._parse_int(args[0])
         headers = ["Region", "Tokens", "Type"]
         rows = []
         for r, t in self.game.players[i].active_regions.items():
@@ -221,10 +218,7 @@ class Client:
             raise InvalidCommand("You need to provide a combo index.")
         if len(args) > 1:
             raise InvalidCommand("'combo' expects only one argument.")
-        try:
-            i = int(args[0])
-        except ValueError:
-            raise ValueError(f"'{args[0]}' is not an integer")
+        i = self._parse_int(args[0])
         self.game.select_combo(i)
 
     def _command_conquer(self, args: list[str]) -> None:
@@ -232,10 +226,7 @@ class Client:
             raise InvalidCommand("You need to provide a region index.")
         if len(args) > 1:
             raise InvalidCommand("'conquer' expects only one argument.")
-        try:
-            i = int(args[0])
-        except ValueError:
-            raise ValueError(f"'{args[0]}' is not an integer.")
+        i = self._parse_int(args[0])
         self.game.conquer(i)
 
     def _command_deploy(self, args: list[str]) -> None:
@@ -244,15 +235,15 @@ class Client:
             raise InvalidCommand(msg)
         if len(args) > 2:
             raise InvalidCommand("'deploy' expects only 2 arguments.")
-        try:
-            n = int(args[0])
-        except ValueError:
-            raise ValueError(f"'{args[0]}' is not an integer.")
-        try:
-            region = int(args[1])
-        except ValueError:
-            raise ValueError(f"'{args[1]}' is not an integer.")
+        n, region = [self._parse_int(a) for a in args]
         self.game.deploy(n, region)
+
+    def _parse_int(self, s: str) -> int:
+        """Parse an integer or raise `ValueError` with a frendly message."""
+        try:
+            return int(s)
+        except ValueError:
+            raise ValueError(f"'{s}' is not an integer.")
 
 
 if __name__ == "__main__":
