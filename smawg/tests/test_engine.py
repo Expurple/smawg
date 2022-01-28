@@ -173,6 +173,8 @@ class TestGame(unittest.TestCase):
         convenience.
         """
         game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        with self.assertRaises(RulesViolation):
+            game.conquer(0)  # Attempt to conquer without an active race.
         game.select_combo(0)
         for region in [-10, -1, len(TestGame.TINY_ASSETS["map"]["tiles"]), 99]:
             # "region must be between 0 and {len(assets["map"]["tiles"])}"
