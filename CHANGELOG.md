@@ -10,8 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     Lost Tribes).
 - The mechanic of conquering regions and earning coins, **but without**:
     - Support for conquering non-empty regions.
-    - Checking region location (map border for 1st conquest, adjacency for
-        later conquests).
+    - Checking if the conquested region is adjacent to any onwed region.
     - Reinforcements dice.
     - Redeployment step after.
     - Ability to abandon regions.

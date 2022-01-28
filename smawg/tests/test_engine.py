@@ -180,6 +180,8 @@ class TestGame(unittest.TestCase):
             # "region must be between 0 and {len(assets["map"]["tiles"])}"
             with self.assertRaises(ValueError):
                 game.conquer(region)
+        with self.assertRaises(RulesViolation):
+            game.conquer(2)  # First conquest not at the map border.
         game.conquer(0)
         with self.assertRaises(RulesViolation):
             game.conquer(0)  # Attempt to conquer own region.

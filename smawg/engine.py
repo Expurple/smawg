@@ -349,6 +349,7 @@ class Game:
         Exceptions raised:
         * `ValueError` - if not `0 <= region < len(assets["map"]["tiles"])`.
         * `RulesViolation` - if the player attempts to:
+            * Do the first conquest of a new race not at the map border.
             * Conquer a region occupied by their own active race.
             * Conquer without having enough tokens at hand.
         * `GameEnded` - if this method is called after the game has ended.
@@ -356,6 +357,10 @@ class Game:
         if not 0 <= region < len(self._regions):
             msg = f"region must be between 0 and {len(self._regions)}"
             raise ValueError(msg)
+        if len(self._current_player.active_regions) == 0 \
+                and not self._regions[region]["is_at_map_border"]:
+            msg = "The first conquest of a new race must be at the map border"
+            raise RulesViolation(msg)
         if region in self._current_player.active_regions:
             raise RulesViolation("Can't conquer your own region")
         if any(p._is_owning(region) for p in self.players):
