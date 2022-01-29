@@ -16,13 +16,23 @@ event names (`"on_turn_start"` and so on).
 
 ```python
 def on_turn_start(game: Game) -> None:
-    # Do stuff
+    """Fired when a player gets control over the `game`, starting a new turn.
+
+    You may choose to perform all interactions with the `game` here
+    (see example below).
+    """
 
 def on_turn_end(game: Game) -> None:
-    # Do stuff
+    """Fired after getting coins but before giving control to next player.
+
+    No acions can be performed from here. This hook is just for observing.
+    """
 
 def on_game_end(game: Game) -> None:
-    # Do stuff
+    """Fired after the last turn has ended.
+
+    No acions can be performed from here. This hook is just for observing.
+    """
 ```
 
 
@@ -38,7 +48,18 @@ def on_turn_start(game: Game) -> None:
 hooks = {
     "on_turn_start": on_turn_start
 }
+
+# After initialization, immediately fires "on_turn_start" for player 0.
 game = Game(some, other, args, hooks=hooks)
+
+# Rewards player 0 with Victory Coins.
+# Would execute "on_turn_end" if it was defined.
+# Then, gives control to player 1 and fires "on_turn_start" immediately.
+game.end_turn()
+
+# You get the idea, just call end_turn() n_players*n_turns times.
+# You can also do this in "on_turn_start" body,
+# but this leads to horrible recursing stack traces.
 ```
 
 
