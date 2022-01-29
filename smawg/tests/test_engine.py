@@ -166,6 +166,34 @@ class TestGame(unittest.TestCase):
         with self.assertRaises(RulesViolation):
             game.select_combo(0)  # Player has just declined during this turn.
 
+    def test_conquer_functionality(self):
+        """Check if `Game.conquer()` behaves as expected if used correctly."""
+        game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            game.select_combo(1)
+            self.assertEqual(game.players[0].tokens_on_hand, 9)
+            game.conquer(0)
+            self.assertEqual(game.players[0].tokens_on_hand, 6)
+            self.assertEqual(game.players[0].active_regions, {0: 3})
+            game.conquer(1)
+            self.assertEqual(game.players[0].tokens_on_hand, 3)
+            self.assertEqual(game.players[0].active_regions, {0: 3, 1: 3})
+            game.conquer(2)
+            self.assertEqual(game.players[0].tokens_on_hand, 0)
+            self.assertEqual(game.players[0].active_regions,
+                             {0: 3, 1: 3, 2: 3})
+            game.end_turn()
+        with nullcontext("Player 1, turn 1:"):
+            game.select_combo(0)
+            game.conquer(3)
+            self.assertEqual(game.players[1].tokens_on_hand, 6)
+            self.assertEqual(game.players[1].active_regions, {3: 3})
+            game.conquer(0)
+            self.assertEqual(game.players[1].tokens_on_hand, 0)
+            self.assertEqual(game.players[1].active_regions, {0: 6, 3: 3})
+            self.assertEqual(game.players[0].tokens_on_hand, 0)
+            self.assertEqual(game.players[0].active_regions, {1: 3, 2: 3})
+
     def test_conquer_exceptions(self):
         """Check if `Game.conquer()` raises expected exceptions.
 
@@ -256,23 +284,25 @@ class TestGame(unittest.TestCase):
         """Check if coin rewards work as expected."""
         game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
         self.assertBalances(game, [1, 1])  # Initial coin balances
-        game.select_combo(1)
-        self.assertBalances(game, [0, 1])  # Paid for combo
-        game.conquer(0)
-        game.conquer(1)
-        game.conquer(2)
-        game.end_turn()
+        with nullcontext("Player 0, turn 1:"):
+            game.select_combo(1)
+            self.assertBalances(game, [0, 1])  # Paid 1 coin for combo 1
+            game.conquer(0)
+            game.conquer(1)
+            game.conquer(2)
+            game.end_turn()
         self.assertBalances(game, [3, 1])  # Reward for active regions
-        game.select_combo(0)
-        self.assertBalances(game, [3, 2])  # Combo 0 had a coin from player 0
-        game.conquer(3)
-        game.conquer(4)
-        game.deploy(3, 4)
-        game.end_turn()
+        with nullcontext("Player 1, turn 1:"):
+            game.select_combo(0)
+            self.assertBalances(game, [3, 2])  # Combo 0 had coin from player 0
+            game.conquer(3)
+            game.conquer(0)
+            game.end_turn()
         self.assertBalances(game, [3, 4])  # Reward for active regions
-        game.decline()
-        game.end_turn()
-        self.assertBalances(game, [6, 4])  # Reward for decline regions
+        with nullcontext("Player 0, turn 2:"):
+            game.decline()
+            game.end_turn()
+        self.assertBalances(game, [5, 4])  # Reward for decline regions 1 and 2
 
     def assertBalances(self, game: Game, expected: list[int]):
         """Check if all player balances match the `expected`."""

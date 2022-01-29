@@ -392,14 +392,13 @@ class Game:
         if len(self._current_player.active_regions) > 0 and not has_adjacent:
             msg = "The region must be adjacent to any of your active regions"
             raise RulesViolation(msg)
-        if any(p._is_owning(region) for p in self.players):
-            raise NotImplementedError()
-        tokens_required = 3
+        tokens_required = self._get_conquest_cost(region)
         tokens_on_hand = self._current_player.tokens_on_hand
         if tokens_on_hand < tokens_required:
             msg = f"Not enough tokens on hand (you have {tokens_on_hand}, " \
                   f"but need {tokens_required})"
             raise RulesViolation(msg)
+        self._kick_out_owner(region)
         self._current_player.tokens_on_hand -= tokens_required
         self._current_player.active_regions[region] = tokens_required
         self._turn_stage = _TurnStage.ACTIVE
@@ -498,6 +497,28 @@ class Game:
         next_combo = Combo(self._races[self._n_combos - 1],
                            self._abilities[self._n_combos - 1])
         self.combos.append(next_combo)
+
+    def _get_conquest_cost(self, region: int) -> int:
+        """Return the amount of tokens needed to conquer the given `region`."""
+        cost = 3
+        for p in self.players:
+            if region in p.active_regions:
+                cost += p.active_regions[region]
+                break
+            if region in p.decline_regions:
+                cost += 1
+                break
+        return cost
+
+    def _kick_out_owner(self, region: int) -> None:
+        """Put all tokens from the given `region` to the storage tray."""
+        for p in self.players:
+            if region in p.active_regions:
+                del p.active_regions[region]
+                break
+            if region in p.decline_regions:
+                p.decline_regions.remove(region)
+                break
 
     def _reward_coins_for_turn(self) -> None:
         """Calculate and pay victory coins for the passed turn."""
