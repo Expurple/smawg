@@ -276,7 +276,6 @@ class Game:
         self._combos = [Combo(r, a) for r, a in visible_ra]
         self._players = [Player(self._n_combos - 1) for _ in range(n_players)]
         self._current_player_id: int = 0
-        self._current_player = self.players[self.current_player_id]
         self._roll_dice = dice_roll_func
         self._turn_stage = _TurnStage.SELECT_COMBO
         self._hooks: Mapping[str, Callable] \
@@ -318,6 +317,11 @@ class Game:
     def current_player_id(self) -> int:
         """0-based index of the current active player in `players`."""
         return self._current_player_id
+
+    @property
+    def _current_player(self) -> Player:
+        """The current active `Player`."""
+        return self.players[self.current_player_id]
 
     @_check_rules(require_active=True)
     def decline(self) -> None:
@@ -545,7 +549,6 @@ class Game:
         if self.current_player_id == len(self.players):
             self._current_player_id = 0
             self._current_turn += 1
-        self._current_player = self.players[self.current_player_id]
         if self._current_player.active_race is None:
             self._turn_stage = _TurnStage.SELECT_COMBO
         else:
