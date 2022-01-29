@@ -498,27 +498,32 @@ class Game:
                            self._abilities[self._n_combos - 1])
         self.combos.append(next_combo)
 
+    def _owner(self, region: int) -> Optional[int]:
+        """Return the owner of the given `region` or `None` if there's none."""
+        for i, p in enumerate(self.players):
+            if p._is_owning(region):
+                return i
+        return None
+
     def _get_conquest_cost(self, region: int) -> int:
         """Return the amount of tokens needed to conquer the given `region`."""
         cost = 3
-        for p in self.players:
-            if region in p.active_regions:
-                cost += p.active_regions[region]
-                break
-            if region in p.decline_regions:
-                cost += 1
-                break
+        owner_idx = self._owner(region)
+        if owner_idx is not None:
+            owner = self.players[owner_idx]
+            cost += owner.active_regions.get(region, 1)  # 1 if declined
         return cost
 
     def _kick_out_owner(self, region: int) -> None:
         """Put all tokens from the given `region` to the storage tray."""
-        for p in self.players:
-            if region in p.active_regions:
-                del p.active_regions[region]
-                break
-            if region in p.decline_regions:
-                p.decline_regions.remove(region)
-                break
+        owner_idx = self._owner(region)
+        if owner_idx is None:
+            return
+        owner = self.players[owner_idx]
+        if region in owner.active_regions:
+            del owner.active_regions[region]
+        else:
+            owner.decline_regions.remove(region)
 
     def _reward_coins_for_turn(self) -> None:
         """Calculate and pay victory coins for the passed turn."""
