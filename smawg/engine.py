@@ -515,13 +515,18 @@ class Game:
         return cost
 
     def _kick_out_owner(self, region: int) -> None:
-        """Put all tokens from the given `region` to the storage tray."""
+        """Move tokens from `region` to the storage tray and owner's hand.
+
+        If the `region` has no owner, do nothing.
+        """
         owner_idx = self._owner(region)
         if owner_idx is None:
             return
         owner = self.players[owner_idx]
         if region in owner.active_regions:
+            n_tokens = owner.active_regions[region]
             del owner.active_regions[region]
+            owner.tokens_on_hand += n_tokens - 1
         else:
             owner.decline_regions.remove(region)
 

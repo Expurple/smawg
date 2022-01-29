@@ -12,8 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Reinforcements dice.
     - Redeployment step after.
     - Ability to abandon regions.
-    - Allowing to redeploy any defeated tokens from hand (*all* tokens are
-        moved to the storage tray, not just one).
+    - Ability to redeploy defeated tokens right after attacker's turn.
 - Related `Game` methods: `conquer()`, `deploy()`
 - Related `Player` attributes: `active_regions`, `decline_regions`,
     `tokens_on_hand`

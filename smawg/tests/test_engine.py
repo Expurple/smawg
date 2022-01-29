@@ -191,7 +191,7 @@ class TestGame(unittest.TestCase):
             game.conquer(0)
             self.assertEqual(game.players[1].tokens_on_hand, 0)
             self.assertEqual(game.players[1].active_regions, {0: 6, 3: 3})
-            self.assertEqual(game.players[0].tokens_on_hand, 0)
+            self.assertEqual(game.players[0].tokens_on_hand, 2)
             self.assertEqual(game.players[0].active_regions, {1: 3, 2: 3})
 
     def test_conquer_exceptions(self):
