@@ -114,13 +114,21 @@ class Client:
             print(f"Player {game.current_player_id} starts turn "
                   f"{game.current_turn}/{game.n_turns}.")
 
+        def on_redeploy(game: Game) -> None:
+            print(f"Player {game.current_player_id} redeploys "
+                  f"{game._current_player.tokens_on_hand} tokens.")
+
         def on_game_end(game: Game) -> None:
             self._command_show_players()
             print("")
             print(f"{game.n_turns} turns have passed, the game is over.")
             print("You can take a final look around and type 'quit' to quit.")
 
-        hooks = {f.__name__: f for f in [on_turn_start, on_game_end]}
+        hooks = {
+            "on_turn_start": on_turn_start,
+            "on_redeploy": on_redeploy,
+            "on_game_end": on_game_end
+        }
         self.game = init_game(args, hooks)
 
     def run(self) -> None:

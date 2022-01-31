@@ -6,6 +6,7 @@ This module can also be seen as a collection of usage examples.
 import json
 import unittest
 from contextlib import nullcontext
+from copy import deepcopy
 
 import jsonschema.exceptions
 
@@ -115,6 +116,39 @@ class TestGame(unittest.TestCase):
                 game.deploy(game._current_player.tokens_on_hand, 3)
                 game.end_turn()
         self.assertEnded(game)
+
+    def test_redeployment_pseudo_turn(self):
+        """Check if redeployment pseudo-turn works as expected."""
+        assets = deepcopy(TestGame.TINY_ASSETS)
+        assets["max_n_players"] = 3
+        game = Game(assets, n_players=3, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            game.select_combo(0)
+            game.conquer(0)
+            game.conquer(1)
+            game.conquer(2)
+            game.end_turn()
+        with nullcontext("Player 1, turn 1:"):
+            game.select_combo(0)
+            game.conquer(3)
+            game.conquer(0)  # Region owned by player 0.
+            game.end_turn()
+        with nullcontext("Player 0 redeploys tokens:"):
+            self.assertEqual(game.current_player_id, 0)
+            self.assertEqual(game._current_player.tokens_on_hand, 2)
+            with self.assertRaises(RulesViolation):
+                game.select_combo(0)  # Method not allowed during redeployment.
+            with self.assertRaises(RulesViolation):
+                game.conquer(4)  # Method not allowed during redeployment.
+            with self.assertRaises(RulesViolation):
+                game.decline()  # Method not allowed during redeployment.
+            with self.assertRaises(RulesViolation):
+                game.end_turn()  # Must redeploy tokens first.
+            game.deploy(game._current_player.tokens_on_hand, 1)
+            game.end_turn()
+        with nullcontext("Player 2, turn 1:"):
+            self.assertEqual(game.current_turn, 1)
+            self.assertEqual(game.current_player_id, 2)
 
     def test_decline_exceptions(self):
         """Check if `Game.decline()` raises expected exceptions.

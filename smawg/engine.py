@@ -199,12 +199,18 @@ class _TurnStage(Enum):
     """Just declined and must `end_turn()` now."""
     ACTIVE = 3
     """Selected/used an active race during the turn and can't decline now."""
+    REDEPLOYMENT = 4
+    """Pseudo-turn for redeploying tokens after attack from other player."""
 
 
-def _check_rules(require_active: bool = False):
+def _check_rules(require_active: bool = False,
+                 allow_during_redeployment: bool = True):
     """Add boilerplate rule checks to public `Game` methods.
 
     `require_active` specifies whether an action requires an active race.
+
+    `allow_when_redeploying` specifies whether an action is allowed during the
+    redeployment phase.
     """
     def decorator(game_method: Callable):
         @wraps(game_method)
@@ -215,6 +221,10 @@ def _check_rules(require_active: bool = False):
                 raise GameEnded()
             if require_active and self._current_player.active_race is None:
                 msg = "To do this, you need to control an active race"
+                raise RulesViolation(msg)
+            if not allow_during_redeployment \
+                    and self._turn_stage == _TurnStage.REDEPLOYMENT:
+                msg = "This action is not allowed during redeployment"
                 raise RulesViolation(msg)
             # And then just execute the wrapped method
             return game_method(*args, **kwargs)
@@ -276,6 +286,8 @@ class Game:
         self._combos = [Combo(r, a) for r, a in visible_ra]
         self._players = [Player(self._n_combos - 1) for _ in range(n_players)]
         self._current_player_id: int = 0
+        self._next_player_id = self._increment(self._current_player_id)
+        """Helper to preserve `_current_player_id` during redeployment."""
         self._roll_dice = dice_roll_func
         self._turn_stage = _TurnStage.SELECT_COMBO
         self._hooks: Mapping[str, Callable] \
@@ -323,13 +335,15 @@ class Game:
         """The current active `Player`."""
         return self.players[self.current_player_id]
 
-    @_check_rules(require_active=True)
+    @_check_rules(require_active=True, allow_during_redeployment=False)
     def decline(self) -> None:
         """Put player's active race in decline state.
 
         Exceptions raised:
-        * `RulesViolation` - if the player is already in decline
-            or has already used his active race during this turn.
+        * `RulesViolation`:
+            * If the player is already in decline.
+            * If the player has already used his active race during this turn.
+            * If this method is called during the redeployment phase.
         * `GameEnded` - if this method is called after the game has ended.
         """
         if self._turn_stage in (_TurnStage.SELECT_COMBO, _TurnStage.DECLINED):
@@ -341,7 +355,7 @@ class Game:
         self._current_player._decline()
         self._turn_stage = _TurnStage.DECLINED
 
-    @_check_rules()
+    @_check_rules(allow_during_redeployment=False)
     def select_combo(self, combo_index: int) -> None:
         """Select the combo at specified `combo_index` as active.
 
@@ -352,24 +366,26 @@ class Game:
 
         Exceptions raised:
         * `ValueError` - if not `0 <= combo_index < len(combos)`.
-        * `RulesViolation` - if the player is not in decline, or has
-            just declined during this turn, or doesn't have enough coins.
+        * `RulesViolation`:
+            * If the player already has an active race.
+            * If the player has just declined during this turn.
+            * If the player doesn't have enough coins.
         * `GameEnded` - if this method is called after the game has ended.
         """
         if not 0 <= combo_index < len(self.combos):
             msg = f"combo_index must be between 0 and {len(self.combos)}"
             raise ValueError(msg)
-        if self._turn_stage in (_TurnStage.CAN_DECLINE, _TurnStage.ACTIVE):
-            raise RulesViolation("You need to decline first")
         if self._turn_stage == _TurnStage.DECLINED:
             raise RulesViolation("You need to finish your turn now and select "
                                  "a new race during the next turn")
+        if self._turn_stage != _TurnStage.SELECT_COMBO:
+            raise RulesViolation("You need to decline first")
         self._pay_for_combo(combo_index)
         self._current_player._set_active(self.combos[combo_index])
         self._pop_combo(combo_index)
         self._turn_stage = _TurnStage.ACTIVE
 
-    @_check_rules(require_active=True)
+    @_check_rules(require_active=True, allow_during_redeployment=False)
     def conquer(self, region: int) -> None:
         """Conquer the given map `region`.
 
@@ -380,6 +396,7 @@ class Game:
             * Conquer a region that isn't adjacent to any owned regions.
             * Conquer a region occupied by their own active race.
             * Conquer without having enough tokens at hand.
+            * Or if this method is called during the redeployment phase.
         * `GameEnded` - if this method is called after the game has ended.
         """
         if not 0 <= region < len(self._regions):
@@ -387,7 +404,7 @@ class Game:
             raise ValueError(msg)
         if len(self._current_player.active_regions) == 0 \
                 and not self._regions[region]["is_at_map_border"]:
-            msg = "The first conquest of a new race must be at the map border"
+            msg = "The initial conquest must be at the map border"
             raise RulesViolation(msg)
         if region in self._current_player.active_regions:
             raise RulesViolation("Can't conquer your own region")
@@ -437,15 +454,9 @@ class Game:
 
     @_check_rules()
     def end_turn(self) -> None:
-        """End current player's turn and give control to the next player.
+        """End turn (full or redeployment) and give control to the next player.
 
-        This action:
-        * Atomatically calculates and pays coin rewards for the passed turn.
-        * Fires `"on_turn_end"` hook.
-        * Then updates `current_player_id`.
-        * If that was the last player, increments `current_turn`.
-        * Then fires `"on_turn_start"` or `"on_game_end"` hook,
-            depending on whether `Game.has_ended`.
+        Automatically calculate+pay coin rewards and fire appropriate hooks.
 
         Exceptions raised:
         * `RulesViolation` - if the player:
@@ -462,8 +473,9 @@ class Game:
             if self._turn_stage == _TurnStage.CAN_DECLINE:
                 msg += " or decline"
             raise RulesViolation(msg)
-        self._reward_coins_for_turn()
-        self._hooks["on_turn_end"](self)
+        if self._turn_stage != _TurnStage.REDEPLOYMENT:
+            self._reward_coins_for_turn()
+            self._hooks["on_turn_end"](self)
         self._switch_player()
 
     def _pay_for_combo(self, combo_index: int) -> None:
@@ -536,7 +548,17 @@ class Game:
 
     def _switch_player(self) -> None:
         """Switch to the next player, updating state and firing hooks."""
-        self._current_player_id = self._increment(self._current_player_id)
+        # This part switches to redeployment "pseudo-turn" if needed:
+        for i, p in enumerate(self.players):
+            need_redeploy = p.tokens_on_hand > 0 and len(p.active_regions) > 0
+            if need_redeploy and i != self._next_player_id:
+                self._current_player_id = i
+                self._turn_stage = _TurnStage.REDEPLOYMENT
+                self._hooks["on_redeploy"](self)
+                return
+        # This part performs the actual switch to the next turn:
+        self._current_player_id = self._next_player_id
+        self._next_player_id = self._increment(self._current_player_id)
         if self._current_player_id == 0:
             self._current_turn += 1
         if self._current_player.active_race is None:

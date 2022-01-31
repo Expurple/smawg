@@ -10,10 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     Lost Tribes).
 - The mechanic of conquering regions and earning coins, **but without**:
     - Reinforcements dice.
-    - Redeployment step after.
+    - Redeployment at the end of the turn.
     - Ability to abandon regions.
-    - Ability to redeploy defeated tokens right after attacker's turn.
 - Related `Game` methods: `conquer()`, `deploy()`
+- Related `Game` hook: `"on_redeploy"`
 - Related `Player` attributes: `active_regions`, `decline_regions`,
     `tokens_on_hand`
 - Related `cli` commands: `show-regions`, `conquer`, `deploy`.
