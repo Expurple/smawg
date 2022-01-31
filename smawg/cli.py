@@ -216,6 +216,9 @@ class Client:
         if len(args) > 1:
             raise InvalidCommand("'show-regions' expects only one argument.")
         i = self._parse_int(args[0])
+        if not 0 <= i < len(self.game.players):
+            msg = f"<player> must be between 0 and {len(self.game.players)}"
+            raise ValueError(msg)
         headers = ["Region", "Tokens", "Type"]
         rows = []
         for r, t in self.game.players[i].active_regions.items():
