@@ -140,8 +140,11 @@ class Client:
 
     def _run_main_loop(self) -> None:
         while True:
+            command = input("> ").strip()
+            if command == "":
+                continue
+            command, *args = command.split()
             try:
-                command, *args = input("> ").strip().split()
                 self._interpret(command, args)
             except InvalidCommand as e:
                 print(f"Invalid command: {e.args[0]}")
