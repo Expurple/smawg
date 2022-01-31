@@ -465,11 +465,6 @@ class Game:
         self._reward_coins_for_turn()
         self._hooks["on_turn_end"](self)
         self._switch_player()
-        if self.has_ended:
-            self._hooks["on_game_end"](self)
-        else:
-            self._current_player._pick_up_tokens()
-            self._hooks["on_turn_start"](self)
 
     def _pay_for_combo(self, combo_index: int) -> None:
         """Perform coin transactions needed to obtain the specified combo.
@@ -540,16 +535,20 @@ class Game:
         self._current_player.coins += len(self._current_player.decline_regions)
 
     def _switch_player(self) -> None:
-        """Switch `_current_player` to the next player.
-
-        Update `_turn_stage`, `current_player_id` and `current_turn`
-        accordingly.
-        """
-        self._current_player_id += 1
-        if self.current_player_id == len(self.players):
-            self._current_player_id = 0
+        """Switch to the next player, updating state and firing hooks."""
+        self._current_player_id = self._increment(self._current_player_id)
+        if self._current_player_id == 0:
             self._current_turn += 1
         if self._current_player.active_race is None:
             self._turn_stage = _TurnStage.SELECT_COMBO
         else:
             self._turn_stage = _TurnStage.CAN_DECLINE
+        if self.has_ended:
+            self._hooks["on_game_end"](self)
+        else:
+            self._current_player._pick_up_tokens()
+            self._hooks["on_turn_start"](self)
+
+    def _increment(self, player_id: int) -> int:
+        """Increment the given `player_id`, wrapping around if needed."""
+        return (self._current_player_id + 1) % len(self.players)
