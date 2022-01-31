@@ -106,13 +106,11 @@ class TestGame(unittest.TestCase):
         with nullcontext("Player 1, turn 1:"):
             game.select_combo(0)
             game.conquer(3)
-            game.conquer(4)
-            # Can't conquer other players' regions yet.
-            game.deploy(game._current_player.tokens_on_hand, 3)
+            game.conquer(0)
             game.end_turn()
         with nullcontext("Both players do nothing on turns 2-3:"):
             for _ in range(2):
-                game.deploy(game._current_player.tokens_on_hand, 0)
+                game.deploy(game._current_player.tokens_on_hand, 1)
                 game.end_turn()
                 game.deploy(game._current_player.tokens_on_hand, 3)
                 game.end_turn()
