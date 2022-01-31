@@ -273,8 +273,7 @@ class Game:
                   f'between {assets["min_n_players"]} ' \
                   f'and {assets["max_n_players"]})'
             raise RulesViolation(msg)
-        if shuffle_data:
-            assets = shuffle(assets)
+        assets = shuffle(assets) if shuffle_data else deepcopy(assets)
         self._regions: list[dict] = assets["map"]["tiles"]
         self._borders = _borders(assets["map"]["tile_borders"])
         self._abilities = [Ability(a) for a in assets["abilities"]]

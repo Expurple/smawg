@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Fixed
+- `Game` potentially breaking when `assets` are modified later.
 - `cli` crashing when `show-regions` argument is out of bounds.
 - "not enough values to unpack" when entering an empty line in `cli`.
 
