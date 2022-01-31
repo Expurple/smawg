@@ -17,10 +17,14 @@ and easy interoperability with other programming languages.
 * Support for custom maps, races and other assets.
 * Deterministic or randomized outcomes.
 
-### **Missing essential features** (in progress):
+### **Missing features** (in progress):
 
-* A lot of core concepts: abandoning regions, using reinrofcements...
-* Implementation of unique race abilities.
+* Lost Tribes.
+* Different region types (Seas, Mountains, etc).
+* Redeployment at the end of the turn.
+* Ability to abandon regions.
+* Reinforcements dice.
+* Unique Race and Special Power abilities.
 
 ### Future plans:
 
