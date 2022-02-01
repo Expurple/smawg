@@ -448,7 +448,8 @@ class Game:
             raise RulesViolation(msg)
         self.player.tokens_on_hand -= n_tokens
         self.player.active_regions[region] += n_tokens
-        self._turn_stage = _TurnStage.ACTIVE
+        if self._turn_stage == _TurnStage.CAN_DECLINE:
+            self._turn_stage = _TurnStage.ACTIVE
 
     @_check_rules()
     def end_turn(self) -> None:
