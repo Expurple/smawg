@@ -111,12 +111,12 @@ class Client:
         print(START_SCREEN)
 
         def on_turn_start(game: Game) -> None:
-            print(f"Player {game.current_player_id} starts turn "
+            print(f"Player {game.player_id} starts turn "
                   f"{game.current_turn}/{game.n_turns}.")
 
         def on_redeploy(game: Game) -> None:
-            print(f"Player {game.current_player_id} redeploys "
-                  f"{game._current_player.tokens_on_hand} tokens.")
+            print(f"Player {game.player_id} redeploys "
+                  f"{game._player.tokens_on_hand} tokens.")
 
         def on_game_end(game: Game) -> None:
             self._command_show_players()

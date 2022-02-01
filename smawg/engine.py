@@ -219,7 +219,7 @@ def _check_rules(require_active: bool = False,
             self: "Game" = args[0]
             if self.has_ended:
                 raise GameEnded()
-            if require_active and self._current_player.active_race is None:
+            if require_active and self._player.active_race is None:
                 msg = "To do this, you need to control an active race"
                 raise RulesViolation(msg)
             if not allow_during_redeployment \
@@ -284,8 +284,8 @@ class Game:
         visible_ra = islice(zip(self._races, self._abilities), self._n_combos)
         self._combos = [Combo(r, a) for r, a in visible_ra]
         self._players = [Player(self._n_combos - 1) for _ in range(n_players)]
-        self._current_player_id: int = 0
-        self._next_player_id = self._increment(self._current_player_id)
+        self._player_id = 0
+        self._next_player_id = self._increment(self._player_id)
         """Helper to preserve `_current_player_id` during redeployment."""
         self._roll_dice = dice_roll_func
         self._turn_stage = _TurnStage.SELECT_COMBO
@@ -325,14 +325,14 @@ class Game:
         return self._players
 
     @property
-    def current_player_id(self) -> int:
+    def player_id(self) -> int:
         """0-based index of the current active player in `players`."""
-        return self._current_player_id
+        return self._player_id
 
     @property
-    def _current_player(self) -> Player:
+    def _player(self) -> Player:
         """The current active `Player`."""
-        return self.players[self.current_player_id]
+        return self.players[self.player_id]
 
     @_check_rules(require_active=True, allow_during_redeployment=False)
     def decline(self) -> None:
@@ -351,7 +351,7 @@ class Game:
             msg = "You've already used your active race during this turn. " \
                   "You can only decline during the next turn"
             raise RulesViolation(msg)
-        self._current_player._decline()
+        self._player._decline()
         self._turn_stage = _TurnStage.DECLINED
 
     @_check_rules(allow_during_redeployment=False)
@@ -380,7 +380,7 @@ class Game:
         if self._turn_stage != _TurnStage.SELECT_COMBO:
             raise RulesViolation("You need to decline first")
         self._pay_for_combo(combo_index)
-        self._current_player._set_active(self.combos[combo_index])
+        self._player._set_active(self.combos[combo_index])
         self._pop_combo(combo_index)
         self._turn_stage = _TurnStage.ACTIVE
 
@@ -401,26 +401,26 @@ class Game:
         if not 0 <= region < len(self._regions):
             msg = f"region must be between 0 and {len(self._regions)}"
             raise ValueError(msg)
-        if len(self._current_player.active_regions) == 0 \
+        if len(self._player.active_regions) == 0 \
                 and not self._regions[region]["is_at_map_border"]:
             msg = "The initial conquest must be at the map border"
             raise RulesViolation(msg)
-        if region in self._current_player.active_regions:
+        if region in self._player.active_regions:
             raise RulesViolation("Can't conquer your own region")
         has_adjacent = any(region in self._borders[own]
-                           for own in self._current_player.active_regions)
-        if len(self._current_player.active_regions) > 0 and not has_adjacent:
+                           for own in self._player.active_regions)
+        if len(self._player.active_regions) > 0 and not has_adjacent:
             msg = "The region must be adjacent to any of your active regions"
             raise RulesViolation(msg)
         tokens_required = self._get_conquest_cost(region)
-        tokens_on_hand = self._current_player.tokens_on_hand
+        tokens_on_hand = self._player.tokens_on_hand
         if tokens_on_hand < tokens_required:
             msg = f"Not enough tokens on hand (you have {tokens_on_hand}, " \
                   f"but need {tokens_required})"
             raise RulesViolation(msg)
         self._kick_out_owner(region)
-        self._current_player.tokens_on_hand -= tokens_required
-        self._current_player.active_regions[region] = tokens_required
+        self._player.tokens_on_hand -= tokens_required
+        self._player.active_regions[region] = tokens_required
         self._turn_stage = _TurnStage.ACTIVE
 
     @_check_rules(require_active=True)
@@ -441,14 +441,14 @@ class Game:
         if not 0 <= region < len(self._regions):
             msg = f"region must be between 0 and {len(self._regions)}"
             raise ValueError(msg)
-        if region not in self._current_player.active_regions:
+        if region not in self._player.active_regions:
             raise RulesViolation("Can only deploy to owned region")
-        tokens_on_hand = self._current_player.tokens_on_hand
+        tokens_on_hand = self._player.tokens_on_hand
         if n_tokens > tokens_on_hand:
             msg = f"Not enough tokens on hand (you have {tokens_on_hand})"
             raise RulesViolation(msg)
-        self._current_player.tokens_on_hand -= n_tokens
-        self._current_player.active_regions[region] += n_tokens
+        self._player.tokens_on_hand -= n_tokens
+        self._player.active_regions[region] += n_tokens
         self._turn_stage = _TurnStage.ACTIVE
 
     @_check_rules()
@@ -466,7 +466,7 @@ class Game:
         if self._turn_stage == _TurnStage.SELECT_COMBO:
             raise RulesViolation("You need to select a new race+ability combo "
                                  "before ending this turn")
-        tokens_on_hand = self._current_player.tokens_on_hand
+        tokens_on_hand = self._player.tokens_on_hand
         if tokens_on_hand > 0:
             msg = f"You need to use remaining {tokens_on_hand} tokens on hand"
             if self._turn_stage == _TurnStage.CAN_DECLINE:
@@ -487,9 +487,9 @@ class Game:
         If the player doesn't have enough coins, `RulesViolation` is raised.
         """
         coins_getting = self.combos[combo_index].coins
-        if combo_index > self._current_player.coins + coins_getting:
+        if combo_index > self._player.coins + coins_getting:
             raise RulesViolation("Not enough coins, select a different race")
-        self._current_player.coins += coins_getting - combo_index
+        self._player.coins += coins_getting - combo_index
         for combo in self.combos[:combo_index]:
             combo.coins += 1
         self.combos[combo_index].coins = 0
@@ -542,8 +542,8 @@ class Game:
 
     def _reward_coins_for_turn(self) -> None:
         """Calculate and pay victory coins for the passed turn."""
-        self._current_player.coins += len(self._current_player.active_regions)
-        self._current_player.coins += len(self._current_player.decline_regions)
+        self._player.coins += len(self._player.active_regions)
+        self._player.coins += len(self._player.decline_regions)
 
     def _switch_player(self) -> None:
         """Switch to the next player, updating state and firing hooks."""
@@ -551,23 +551,23 @@ class Game:
         for i, p in enumerate(self.players):
             need_redeploy = p.tokens_on_hand > 0 and len(p.active_regions) > 0
             if need_redeploy and i != self._next_player_id:
-                self._current_player_id = i
+                self._player_id = i
                 self._turn_stage = _TurnStage.REDEPLOYMENT
                 self._hooks["on_redeploy"](self)
                 return
         # This part performs the actual switch to the next turn:
-        self._current_player_id = self._next_player_id
-        self._next_player_id = self._increment(self._current_player_id)
-        if self._current_player_id == 0:
+        self._player_id = self._next_player_id
+        self._next_player_id = self._increment(self._player_id)
+        if self._player_id == 0:
             self._current_turn += 1
-        if self._current_player.active_race is None:
+        if self._player.active_race is None:
             self._turn_stage = _TurnStage.SELECT_COMBO
         else:
             self._turn_stage = _TurnStage.CAN_DECLINE
         if self.has_ended:
             self._hooks["on_game_end"](self)
         else:
-            self._current_player._pick_up_tokens()
+            self._player._pick_up_tokens()
             self._hooks["on_turn_start"](self)
 
     def _increment(self, player_id: int) -> int:
