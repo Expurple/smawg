@@ -27,6 +27,11 @@
             "type": "integer",
             "minimum": 2
         },
+        "n_coins_on_start": {
+            "description": "The number of coins at the start of the game.",
+            "type": "integer",
+            "minimum": 0
+        },
         "n_selectable_combos": {
             "description": "The number of revealed combos at any given time, each available for players to select.",
             "type": "integer",
@@ -52,6 +57,7 @@
     "required": [
         "min_n_players",
         "max_n_players",
+        "n_coins_on_start",
         "n_selectable_combos",
         "n_turns",
         "abilities",

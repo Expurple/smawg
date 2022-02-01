@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Explicit `"n_coins_on_start"` in assets
+    (instead of implicitly deduced from `"n_combos"`).
 - `Game.player` as a shortcut to `Game.players[Game.player_id]`.
 
 ### Changed

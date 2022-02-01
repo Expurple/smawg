@@ -283,7 +283,8 @@ class Game:
         self._current_turn: int = 1
         visible_ra = islice(zip(self._races, self._abilities), self._n_combos)
         self._combos = [Combo(r, a) for r, a in visible_ra]
-        self._players = [Player(self._n_combos - 1) for _ in range(n_players)]
+        n_coins: int = assets["n_coins_on_start"]
+        self._players = [Player(n_coins) for _ in range(n_players)]
         self._player_id = 0
         self._next_player_id = self._increment(self._player_id)
         """Helper to preserve `_current_player_id` during redeployment."""
