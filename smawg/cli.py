@@ -159,7 +159,7 @@ class Client:
         * `RulesViolation` - if given command violates the game rules.
         """
         if command in COMMANDS_WITHOUT_ARGS and len(args) > 0:
-            raise InvalidCommand(f"'{command}' does not accept any arguments.")
+            raise InvalidCommand(f"'{command}' does not accept any arguments")
         if command == "help":
             print(HELP)
         elif command == "show-combos":
@@ -181,7 +181,7 @@ class Client:
         elif command == "quit":
             exit(0)
         else:
-            raise InvalidCommand(f"'{command}'.")
+            raise InvalidCommand(f"'{command}'")
 
     def _command_show_players(self) -> None:
         headers = ["Player", "Active ability", "Active race", "Declined race",
@@ -207,9 +207,9 @@ class Client:
 
     def _command_show_regions(self, args: list[str]) -> None:
         if len(args) == 0:
-            raise InvalidCommand("You need to provide a player index.")
+            raise InvalidCommand("You need to provide a player index")
         if len(args) > 1:
-            raise InvalidCommand("'show-regions' expects only one argument.")
+            raise InvalidCommand("'show-regions' expects only one argument")
         i = self._parse_int(args[0])
         if not 0 <= i < len(self.game.players):
             msg = f"<player> must be between 0 and {len(self.game.players)}"
@@ -224,26 +224,26 @@ class Client:
 
     def _command_combo(self, args: list[str]) -> None:
         if len(args) == 0:
-            raise InvalidCommand("You need to provide a combo index.")
+            raise InvalidCommand("You need to provide a combo index")
         if len(args) > 1:
-            raise InvalidCommand("'combo' expects only one argument.")
+            raise InvalidCommand("'combo' expects only one argument")
         i = self._parse_int(args[0])
         self.game.select_combo(i)
 
     def _command_conquer(self, args: list[str]) -> None:
         if len(args) == 0:
-            raise InvalidCommand("You need to provide a region index.")
+            raise InvalidCommand("You need to provide a region index")
         if len(args) > 1:
-            raise InvalidCommand("'conquer' expects only one argument.")
+            raise InvalidCommand("'conquer' expects only one argument")
         i = self._parse_int(args[0])
         self.game.conquer(i)
 
     def _command_deploy(self, args: list[str]) -> None:
         if len(args) < 2:
-            msg = "You need to provide a number of tokens and a region index."
+            msg = "You need to provide a number of tokens and a region index"
             raise InvalidCommand(msg)
         if len(args) > 2:
-            raise InvalidCommand("'deploy' expects only 2 arguments.")
+            raise InvalidCommand("'deploy' expects only 2 arguments")
         n, region = [self._parse_int(a) for a in args]
         self.game.deploy(n, region)
 
@@ -252,7 +252,7 @@ class Client:
         try:
             return int(s)
         except ValueError:
-            raise ValueError(f"'{s}' is not an integer.")
+            raise ValueError(f"'{s}' is not an integer")
 
 
 if __name__ == "__main__":
