@@ -572,4 +572,4 @@ class Game:
 
     def _increment(self, player_id: int) -> int:
         """Increment the given `player_id`, wrapping around if needed."""
-        return (self._current_player_id + 1) % len(self.players)
+        return (player_id + 1) % len(self.players)
