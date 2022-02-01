@@ -31,9 +31,9 @@ Available commands:
     help                   show this message
     show-combos            show available combos
     show-players           show general player stats
-    show-regions <player>  show regions owned by the player
-    combo <index>          pick race+ability combo by index
-    conquer <region>       conquer region by index
+    show-regions <player>  show regions owned by <player>
+    combo <index>          pick race+ability combo by <index>
+    conquer <region>       conquer <region> by index
     deploy <n> <region>    deploy <n> tokens from hand to <region>
     decline                enter decline
     end-turn               end turn and give control to the next player
@@ -60,10 +60,11 @@ def parse_args() -> Namespace:
     """
     parser = ArgumentParser(description=TITLE, epilog=VISIT_HOME_PAGE)
     parser.add_argument("assets_file",
+                        metavar="<assets_file>",
                         help="path to JSON file with assets")
     parser.add_argument("-s", "--no-shuffle",
                         action="store_true",
-                        help="don't shuffle data from json")
+                        help="don't shuffle data from <assets_file>")
     parser.add_argument("-d", "--read-dice",
                         action="store_true",
                         help="read dice roll results from stdin instead of "
