@@ -111,9 +111,9 @@ class TestGame(unittest.TestCase):
             game.end_turn()
         with nullcontext("Both players do nothing on turns 2-3:"):
             for _ in range(2):
-                game.deploy(game._player.tokens_on_hand, 1)
+                game.deploy(game.player.tokens_on_hand, 1)
                 game.end_turn()
-                game.deploy(game._player.tokens_on_hand, 3)
+                game.deploy(game.player.tokens_on_hand, 3)
                 game.end_turn()
         self.assertEnded(game)
 
@@ -135,7 +135,7 @@ class TestGame(unittest.TestCase):
             game.end_turn()
         with nullcontext("Player 0 redeploys tokens:"):
             self.assertEqual(game.player_id, 0)
-            self.assertEqual(game._player.tokens_on_hand, 2)
+            self.assertEqual(game.player.tokens_on_hand, 2)
             with self.assertRaises(RulesViolation):
                 game.select_combo(0)  # Method not allowed during redeployment.
             with self.assertRaises(RulesViolation):
@@ -144,7 +144,7 @@ class TestGame(unittest.TestCase):
                 game.decline()  # Method not allowed during redeployment.
             with self.assertRaises(RulesViolation):
                 game.end_turn()  # Must redeploy tokens first.
-            game.deploy(game._player.tokens_on_hand, 1)
+            game.deploy(game.player.tokens_on_hand, 1)
             game.end_turn()
         with nullcontext("Player 2, turn 1:"):
             self.assertEqual(game.current_turn, 1)
@@ -260,12 +260,12 @@ class TestGame(unittest.TestCase):
         game.select_combo(CHOSEN_COMBO)
         TOKENS_TOTAL = game.combos[CHOSEN_COMBO].base_n_tokens
         game.conquer(CHOSEN_REGION)
-        self.assertEqual(game._player.tokens_on_hand, TOKENS_TOTAL - 3)
-        self.assertEqual(game._player.active_regions,
+        self.assertEqual(game.player.tokens_on_hand, TOKENS_TOTAL - 3)
+        self.assertEqual(game.player.active_regions,
                          {CHOSEN_REGION: 3})
-        game.deploy(game._player.tokens_on_hand, CHOSEN_REGION)
-        self.assertEqual(game._player.tokens_on_hand, 0)
-        self.assertEqual(game._player.active_regions,
+        game.deploy(game.player.tokens_on_hand, CHOSEN_REGION)
+        self.assertEqual(game.player.tokens_on_hand, 0)
+        self.assertEqual(game.player.active_regions,
                          {CHOSEN_REGION: TOKENS_TOTAL})
 
     def test_deploy_exceptions(self):
@@ -284,7 +284,7 @@ class TestGame(unittest.TestCase):
         game.conquer(CHOSEN_REGION)
         with self.assertRaises(RulesViolation):
             # Not enough tokens on hand.
-            game.deploy(game._player.tokens_on_hand + 1, CHOSEN_REGION)
+            game.deploy(game.player.tokens_on_hand + 1, CHOSEN_REGION)
         for n_tokens in [-99, -1, 0]:
             # "n_tokens must be greater then 0"
             with self.assertRaises(ValueError):
@@ -309,7 +309,7 @@ class TestGame(unittest.TestCase):
         with self.assertRaises(RulesViolation):  # Must deploy tokens first.
             game.end_turn()
         game.conquer(CHOSEN_REGION)
-        game.deploy(game._player.tokens_on_hand, CHOSEN_REGION)
+        game.deploy(game.player.tokens_on_hand, CHOSEN_REGION)
         game.end_turn()
 
     def test_coin_rewards(self):

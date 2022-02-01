@@ -116,7 +116,7 @@ class Client:
 
         def on_redeploy(game: Game) -> None:
             print(f"Player {game.player_id} redeploys "
-                  f"{game._player.tokens_on_hand} tokens.")
+                  f"{game.player.tokens_on_hand} tokens.")
 
         def on_game_end(game: Game) -> None:
             self._command_show_players()
