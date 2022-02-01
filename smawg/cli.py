@@ -22,7 +22,7 @@ from smawg import _PACKAGE_DIR, VERSION
 from smawg.engine import Game, RulesViolation
 
 
-TITLE = f"Small World CLI v{VERSION}"
+TITLE = f"smawg CLI v{VERSION}"
 HELP_SUGGESTION = "Type 'help' to see available commands."
 VISIT_HOME_PAGE = "For more info, visit https://github.com/expurple/smawg"
 START_SCREEN = "\n".join([TITLE, HELP_SUGGESTION, VISIT_HOME_PAGE, ""])
