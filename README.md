@@ -91,7 +91,7 @@ Generally, it's invoked as
 * `python3 -m smawg.cli`
 
 A simple example set of options would be
-* `python3 -m smawg.cli --players=2 --relative-path assets/tiny.json`
+* `python3 -m smawg.cli --relative-path assets/tiny.json`
 
 It should guide you through the usage.
 
@@ -110,9 +110,9 @@ from smawg.engine import Game
 with open('some/path/to/assets.json') as assets_file:
     assets = json.load(assets_file)
 
-# Provide different arguments or set hooks on game events, if needed.
+# Provide additional arguments or set hooks on game events, if needed.
 # See `docs/hooks.md` for more info about hooks.
-game = Game(assets, n_players=2)
+game = Game(assets)
 
 # Call `game` methods to perform actions.
 # Read `game` properties to monitor the game state.

@@ -11,7 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Game.player` as a shortcut to `Game.players[Game.player_id]`.
 
 ### Changed
+- In assets, replaced `"min_n_players"` and `"max_n_players"`
+    with just `"n_players"`.
 - Renamed `Game.current_player_id` to `Game.player_id`.
+
+### Removed
+- `n_players` parameter from `Game.__init__()`.
+- `--players` option from `cli`.
 
 ## [0.2.1] - 2021-02-01
 ### Fixed

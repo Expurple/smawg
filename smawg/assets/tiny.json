@@ -3,8 +3,7 @@
     "name": "Tiny",
     "description": "A bare minimum working set of assets.",
 
-    "min_n_players": 2,
-    "max_n_players": 2,
+    "n_players": 2,
     "n_coins_on_start": 1,
     "n_selectable_combos": 2,
     "n_turns": 3,

@@ -244,10 +244,10 @@ class Game:
     or raise exceptions if the call violates the rules.
     """
 
-    def __init__(self, assets: dict, n_players: int, shuffle_data: bool = True,
+    def __init__(self, assets: dict, shuffle_data: bool = True,
                  dice_roll_func: Callable[[], int] = roll_dice,
                  hooks: Mapping[str, Callable] = dict()) -> None:
-        """Initialize a game for `n_players`, with given `assets`.
+        """Initialize a game based on given `assets`.
 
         When initialization is finished, the object is ready to be used by
         player 0. `"on_turn_start"` hook is fired immediately, if provided.
@@ -264,16 +264,11 @@ class Game:
         Exceptions raised:
         * `jsonschema.exceptions.ValidationError` -
             if `assets` dict doesn't match `assets_schema/assets.json`.
-        * `RulesViolation` -
-            if `n_players` doesn't respect the limits specified in `assets`.
         """
         jsonschema.validate(assets, ASSETS_SCHEMA, resolver=_JS_REF_RESOLVER)
-        if not assets["min_n_players"] <= n_players <= assets["max_n_players"]:
-            msg = f"Invalid number of players: {n_players} (expected " \
-                  f'between {assets["min_n_players"]} ' \
-                  f'and {assets["max_n_players"]})'
-            raise RulesViolation(msg)
         assets = shuffle(assets) if shuffle_data else deepcopy(assets)
+        n_coins: int = assets["n_coins_on_start"]
+        n_players: int = assets["n_players"]
         self._regions: list[dict] = assets["map"]["tiles"]
         self._borders = _borders(assets["map"]["tile_borders"])
         self._abilities = [Ability(a) for a in assets["abilities"]]
@@ -283,7 +278,6 @@ class Game:
         self._current_turn: int = 1
         visible_ra = islice(zip(self._races, self._abilities), self._n_combos)
         self._combos = [Combo(r, a) for r, a in visible_ra]
-        n_coins: int = assets["n_coins_on_start"]
         self._players = [Player(n_coins) for _ in range(n_players)]
         self._player_id = 0
         self._next_player_id = self._increment(self._player_id)

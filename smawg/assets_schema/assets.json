@@ -17,15 +17,10 @@
             "description": "An optional description of this particular set of assets.",
             "type": "string"
         },
-        "min_n_players": {
-            "description": "The maximum allowed number of players in this particular game setup.",
+        "n_players": {
+            "description": "The number of players in this particular game setup.",
             "type": "integer",
-            "minimum": 2
-        },
-        "max_n_players": {
-            "description": "The minimum allowed number of players in this particular game setup.",
-            "type": "integer",
-            "minimum": 2
+            "minimum": 1
         },
         "n_coins_on_start": {
             "description": "The number of coins at the start of the game.",
@@ -55,8 +50,7 @@
         "map": {"$ref": "map.json"}
     },
     "required": [
-        "min_n_players",
-        "max_n_players",
+        "n_players",
         "n_coins_on_start",
         "n_selectable_combos",
         "n_turns",

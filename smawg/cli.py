@@ -61,11 +61,6 @@ def parse_args() -> Namespace:
     parser = ArgumentParser(description=TITLE, epilog=VISIT_HOME_PAGE)
     parser.add_argument("assets_file",
                         help="path to JSON file with assets")
-    parser.add_argument("-p", "--players",
-                        metavar="<num>",
-                        type=int,
-                        required=True,
-                        help="specify the number of players")
     parser.add_argument("-s", "--no-shuffle",
                         action="store_true",
                         help="don't shuffle data from json")
@@ -87,12 +82,11 @@ def init_game(args: Namespace, hooks: dict[str, Callable]) -> Game:
     with open(args.assets_file) as file:
         assets = json.load(file)
     if args.read_dice:
-        return Game(assets, args.players, not args.no_shuffle,
+        return Game(assets, not args.no_shuffle,
                     lambda: int(input("Enter the result of the dice roll: ")),
                     hooks=hooks)
     else:
-        return Game(assets, args.players, not args.no_shuffle,
-                    hooks=hooks)
+        return Game(assets, not args.no_shuffle, hooks=hooks)
 
 
 class InvalidCommand(ValueError):

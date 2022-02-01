@@ -97,7 +97,7 @@ class TestGame(unittest.TestCase):
         Make sure that valid gameplay doesn't raise any exceptions.
         Then, check if all `Game` methods raise `GameEnded` after the game end.
         """
-        game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
             game.conquer(0)
@@ -120,8 +120,8 @@ class TestGame(unittest.TestCase):
     def test_redeployment_pseudo_turn(self):
         """Check if redeployment pseudo-turn works as expected."""
         assets = deepcopy(TestGame.TINY_ASSETS)
-        assets["max_n_players"] = 3
-        game = Game(assets, n_players=3, shuffle_data=False)
+        assets["n_players"] = 3
+        game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
             game.conquer(0)
@@ -156,7 +156,7 @@ class TestGame(unittest.TestCase):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
         with self.assertRaises(RulesViolation):
             game.decline()  # There's no active race yet.
         game.select_combo(0)
@@ -179,7 +179,7 @@ class TestGame(unittest.TestCase):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
         for combo in [-10, -1, len(game.combos), 999]:
             # "combo_index must be between 0 and {len(game.combos)}"
             with self.assertRaises(ValueError):
@@ -200,7 +200,7 @@ class TestGame(unittest.TestCase):
 
     def test_conquer_functionality(self):
         """Check if `Game.conquer()` behaves as expected if used correctly."""
-        game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
             self.assertEqual(game.players[0].tokens_on_hand, 9)
@@ -232,7 +232,7 @@ class TestGame(unittest.TestCase):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
         with self.assertRaises(RulesViolation):
             game.conquer(0)  # Attempt to conquer without an active race.
         game.select_combo(0)
@@ -254,7 +254,7 @@ class TestGame(unittest.TestCase):
 
     def test_deploy_functionality(self):
         """Check if `Game.deploy()` behaves as expected when used correctly."""
-        game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
         CHOSEN_COMBO = 0
         CHOSEN_REGION = 0
         game.select_combo(CHOSEN_COMBO)
@@ -274,7 +274,7 @@ class TestGame(unittest.TestCase):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
         CHOSEN_COMBO = 0
         CHOSEN_REGION = 0
         game.select_combo(CHOSEN_COMBO)
@@ -300,7 +300,7 @@ class TestGame(unittest.TestCase):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
         CHOSEN_COMBO = 0
         CHOSEN_REGION = 0
         with self.assertRaises(RulesViolation):  # Must pick a combo first.
@@ -314,7 +314,7 @@ class TestGame(unittest.TestCase):
 
     def test_coin_rewards(self):
         """Check if coin rewards work as expected."""
-        game = Game(TestGame.TINY_ASSETS, n_players=2, shuffle_data=False)
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
         self.assertBalances(game, [1, 1])  # Initial coin balances
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
