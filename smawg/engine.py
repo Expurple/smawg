@@ -81,7 +81,11 @@ class Combo:
 
 
 class Player:
-    """A bunch of "dumb" mutable stats, related to the same player."""
+    """A bunch of "dumb" mutable stats, related to the same player.
+
+    Even though these stats are mutated during the game,
+    they aren't supposed to be directly modified by library users.
+    """
 
     def __init__(self, coins: int) -> None:
         """Initialize `Player` with an initial supply of `coins`."""
