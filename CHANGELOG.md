@@ -5,9 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-\-
+### Fixed
+- Dates of releases in `CHANGELOG.md`.
 
-## [0.3.0] - 2021-02-01
+## [0.3.0] - 2022-02-01
 ### Added
 - Explicit `"n_coins_on_start"` in assets
     (instead of implicitly deduced from `"n_combos"`).
@@ -22,13 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `n_players` parameter from `Game.__init__()`.
 - `--players` option from `cli`.
 
-## [0.2.1] - 2021-02-01
+## [0.2.1] - 2022-02-01
 ### Fixed
 - `Game` potentially breaking when `assets` are modified later.
 - `cli` crashing when `show-regions` argument is out of bounds.
 - "not enough values to unpack" when entering an empty line in `cli`.
 
-## [0.2.0] - 2021-02-01
+## [0.2.0] - 2022-02-01
 ### Added
 - Schema and example of a `"map"` asset (without support for unique regions or
     Lost Tribes).
@@ -55,11 +56,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Methods `is_in_decline()` and `needs_to_pick_combo()`.
     - Attributes `acted_on_this_turn` and `declined_on_this_turn`.
 
-## [0.1.1] - 2021-01-25
+## [0.1.1] - 2022-01-25
 ### Fixed
 - Validation of `"races"` and `"abilities"` objects in asset files.
 
-## [0.1.0] - 2021-01-24
+## [0.1.0] - 2022-01-24
 ### Added
 - JSON schema for asset files.
 - A minimal asset file, which specifies:
