@@ -6,7 +6,6 @@ This module can also be seen as a collection of usage examples.
 import json
 import unittest
 from contextlib import nullcontext
-from copy import deepcopy
 
 import jsonschema.exceptions
 
@@ -89,7 +88,7 @@ class TestGame(unittest.TestCase):
     def setUpClass(cls):
         """Preload game assets once."""
         with open(f"{_ASSETS_DIR}/tiny.json") as file:
-            cls.TINY_ASSETS = json.load(file)
+            cls.TINY_ASSETS: dict = json.load(file)
 
     def test_tiny_game_scenario(self):
         """Run a full game based on `tiny.json` asssets.
@@ -119,8 +118,7 @@ class TestGame(unittest.TestCase):
 
     def test_redeployment_pseudo_turn(self):
         """Check if redeployment pseudo-turn works as expected."""
-        assets = deepcopy(TestGame.TINY_ASSETS)
-        assets["n_players"] = 3
+        assets = {**TestGame.TINY_ASSETS, "n_players": 3}
         game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
@@ -156,22 +154,21 @@ class TestGame(unittest.TestCase):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
-        with self.assertRaises(RulesViolation):
-            game.decline()  # There's no active race yet.
-        game.select_combo(0)
-        with self.assertRaises(RulesViolation):
-            game.decline()  # Just got a new race during this turn.
-        game.conquer(0)
-        game.deploy(6, 0)
-        game.end_turn()
-        game.select_combo(0)
-        game.conquer(1)
-        game.deploy(6, 1)
-        game.end_turn()
-        game.conquer(3)
-        with self.assertRaises(RulesViolation):
-            game.decline()  # Already used the active race during this turn.
+        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        game = Game(assets, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            with self.assertRaises(RulesViolation):
+                game.decline()  # There's no active race yet.
+            game.select_combo(0)
+            with self.assertRaises(RulesViolation):
+                game.decline()  # Just got a new race during this turn.
+            game.conquer(0)
+            game.deploy(game.player.tokens_on_hand, 0)
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            game.conquer(1)
+            with self.assertRaises(RulesViolation):
+                game.decline()  # Already used the active race during this turn
 
     def test_select_combo_exceptions(self):
         """Check if `Game.select_combo()` raises expected exceptions.
@@ -179,24 +176,23 @@ class TestGame(unittest.TestCase):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
-        for combo in [-10, -1, len(game.combos), 999]:
-            # "combo_index must be between 0 and {len(game.combos)}"
-            with self.assertRaises(ValueError):
-                game.select_combo(combo)
-        game.select_combo(0)
-        with self.assertRaises(RulesViolation):
-            game.select_combo(0)  # The player isn't in decline.
-        game.conquer(0)
-        game.deploy(6, 0)
-        game.end_turn()
-        game.select_combo(0)
-        game.conquer(1)
-        game.deploy(6, 1)
-        game.end_turn()
-        game.decline()
-        with self.assertRaises(RulesViolation):
-            game.select_combo(0)  # Player has just declined during this turn.
+        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        game = Game(assets, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            for combo in [-10, -1, len(game.combos), 999]:
+                # "combo_index must be between 0 and {len(game.combos)}"
+                with self.assertRaises(ValueError):
+                    game.select_combo(combo)
+            game.select_combo(0)
+            with self.assertRaises(RulesViolation):
+                game.select_combo(0)  # The player isn't in decline.
+            game.conquer(0)
+            game.deploy(game.player.tokens_on_hand, 0)
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            game.decline()
+            with self.assertRaises(RulesViolation):
+                game.select_combo(0)  # Has just declined during this turn.
 
     def test_conquer_functionality(self):
         """Check if `Game.conquer()` behaves as expected if used correctly."""
@@ -343,16 +339,11 @@ class TestGame(unittest.TestCase):
         convenience.
         """
         game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
-        CHOSEN_COMBO = 0
-        CHOSEN_REGION = 0
         with self.assertRaises(RulesViolation):  # Must pick a combo first.
             game.end_turn()
-        game.select_combo(CHOSEN_COMBO)
+        game.select_combo(0)
         with self.assertRaises(RulesViolation):  # Must deploy tokens first.
             game.end_turn()
-        game.conquer(CHOSEN_REGION)
-        game.deploy(game.player.tokens_on_hand, CHOSEN_REGION)
-        game.end_turn()
 
     def test_coin_rewards(self):
         """Check if coin rewards work as expected."""

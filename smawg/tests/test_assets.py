@@ -2,7 +2,6 @@
 
 import json
 import unittest
-from copy import deepcopy
 
 import jsonschema
 import jsonschema.exceptions
@@ -18,9 +17,7 @@ class TestAssets(unittest.TestCase):
         """Test all asset files against `smawg/assets_schema/assets.json`."""
         # Fail on keys which are not documented in the schema.
         # This is useful if I commit new keys and forget to document.
-        strict_schema = deepcopy(ASSETS_SCHEMA)
-        strict_schema["additionalProperties"] = False
-
+        strict_schema = {**ASSETS_SCHEMA, "additionalProperties": False}
         for assets_file_name in _ASSETS_DIR.glob("*.json"):
             with open(assets_file_name) as assets_file:
                 assets_json = json.load(assets_file)
@@ -46,8 +43,7 @@ class TestSchemaValidation(unittest.TestCase):
         with open(f"{_ASSETS_DIR}/tiny.json") as assets_file:
             assets = json.load(assets_file)
         for key, value in invalid_values:
-            invalid_assets = deepcopy(assets)
-            invalid_assets[key] = value
+            invalid_assets = {**assets, key: value}
             with self.assertRaises(jsonschema.exceptions.ValidationError):
                 jsonschema.validate(invalid_assets, ASSETS_SCHEMA,
                                     resolver=_JS_REF_RESOLVER)
