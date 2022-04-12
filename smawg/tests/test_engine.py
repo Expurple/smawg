@@ -169,6 +169,12 @@ class TestGame(unittest.TestCase):
             game.conquer(1)
             with self.assertRaises(RulesViolation):
                 game.decline()  # Already used the active race during this turn
+            game.deploy(game.player.tokens_on_hand, 1)
+            game.end_turn()
+        with nullcontext("Player 0, turn 3:"):
+            game.decline()
+            with self.assertRaises(RulesViolation):
+                game.decline()  # Already in decline
 
     def test_select_combo_exceptions(self):
         """Check if `Game.select_combo()` raises expected exceptions.

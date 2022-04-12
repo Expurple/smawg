@@ -347,8 +347,6 @@ class Game:
             * If this method is called during the redeployment phase.
         * `GameEnded` - if this method is called after the game has ended.
         """
-        if self._turn_stage in (_TurnStage.SELECT_COMBO, _TurnStage.DECLINED):
-            raise RulesViolation("You're already in Decline")
         if self._turn_stage == _TurnStage.ACTIVE:
             msg = "You've already used your active race during this turn. " \
                   "You can only decline during the next turn"
