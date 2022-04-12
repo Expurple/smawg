@@ -251,6 +251,48 @@ class TestGame(unittest.TestCase):
         game.conquer(2)
         with self.assertRaises(RulesViolation):
             game.conquer(3)  # Not enough tokens on hand.
+        game.start_redeployment()
+        with self.assertRaises(RulesViolation):
+            game.conquer(3)  # Attempt to conquer during redeployment.
+
+    def test_start_redeployment_functionality(self):
+        """Check if `Game.start_redeployment()` behaves as expected."""
+        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        game = Game(assets, shuffle_data=False)
+        game.select_combo(0)
+        TOKENS_TOTAL = game.player.tokens_on_hand
+        game.conquer(0)
+        game.conquer(1)
+        self.assertDictEqual(game.player.active_regions, {0: 3, 1: 3})
+        self.assertEqual(game.player.tokens_on_hand, TOKENS_TOTAL - 6)
+        game.start_redeployment()
+        self.assertDictEqual(game.player.active_regions, {0: 1, 1: 1})
+        self.assertEqual(game.player.tokens_on_hand, TOKENS_TOTAL - 2)
+
+    def test_start_redeployment_exceptions(self):
+        """Check if `Game.start_redeployment()` raises expected exceptions.
+
+        This doesn't include `GameEnded`, which is tested separately for
+        convenience.
+        """
+        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        game = Game(assets, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            with self.assertRaises(RulesViolation):
+                game.start_redeployment()  # No active race.
+            game.select_combo(0)
+            with self.assertRaises(RulesViolation):
+                game.start_redeployment()  # No active regions to redeploy to.
+            game.conquer(0)
+            game.start_redeployment()
+            game.deploy(game.player.tokens_on_hand, 0)
+            with self.assertRaises(RulesViolation):
+                game.start_redeployment()  # Called during redeployment.
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            game.decline()
+            with self.assertRaises(RulesViolation):
+                game.start_redeployment()  # No active race.
 
     def test_deploy_functionality(self):
         """Check if `Game.deploy()` behaves as expected when used correctly."""
@@ -351,6 +393,8 @@ class TestGame(unittest.TestCase):
             game.decline()
         with self.assertRaises(GameEnded):
             game.conquer(0)
+        with self.assertRaises(GameEnded):
+            game.start_redeployment()
         with self.assertRaises(GameEnded):
             game.deploy(1, 0)
         with self.assertRaises(GameEnded):

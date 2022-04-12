@@ -35,6 +35,7 @@ Available commands:
     combo <index>          pick race+ability combo by <index>
     conquer <region>       conquer <region> by index
     deploy <n> <region>    deploy <n> tokens from hand to <region>
+    redeploy               pick up tokens, leaving 1 in each region
     decline                enter decline
     end-turn               end turn and give control to the next player
     quit                   quit game
@@ -176,6 +177,8 @@ class Client:
             self._command_deploy(args)
         elif command == "decline":
             self.game.decline()
+        elif command == "redeploy":
+            self.game.start_redeployment()
         elif command == "end-turn":
             self.game.end_turn()
         elif command == "quit":

@@ -204,6 +204,8 @@ class _TurnStage(Enum):
     ACTIVE = 3
     """Selected/used an active race during the turn and can't decline now."""
     REDEPLOYMENT = 4
+    """Done conquering, can only redeploy and end turn."""
+    REDEPLOYMENT_TURN = 5
     """Pseudo-turn for redeploying tokens after attack from other player."""
 
 
@@ -226,8 +228,8 @@ def _check_rules(require_active: bool = False,
             if require_active and self.player.active_race is None:
                 msg = "To do this, you need to control an active race"
                 raise RulesViolation(msg)
-            if not allow_during_redeployment \
-                    and self._turn_stage == _TurnStage.REDEPLOYMENT:
+            if not allow_during_redeployment and self._turn_stage in \
+                    (_TurnStage.REDEPLOYMENT, _TurnStage.REDEPLOYMENT_TURN):
                 msg = "This action is not allowed during redeployment"
                 raise RulesViolation(msg)
             # And then just execute the wrapped method
@@ -422,6 +424,24 @@ class Game:
         self.player.active_regions[region] = tokens_required
         self._turn_stage = _TurnStage.ACTIVE
 
+    @_check_rules(require_active=True, allow_during_redeployment=False)
+    def start_redeployment(self) -> None:
+        """Pick up tokens to redeploy, leaving 1 token in each owned region.
+
+        This action ends conquests. After this method is called,
+        the player should deploy tokens from hand and then end the turn.
+
+        Exceptions raised:
+        * `RulesViolation`:
+            * If the player doesn't control any region with his active race.
+            * If this method is called during the redeployment phase.
+        * `GameEnded` - if this method is called after the game has ended.
+        """
+        if not self.player.active_regions:
+            raise RulesViolation("You must control at least one active region")
+        self.player._pick_up_tokens()
+        self._turn_stage = _TurnStage.REDEPLOYMENT
+
     @_check_rules(require_active=True)
     def deploy(self, n_tokens: int, region: int) -> None:
         """Deploy `n_tokens` from hand to the specified own `region`.
@@ -472,7 +492,7 @@ class Game:
             if self._turn_stage == _TurnStage.CAN_DECLINE:
                 msg += " or decline"
             raise RulesViolation(msg)
-        if self._turn_stage != _TurnStage.REDEPLOYMENT:
+        if self._turn_stage != _TurnStage.REDEPLOYMENT_TURN:
             self._reward_coins_for_turn()
             self._hooks["on_turn_end"](self)
         self._switch_player()
@@ -552,7 +572,7 @@ class Game:
             need_redeploy = p.tokens_on_hand > 0 and len(p.active_regions) > 0
             if need_redeploy and i != self._next_player_id:
                 self._player_id = i
-                self._turn_stage = _TurnStage.REDEPLOYMENT
+                self._turn_stage = _TurnStage.REDEPLOYMENT_TURN
                 self._hooks["on_redeploy"](self)
                 return
         # This part performs the actual switch to the next turn:
