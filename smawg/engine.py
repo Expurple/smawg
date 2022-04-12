@@ -209,7 +209,7 @@ class _TurnStage(Enum):
     """Pseudo-turn for redeploying tokens after attack from other player."""
 
 
-def _check_rules(require_active: bool = False,
+def _check_rules(*, require_active: bool = False,
                  allow_during_redeployment: bool = True):
     """Add boilerplate rule checks to public `Game` methods.
 
@@ -250,7 +250,8 @@ class Game:
     or raise exceptions if the call violates the rules.
     """
 
-    def __init__(self, assets: dict, shuffle_data: bool = True,
+    def __init__(self, assets: dict, *,
+                 shuffle_data: bool = True,
                  dice_roll_func: Callable[[], int] = roll_dice,
                  hooks: Mapping[str, Callable] = dict()) -> None:
         """Initialize a game based on given `assets`.

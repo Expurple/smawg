@@ -84,11 +84,14 @@ def init_game(args: Namespace, hooks: dict[str, Callable]) -> Game:
     with open(args.assets_file) as file:
         assets = json.load(file)
     if args.read_dice:
-        return Game(assets, not args.no_shuffle,
-                    lambda: int(input("Enter the result of the dice roll: ")),
-                    hooks=hooks)
+        def read_dice():
+            # FIXME: This will crash on invalid inputs
+            return int(input("Enter the result of the dice roll: "))
+
+        return Game(assets, shuffle_data=not args.no_shuffle,
+                    dice_roll_func=read_dice, hooks=hooks)
     else:
-        return Game(assets, not args.no_shuffle, hooks=hooks)
+        return Game(assets, shuffle_data=not args.no_shuffle, hooks=hooks)
 
 
 class InvalidCommand(ValueError):

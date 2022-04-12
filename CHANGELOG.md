@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Related `Game` method: `start_redeployment()`.
 - Related `cli` command: `redeploy`.
 
+### Changed
+- Default `Game()` arguments are now keyword-only.
+
 ## [0.3.1] - 2022-02-11
 ### Added
 - `py.typed` marker for PEP 561 compliance.
