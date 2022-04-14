@@ -7,7 +7,7 @@ import json
 import random
 from collections import defaultdict
 from copy import deepcopy
-from enum import Enum
+from enum import auto, Enum
 from functools import wraps
 from itertools import islice
 from typing import Callable, Mapping, Optional
@@ -195,17 +195,17 @@ class _TurnStage(Enum):
     Determines, which actions (`Game` method calls) are allowed.
     """
 
-    SELECT_COMBO = 0
+    SELECT_COMBO = auto()
     """Just started a turn without an active race and must pick a new one."""
-    CAN_DECLINE = 1
+    CAN_DECLINE = auto()
     """Just started a turn with an existing active race and can decline."""
-    DECLINED = 2
+    DECLINED = auto()
     """Just declined and must `end_turn()` now."""
-    ACTIVE = 3
+    ACTIVE = auto()
     """Selected/used an active race during the turn and can't decline now."""
-    REDEPLOYMENT = 4
+    REDEPLOYMENT = auto()
     """Done conquering, can only redeploy and end turn."""
-    REDEPLOYMENT_TURN = 5
+    REDEPLOYMENT_TURN = auto()
     """Pseudo-turn for redeploying tokens after attack from other player."""
 
 
