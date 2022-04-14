@@ -42,15 +42,16 @@ Available commands:
 
 Press Tab for autocompletion."""
 
-COMMANDS = [line.strip().split()[0] for line in HELP.splitlines()[1:-2]]
-COMMANDS_WITHOUT_ARGS = [c for c in COMMANDS if c not in
-                         ("show-regions", "combo", "conquer", "deploy")]
+COMMAND_DESCRIPTIONS = [line.strip() for line in HELP.splitlines()[1:-2]]
+COMMANDS = [d.split()[0] for d in COMMAND_DESCRIPTIONS]
+COMMANDS_WITHOUT_ARGS = [c for c, d in zip(COMMANDS, COMMAND_DESCRIPTIONS)
+                         if "<" not in d]
 
 
 def autocomplete(text: str, state: int) -> Optional[str]:
     """Command completer for `readline`."""
-    results = [c for c in COMMANDS if c.startswith(text)]
-    results.append(None)  # type:ignore
+    results: list[Optional[str]] = [c for c in COMMANDS if c.startswith(text)]
+    results.append(None)
     return results[state]
 
 
