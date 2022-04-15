@@ -79,6 +79,16 @@ def parse_args() -> Namespace:
     return parser.parse_args()
 
 
+def read_dice() -> int:
+    """Get result of a dice roll from an interactive console."""
+    prompt = "Enter the result of the dice roll: "
+    while True:
+        try:
+            return int(input(prompt))
+        except ValueError:
+            prompt = "The result must be an integer, try again: "
+
+
 def init_game(args: Namespace, hooks: dict[str, Callable]) -> Game:
     """Construct `Game` with respect to command line `args`."""
     if args.relative_path:
@@ -86,10 +96,6 @@ def init_game(args: Namespace, hooks: dict[str, Callable]) -> Game:
     with open(args.assets_file) as file:
         assets = json.load(file)
     if args.read_dice:
-        def read_dice():
-            # FIXME: This will crash on invalid inputs
-            return int(input("Enter the result of the dice roll: "))
-
         return Game(assets, shuffle_data=not args.no_shuffle,
                     dice_roll_func=read_dice, hooks=hooks)
     else:
