@@ -22,7 +22,6 @@ and easy interoperability with other programming languages.
 * Lost Tribes.
 * Different region types (Seas, Mountains, etc).
 * Ability to abandon regions.
-* Reinforcements dice.
 * Unique Race and Special Power abilities.
 
 ### Future plans:

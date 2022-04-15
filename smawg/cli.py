@@ -34,6 +34,7 @@ Available commands:
     show-regions <player>  show regions owned by <player>
     combo <index>          pick race+ability combo by <index>
     conquer <region>       conquer <region> by index
+    conquer-dice <region>  conquer <region>, using the reinforcements dice
     deploy <n> <region>    deploy <n> tokens from hand to <region>
     redeploy               pick up tokens, leaving 1 in each region
     decline                enter decline
@@ -177,6 +178,8 @@ class Client:
             self._command_combo(args)
         elif command == "conquer":
             self._command_conquer(args)
+        elif command == "conquer-dice":
+            self._command_conquer_dice(args)
         elif command == "deploy":
             self._command_deploy(args)
         elif command == "decline":
@@ -232,6 +235,10 @@ class Client:
     def _command_conquer(self, args: list[str]) -> None:
         i = self._parse_ints(args, n=1)[0]
         self.game.conquer(i)
+
+    def _command_conquer_dice(self, args: list[str]) -> None:
+        i = self._parse_ints(args, n=1)[0]
+        self.game.conquer(i, use_dice=True)
 
     def _command_deploy(self, args: list[str]) -> None:
         n, region = self._parse_ints(args, n=2)

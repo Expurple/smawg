@@ -261,8 +261,8 @@ class TestGameSelectCombo(unittest.TestCase):
 class TestGameConquer(unittest.TestCase):
     """Tests for `smawg.engine.Game.conquer()` method."""
 
-    def test_functionality(self):
-        """Check if the method behaves as expected if used correctly."""
+    def test_diceless_functionality(self):
+        """Check if the method behaves as expected with `use_dice=False`."""
         game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
@@ -289,34 +289,111 @@ class TestGameConquer(unittest.TestCase):
             self.assertEqual(game.players[0].tokens_on_hand, 2)
             self.assertEqual(game.players[0].active_regions, {1: 3, 2: 3})
 
-    def test_exceptions(self):
-        """Check if the method raises expected exceptions.
+    def test_dice_win(self):
+        """Common victory cases with `use_dice=True`."""
+        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        game = Game(assets, shuffle_data=False, dice_roll_func=lambda: 1)
+        with nullcontext("Player 0, turn 1:"):
+            # The dice isn't necessary and results in using less tokens:
+            game.select_combo(0)
+            tokens_before = game.player.tokens_on_hand
+            game.conquer(0, use_dice=True)
+            self.assertEqual(game.player.active_regions, {0: 2})
+            self.assertEqual(game.player.tokens_on_hand, tokens_before - 2)
+            game.deploy(game.player.tokens_on_hand, 0)
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            # The dice is necessary, all tokens are used:
+            game.deploy(game.player.tokens_on_hand - 2, 0)
+            game.conquer(1, use_dice=True)
+            self.assertEqual(game.player.active_regions, {0: 7, 1: 2})
+            self.assertEqual(game.player.tokens_on_hand, 0)
+
+    def test_dice_rolled_3_when_needed_3(self):
+        """1 token should be put on a region."""
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False,
+                    dice_roll_func=lambda: 3)
+        game.select_combo(0)
+        initial_tokens = game.player.tokens_on_hand
+        game.conquer(0, use_dice=True)
+        self.assertEqual(game.player.active_regions, {0: 1})
+        self.assertEqual(game.player.tokens_on_hand, initial_tokens - 1)
+
+    def test_dice_fail(self):
+        """Check if conquest fails when given insufficient dice value."""
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False,
+                    dice_roll_func=lambda: 1)
+        game.select_combo(0)
+        game.conquer(0)
+        game.deploy(game.player.tokens_on_hand - 1, 0)  # Leave 1 in hand.
+        game.conquer(1, use_dice=True)  # Needs to roll at least 2, but gets 1.
+        self.assertNotIn(1, game.player.active_regions)
+        self.assertEqual(game.player.tokens_on_hand, 1)
+
+    def test_common_exceptions(self):
+        """Check if the method raises expected exceptions on common checks.
 
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
+        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        game = Game(assets, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            with self.assertRaises(RulesViolation):
+                game.conquer(0)  # Attempt to conquer without an active race.
+            game.select_combo(0)
+            for region in [-1, len(TestGame.TINY_ASSETS["map"]["tiles"]), 99]:
+                # "region must be between 0 and {len(assets["map"]["tiles"])}"
+                with self.assertRaises(ValueError):
+                    game.conquer(region)
+            with self.assertRaises(RulesViolation):
+                game.conquer(2)  # First conquest not at the map border.
+            game.conquer(0)
+            with self.assertRaises(RulesViolation):
+                game.conquer(0)  # Attempt to conquer own region.
+            with self.assertRaises(RulesViolation):
+                game.conquer(4)  # Attempt to conquer non-adjacent region.
+            game.start_redeployment()
+            with self.assertRaises(RulesViolation):
+                game.conquer(3)  # Attempt to conquer during redeployment.
+            game.deploy(game.player.tokens_on_hand, 0)
+            game.end_turn()
+        with nullcontext("Player 1, turn 1:"):
+            game.conquer(1, use_dice=True)
+            with self.assertRaises(RulesViolation):
+                game.conquer(2)  # Already used the dice during this turn.
+
+    def test_diceless_exceptions(self):
+        """Check if method raises exceptions specific to `use_dice=False`."""
         game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
-        with self.assertRaises(RulesViolation):
-            game.conquer(0)  # Attempt to conquer without an active race.
         game.select_combo(0)
-        for region in [-10, -1, len(TestGame.TINY_ASSETS["map"]["tiles"]), 99]:
-            # "region must be between 0 and {len(assets["map"]["tiles"])}"
-            with self.assertRaises(ValueError):
-                game.conquer(region)
-        with self.assertRaises(RulesViolation):
-            game.conquer(2)  # First conquest not at the map border.
         game.conquer(0)
+        game.deploy(game.player.tokens_on_hand - 2, 0)
         with self.assertRaises(RulesViolation):
-            game.conquer(0)  # Attempt to conquer own region.
-        with self.assertRaises(RulesViolation):
-            game.conquer(4)  # Attempt to conquer non-adjacent region.
-        game.conquer(1)
-        game.conquer(2)
-        with self.assertRaises(RulesViolation):
-            game.conquer(3)  # Not enough tokens on hand.
-        game.start_redeployment()
-        with self.assertRaises(RulesViolation):
-            game.conquer(3)  # Attempt to conquer during redeployment.
+            game.conquer(1)  # Not enough tokens on hand (need 3, have 2).
+
+    def test_dice_only_exceptions(self):
+        """Check if method raises exceptions specific to `use_dice=True`."""
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            game.select_combo(0)
+            game.conquer(0)
+            game.conquer(1)
+            game.conquer(2)
+            with self.assertRaises(RulesViolation):
+                game.conquer(3, use_dice=True)  # 0 tokens on hand.
+            game.end_turn()
+        with nullcontext("Player 1, turn 1:"):
+            game.select_combo(0)
+            game.conquer(3)
+            game.deploy(game.player.tokens_on_hand, 3)
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            # Player 0 has 6 tokens on hand.
+            # Player 1 has 9 tokens in region 3.
+            # 12 tokens are needed to conquer it, which is more than 6+3.
+            with self.assertRaises(RulesViolation):
+                game.conquer(3, use_dice=True)
 
 
 class TestGameStartRedeployment(unittest.TestCase):

@@ -7,6 +7,11 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Reinforcements dice mechanic.
+- Related `Game.conquer()` argument: `use_dice`.
+- Related `cli` command: `conquer-dice`.
+
 ### Changed
 - `cli` error messages when given wrong number of arguments.
 

@@ -203,8 +203,10 @@ class _TurnStage(Enum):
     """Just declined and must `end_turn()` now."""
     ACTIVE = auto()
     """Selected/used an active race during the turn and can't decline now."""
+    USED_DICE = auto()
+    """Done conquering, can only (re)deploy tokens and end turn."""
     REDEPLOYMENT = auto()
-    """Done conquering, can only redeploy and end turn."""
+    """Can only deploy remaining tokens from hand and end turn."""
     REDEPLOYMENT_TURN = auto()
     """Pseudo-turn for redeploying tokens after attack from other player."""
 
@@ -347,7 +349,7 @@ class Game:
             * If this method is called during the redeployment phase.
         * `GameEnded` - if this method is called after the game has ended.
         """
-        if self._turn_stage == _TurnStage.ACTIVE:
+        if self._turn_stage in (_TurnStage.ACTIVE, _TurnStage.USED_DICE):
             msg = "You've already used your active race during this turn. " \
                   "You can only decline during the next turn"
             raise RulesViolation(msg)
@@ -385,8 +387,10 @@ class Game:
         self._turn_stage = _TurnStage.ACTIVE
 
     @_check_rules(require_active=True, allow_during_redeployment=False)
-    def conquer(self, region: int) -> None:
+    def conquer(self, region: int, *, use_dice=False) -> None:
         """Conquer the given map `region`.
+
+        When `use_dice=True` is given, attempt to use reinforcements.
 
         Exceptions raised:
         * `ValueError` - if not `0 <= region < len(assets["map"]["tiles"])`.
@@ -394,10 +398,17 @@ class Game:
             * Do the first conquest of a new race not at the map border.
             * Conquer a region that isn't adjacent to any owned regions.
             * Conquer a region occupied by their own active race.
-            * Conquer without having enough tokens at hand.
-            * Or if this method is called during the redeployment phase.
+            * Conquer without dice and without having enough tokens on hand.
+            * Conquer with dice, without having at least 1 token on hand.
+            * Conquer with dice, while needing more than 3 additional tokens.
+            * Conquer again after rolling the reinforcements dice.
+            * Conquer during the redeployment phase.
         * `GameEnded` - if this method is called after the game has ended.
         """
+        if self._turn_stage == _TurnStage.USED_DICE:
+            msg = "You've already rolled the dice during this turn and " \
+                "can't make any more conquests"
+            raise RulesViolation(msg)
         if not 0 <= region < len(self._regions):
             msg = f"region must be between 0 and {len(self._regions)}"
             raise ValueError(msg)
@@ -412,16 +423,10 @@ class Game:
         if len(self.player.active_regions) > 0 and not has_adjacent:
             msg = "The region must be adjacent to any of your active regions"
             raise RulesViolation(msg)
-        tokens_required = self._get_conquest_cost(region)
-        tokens_on_hand = self.player.tokens_on_hand
-        if tokens_on_hand < tokens_required:
-            msg = f"Not enough tokens on hand (you have {tokens_on_hand}, " \
-                  f"but need {tokens_required})"
-            raise RulesViolation(msg)
-        self._kick_out_owner(region)
-        self.player.tokens_on_hand -= tokens_required
-        self.player.active_regions[region] = tokens_required
-        self._turn_stage = _TurnStage.ACTIVE
+        if use_dice:
+            self._conquer_with_dice(region)
+        else:
+            self._conquer_without_dice(region)
 
     @_check_rules(require_active=True, allow_during_redeployment=False)
     def start_redeployment(self) -> None:
@@ -526,6 +531,49 @@ class Game:
         next_combo = Combo(self._races[self._n_combos - 1],
                            self._abilities[self._n_combos - 1])
         self.combos.append(next_combo)
+
+    def _conquer_without_dice(self, region: int) -> None:
+        """Implementation of `conquer()` with `use_dice=False`.
+
+        Exceptions raised:
+        * `RulesViolation` - if the player doesn't have enough tokens at hand.
+        """
+        tokens_required = self._get_conquest_cost(region)
+        tokens_on_hand = self.player.tokens_on_hand
+        if tokens_on_hand < tokens_required:
+            msg = f"Not enough tokens on hand (you have {tokens_on_hand}, " \
+                  f"but need {tokens_required})"
+            raise RulesViolation(msg)
+        self._kick_out_owner(region)
+        self.player.tokens_on_hand -= tokens_required
+        self.player.active_regions[region] = tokens_required
+        self._turn_stage = _TurnStage.ACTIVE
+
+    def _conquer_with_dice(self, region: int) -> None:
+        """Implementation of `conquer()` with `use_dice=True`.
+
+        Exceptions raised:
+        * `RulesViolation` - if the player:
+            * Doesn't have at least 1 token on hand.
+            * Needs more than 3 additional tokens.
+        """
+        tokens_required = self._get_conquest_cost(region)
+        tokens_on_hand = self.player.tokens_on_hand
+        if tokens_on_hand < 1:
+            msg = "To roll the dice, you need to have at least 1 token on hand"
+            raise RulesViolation(msg)
+        if tokens_required - tokens_on_hand > 3:
+            msg = f"Not enough tokens on hand (you have {tokens_on_hand}, " \
+                  f"but need at least {tokens_required - 3} to have a chance)"
+            raise RulesViolation(msg)
+        dice_value = self._roll_dice()
+        self._turn_stage = _TurnStage.USED_DICE
+        if tokens_on_hand + dice_value < tokens_required:
+            return  # Failed conquest.
+        own_tokens_used = max(tokens_required - dice_value, 1)
+        self._kick_out_owner(region)
+        self.player.tokens_on_hand -= own_tokens_used
+        self.player.active_regions[region] = own_tokens_used
 
     def _owner(self, region: int) -> Optional[int]:
         """Return the owner of the given `region` or `None` if there's none."""
