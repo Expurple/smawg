@@ -82,7 +82,10 @@ class TestRace(unittest.TestCase):
 
 
 class TestGame(unittest.TestCase):
-    """Tests for `smawg.engine.Game` class."""
+    """General tests for `smawg.engine.Game` class.
+
+    Test for particular methods are extracted into separate test fixtures.
+    """
 
     @classmethod
     def setUpClass(cls):
@@ -148,209 +151,6 @@ class TestGame(unittest.TestCase):
             self.assertEqual(game.current_turn, 1)
             self.assertEqual(game.player_id, 2)
 
-    def test_decline_exceptions(self):
-        """Check if `Game.decline()` raises expected exceptions.
-
-        This doesn't include `GameEnded`, which is tested separately for
-        convenience.
-        """
-        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
-        game = Game(assets, shuffle_data=False)
-        with nullcontext("Player 0, turn 1:"):
-            with self.assertRaises(RulesViolation):
-                game.decline()  # There's no active race yet.
-            game.select_combo(0)
-            with self.assertRaises(RulesViolation):
-                game.decline()  # Just got a new race during this turn.
-            game.conquer(0)
-            game.deploy(game.player.tokens_on_hand, 0)
-            game.end_turn()
-        with nullcontext("Player 0, turn 2:"):
-            game.conquer(1)
-            with self.assertRaises(RulesViolation):
-                game.decline()  # Already used the active race during this turn
-            game.deploy(game.player.tokens_on_hand, 1)
-            game.end_turn()
-        with nullcontext("Player 0, turn 3:"):
-            game.decline()
-            with self.assertRaises(RulesViolation):
-                game.decline()  # Already in decline
-
-    def test_select_combo_exceptions(self):
-        """Check if `Game.select_combo()` raises expected exceptions.
-
-        This doesn't include `GameEnded`, which is tested separately for
-        convenience.
-        """
-        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
-        game = Game(assets, shuffle_data=False)
-        with nullcontext("Player 0, turn 1:"):
-            for combo in [-10, -1, len(game.combos), 999]:
-                # "combo_index must be between 0 and {len(game.combos)}"
-                with self.assertRaises(ValueError):
-                    game.select_combo(combo)
-            game.select_combo(0)
-            with self.assertRaises(RulesViolation):
-                game.select_combo(0)  # The player isn't in decline.
-            game.conquer(0)
-            game.deploy(game.player.tokens_on_hand, 0)
-            game.end_turn()
-        with nullcontext("Player 0, turn 2:"):
-            game.decline()
-            with self.assertRaises(RulesViolation):
-                game.select_combo(0)  # Has just declined during this turn.
-
-    def test_conquer_functionality(self):
-        """Check if `Game.conquer()` behaves as expected if used correctly."""
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
-        with nullcontext("Player 0, turn 1:"):
-            game.select_combo(1)
-            self.assertEqual(game.players[0].tokens_on_hand, 9)
-            game.conquer(0)
-            self.assertEqual(game.players[0].tokens_on_hand, 6)
-            self.assertEqual(game.players[0].active_regions, {0: 3})
-            game.conquer(1)
-            self.assertEqual(game.players[0].tokens_on_hand, 3)
-            self.assertEqual(game.players[0].active_regions, {0: 3, 1: 3})
-            game.conquer(2)
-            self.assertEqual(game.players[0].tokens_on_hand, 0)
-            self.assertEqual(game.players[0].active_regions,
-                             {0: 3, 1: 3, 2: 3})
-            game.end_turn()
-        with nullcontext("Player 1, turn 1:"):
-            game.select_combo(0)
-            game.conquer(3)
-            self.assertEqual(game.players[1].tokens_on_hand, 6)
-            self.assertEqual(game.players[1].active_regions, {3: 3})
-            game.conquer(0)
-            self.assertEqual(game.players[1].tokens_on_hand, 0)
-            self.assertEqual(game.players[1].active_regions, {0: 6, 3: 3})
-            self.assertEqual(game.players[0].tokens_on_hand, 2)
-            self.assertEqual(game.players[0].active_regions, {1: 3, 2: 3})
-
-    def test_conquer_exceptions(self):
-        """Check if `Game.conquer()` raises expected exceptions.
-
-        This doesn't include `GameEnded`, which is tested separately for
-        convenience.
-        """
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
-        with self.assertRaises(RulesViolation):
-            game.conquer(0)  # Attempt to conquer without an active race.
-        game.select_combo(0)
-        for region in [-10, -1, len(TestGame.TINY_ASSETS["map"]["tiles"]), 99]:
-            # "region must be between 0 and {len(assets["map"]["tiles"])}"
-            with self.assertRaises(ValueError):
-                game.conquer(region)
-        with self.assertRaises(RulesViolation):
-            game.conquer(2)  # First conquest not at the map border.
-        game.conquer(0)
-        with self.assertRaises(RulesViolation):
-            game.conquer(0)  # Attempt to conquer own region.
-        with self.assertRaises(RulesViolation):
-            game.conquer(4)  # Attempt to conquer non-adjacent region.
-        game.conquer(1)
-        game.conquer(2)
-        with self.assertRaises(RulesViolation):
-            game.conquer(3)  # Not enough tokens on hand.
-        game.start_redeployment()
-        with self.assertRaises(RulesViolation):
-            game.conquer(3)  # Attempt to conquer during redeployment.
-
-    def test_start_redeployment_functionality(self):
-        """Check if `Game.start_redeployment()` behaves as expected."""
-        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
-        game = Game(assets, shuffle_data=False)
-        game.select_combo(0)
-        TOKENS_TOTAL = game.player.tokens_on_hand
-        game.conquer(0)
-        game.conquer(1)
-        self.assertDictEqual(game.player.active_regions, {0: 3, 1: 3})
-        self.assertEqual(game.player.tokens_on_hand, TOKENS_TOTAL - 6)
-        game.start_redeployment()
-        self.assertDictEqual(game.player.active_regions, {0: 1, 1: 1})
-        self.assertEqual(game.player.tokens_on_hand, TOKENS_TOTAL - 2)
-
-    def test_start_redeployment_exceptions(self):
-        """Check if `Game.start_redeployment()` raises expected exceptions.
-
-        This doesn't include `GameEnded`, which is tested separately for
-        convenience.
-        """
-        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
-        game = Game(assets, shuffle_data=False)
-        with nullcontext("Player 0, turn 1:"):
-            with self.assertRaises(RulesViolation):
-                game.start_redeployment()  # No active race.
-            game.select_combo(0)
-            with self.assertRaises(RulesViolation):
-                game.start_redeployment()  # No active regions to redeploy to.
-            game.conquer(0)
-            game.start_redeployment()
-            game.deploy(game.player.tokens_on_hand, 0)
-            with self.assertRaises(RulesViolation):
-                game.start_redeployment()  # Called during redeployment.
-            game.end_turn()
-        with nullcontext("Player 0, turn 2:"):
-            game.decline()
-            with self.assertRaises(RulesViolation):
-                game.start_redeployment()  # No active race.
-
-    def test_deploy_functionality(self):
-        """Check if `Game.deploy()` behaves as expected when used correctly."""
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
-        CHOSEN_COMBO = 0
-        CHOSEN_REGION = 0
-        game.select_combo(CHOSEN_COMBO)
-        TOKENS_TOTAL = game.combos[CHOSEN_COMBO].base_n_tokens
-        game.conquer(CHOSEN_REGION)
-        self.assertEqual(game.player.tokens_on_hand, TOKENS_TOTAL - 3)
-        self.assertEqual(game.player.active_regions,
-                         {CHOSEN_REGION: 3})
-        game.deploy(game.player.tokens_on_hand, CHOSEN_REGION)
-        self.assertEqual(game.player.tokens_on_hand, 0)
-        self.assertEqual(game.player.active_regions,
-                         {CHOSEN_REGION: TOKENS_TOTAL})
-
-    def test_deploy_exceptions(self):
-        """Check if `Game.deploy()` raises expected exceptions.
-
-        This doesn't include `GameEnded`, which is tested separately for
-        convenience.
-        """
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
-        CHOSEN_COMBO = 0
-        CHOSEN_REGION = 0
-        game.select_combo(CHOSEN_COMBO)
-        with self.assertRaises(RulesViolation):
-            # Must control the region.
-            game.deploy(1, CHOSEN_REGION)
-        game.conquer(CHOSEN_REGION)
-        with self.assertRaises(RulesViolation):
-            # Not enough tokens on hand.
-            game.deploy(game.player.tokens_on_hand + 1, CHOSEN_REGION)
-        for n_tokens in [-99, -1, 0]:
-            # "n_tokens must be greater then 0"
-            with self.assertRaises(ValueError):
-                game.deploy(n_tokens, CHOSEN_REGION)
-        for region in [-10, -1, len(TestGame.TINY_ASSETS["map"]["tiles"]), 99]:
-            # "region must be between 0 and {len(assets["map"]["tiles"])}"
-            with self.assertRaises(ValueError):
-                game.deploy(1, region)
-
-    def test_end_turn_exceptions(self):
-        """Check if `Game.end_turn()` raises expected exceptions.
-
-        This doesn't include `GameEnded`, which is tested separately for
-        convenience.
-        """
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
-        with self.assertRaises(RulesViolation):  # Must pick a combo first.
-            game.end_turn()
-        game.select_combo(0)
-        with self.assertRaises(RulesViolation):  # Must deploy tokens first.
-            game.end_turn()
-
     def test_coin_rewards(self):
         """Check if coin rewards work as expected."""
         game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
@@ -395,4 +195,231 @@ class TestGame(unittest.TestCase):
         with self.assertRaises(GameEnded):
             game.deploy(1, 0)
         with self.assertRaises(GameEnded):
+            game.end_turn()
+
+
+class TestGameDecline(unittest.TestCase):
+    """Tests for `smawg.engine.Game.decline()` method."""
+
+    def test_exceptions(self):
+        """Check if the method raises expected exceptions.
+
+        This doesn't include `GameEnded`, which is tested separately for
+        convenience.
+        """
+        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        game = Game(assets, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            with self.assertRaises(RulesViolation):
+                game.decline()  # There's no active race yet.
+            game.select_combo(0)
+            with self.assertRaises(RulesViolation):
+                game.decline()  # Just got a new race during this turn.
+            game.conquer(0)
+            game.deploy(game.player.tokens_on_hand, 0)
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            game.conquer(1)
+            with self.assertRaises(RulesViolation):
+                game.decline()  # Already used the active race during this turn
+            game.deploy(game.player.tokens_on_hand, 1)
+            game.end_turn()
+        with nullcontext("Player 0, turn 3:"):
+            game.decline()
+            with self.assertRaises(RulesViolation):
+                game.decline()  # Already in decline
+
+
+class TestGameSelectCombo(unittest.TestCase):
+    """Tests for `smawg.engine.Game.select_combo()` method."""
+
+    def test_exceptions(self):
+        """Check if the method raises expected exceptions.
+
+        This doesn't include `GameEnded`, which is tested separately for
+        convenience.
+        """
+        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        game = Game(assets, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            for combo in [-10, -1, len(game.combos), 999]:
+                # "combo_index must be between 0 and {len(game.combos)}"
+                with self.assertRaises(ValueError):
+                    game.select_combo(combo)
+            game.select_combo(0)
+            with self.assertRaises(RulesViolation):
+                game.select_combo(0)  # The player isn't in decline.
+            game.conquer(0)
+            game.deploy(game.player.tokens_on_hand, 0)
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            game.decline()
+            with self.assertRaises(RulesViolation):
+                game.select_combo(0)  # Has just declined during this turn.
+
+
+class TestGameConquer(unittest.TestCase):
+    """Tests for `smawg.engine.Game.conquer()` method."""
+
+    def test_functionality(self):
+        """Check if the method behaves as expected if used correctly."""
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            game.select_combo(1)
+            self.assertEqual(game.players[0].tokens_on_hand, 9)
+            game.conquer(0)
+            self.assertEqual(game.players[0].tokens_on_hand, 6)
+            self.assertEqual(game.players[0].active_regions, {0: 3})
+            game.conquer(1)
+            self.assertEqual(game.players[0].tokens_on_hand, 3)
+            self.assertEqual(game.players[0].active_regions, {0: 3, 1: 3})
+            game.conquer(2)
+            self.assertEqual(game.players[0].tokens_on_hand, 0)
+            self.assertEqual(game.players[0].active_regions,
+                             {0: 3, 1: 3, 2: 3})
+            game.end_turn()
+        with nullcontext("Player 1, turn 1:"):
+            game.select_combo(0)
+            game.conquer(3)
+            self.assertEqual(game.players[1].tokens_on_hand, 6)
+            self.assertEqual(game.players[1].active_regions, {3: 3})
+            game.conquer(0)
+            self.assertEqual(game.players[1].tokens_on_hand, 0)
+            self.assertEqual(game.players[1].active_regions, {0: 6, 3: 3})
+            self.assertEqual(game.players[0].tokens_on_hand, 2)
+            self.assertEqual(game.players[0].active_regions, {1: 3, 2: 3})
+
+    def test_exceptions(self):
+        """Check if the method raises expected exceptions.
+
+        This doesn't include `GameEnded`, which is tested separately for
+        convenience.
+        """
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
+        with self.assertRaises(RulesViolation):
+            game.conquer(0)  # Attempt to conquer without an active race.
+        game.select_combo(0)
+        for region in [-10, -1, len(TestGame.TINY_ASSETS["map"]["tiles"]), 99]:
+            # "region must be between 0 and {len(assets["map"]["tiles"])}"
+            with self.assertRaises(ValueError):
+                game.conquer(region)
+        with self.assertRaises(RulesViolation):
+            game.conquer(2)  # First conquest not at the map border.
+        game.conquer(0)
+        with self.assertRaises(RulesViolation):
+            game.conquer(0)  # Attempt to conquer own region.
+        with self.assertRaises(RulesViolation):
+            game.conquer(4)  # Attempt to conquer non-adjacent region.
+        game.conquer(1)
+        game.conquer(2)
+        with self.assertRaises(RulesViolation):
+            game.conquer(3)  # Not enough tokens on hand.
+        game.start_redeployment()
+        with self.assertRaises(RulesViolation):
+            game.conquer(3)  # Attempt to conquer during redeployment.
+
+
+class TestGameStartRedeployment(unittest.TestCase):
+    """Tests for `smawg.engine.Game.start_redeployment()` method."""
+
+    def test_functionality(self):
+        """Check if the method behaves as expected when used correctly."""
+        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        game = Game(assets, shuffle_data=False)
+        game.select_combo(0)
+        TOKENS_TOTAL = game.player.tokens_on_hand
+        game.conquer(0)
+        game.conquer(1)
+        self.assertDictEqual(game.player.active_regions, {0: 3, 1: 3})
+        self.assertEqual(game.player.tokens_on_hand, TOKENS_TOTAL - 6)
+        game.start_redeployment()
+        self.assertDictEqual(game.player.active_regions, {0: 1, 1: 1})
+        self.assertEqual(game.player.tokens_on_hand, TOKENS_TOTAL - 2)
+
+    def test_exceptions(self):
+        """Check if the method raises expected exceptions.
+
+        This doesn't include `GameEnded`, which is tested separately for
+        convenience.
+        """
+        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        game = Game(assets, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            with self.assertRaises(RulesViolation):
+                game.start_redeployment()  # No active race.
+            game.select_combo(0)
+            with self.assertRaises(RulesViolation):
+                game.start_redeployment()  # No active regions to redeploy to.
+            game.conquer(0)
+            game.start_redeployment()
+            game.deploy(game.player.tokens_on_hand, 0)
+            with self.assertRaises(RulesViolation):
+                game.start_redeployment()  # Called during redeployment.
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            game.decline()
+            with self.assertRaises(RulesViolation):
+                game.start_redeployment()  # No active race.
+
+
+class TestGameDeploy(unittest.TestCase):
+    """Tests for `smawg.engine.Game.deploy()` method."""
+
+    def test_functionality(self):
+        """Check if the method behaves as expected when used correctly."""
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
+        CHOSEN_COMBO = 0
+        CHOSEN_REGION = 0
+        game.select_combo(CHOSEN_COMBO)
+        TOKENS_TOTAL = game.combos[CHOSEN_COMBO].base_n_tokens
+        game.conquer(CHOSEN_REGION)
+        self.assertEqual(game.player.tokens_on_hand, TOKENS_TOTAL - 3)
+        self.assertEqual(game.player.active_regions,
+                         {CHOSEN_REGION: 3})
+        game.deploy(game.player.tokens_on_hand, CHOSEN_REGION)
+        self.assertEqual(game.player.tokens_on_hand, 0)
+        self.assertEqual(game.player.active_regions,
+                         {CHOSEN_REGION: TOKENS_TOTAL})
+
+    def test_exceptions(self):
+        """Check if the method raises expected exceptions.
+
+        This doesn't include `GameEnded`, which is tested separately for
+        convenience.
+        """
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
+        CHOSEN_COMBO = 0
+        CHOSEN_REGION = 0
+        game.select_combo(CHOSEN_COMBO)
+        with self.assertRaises(RulesViolation):
+            # Must control the region.
+            game.deploy(1, CHOSEN_REGION)
+        game.conquer(CHOSEN_REGION)
+        with self.assertRaises(RulesViolation):
+            # Not enough tokens on hand.
+            game.deploy(game.player.tokens_on_hand + 1, CHOSEN_REGION)
+        for n_tokens in [-99, -1, 0]:
+            # "n_tokens must be greater then 0"
+            with self.assertRaises(ValueError):
+                game.deploy(n_tokens, CHOSEN_REGION)
+        for region in [-10, -1, len(TestGame.TINY_ASSETS["map"]["tiles"]), 99]:
+            # "region must be between 0 and {len(assets["map"]["tiles"])}"
+            with self.assertRaises(ValueError):
+                game.deploy(1, region)
+
+
+class TestGameEndTurn(unittest.TestCase):
+    """Tests for `smawg.engine.Game.end_turn()` method."""
+
+    def test_exceptions(self):
+        """Check if the method raises expected exceptions.
+
+        This doesn't include `GameEnded`, which is tested separately for
+        convenience.
+        """
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
+        with self.assertRaises(RulesViolation):  # Must pick a combo first.
+            game.end_turn()
+        game.select_combo(0)
+        with self.assertRaises(RulesViolation):  # Must deploy tokens first.
             game.end_turn()
