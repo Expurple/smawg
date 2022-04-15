@@ -10,6 +10,7 @@ and this project adheres to
 ### Added
 - Reinforcements dice mechanic.
 - Related `Game.conquer()` argument: `use_dice`.
+- Related `Game` hook: `"on_dice_rolled"`
 - Related `cli` command: `conquer-dice`.
 
 ### Changed

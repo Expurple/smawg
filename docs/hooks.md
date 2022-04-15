@@ -6,10 +6,7 @@ TODO: write about the general idea.
 ## List of events and hook signatures
 
 All hooks accept `Game` instance as the first parameter.
-
-For all currently existing hooks, this is the only parameter.
-But this signature isn't strictly enforced, because I beleive that other hooks
-will require additional parameters in the future.
+Some also accept additional info about the event.
 
 In this listing, all callbacks have exactly the same names as the corresponding
 event names (`"on_turn_start"` and so on).
@@ -19,6 +16,13 @@ def on_turn_start(game: Game) -> None:
     """Fired when a player gets control over the `game`, starting a new turn.
 
     You may choose to interact with the `game` from here (see example below).
+    """
+
+def on_dice_rolled(game: Game, value: int, conquest_success: bool) -> None:
+    """Fired after an attempt to conquer a region using the reinforcement dice.
+
+    This hook is intended just for notifying about
+    the dice `value` and `conquest_success`.
     """
 
 def on_turn_end(game: Game) -> None:

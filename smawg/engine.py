@@ -567,13 +567,14 @@ class Game:
                   f"but need at least {tokens_required - 3} to have a chance)"
             raise RulesViolation(msg)
         dice_value = self._roll_dice()
+        is_success = tokens_on_hand + dice_value >= tokens_required
+        if is_success:
+            own_tokens_used = max(tokens_required - dice_value, 1)
+            self._kick_out_owner(region)
+            self.player.tokens_on_hand -= own_tokens_used
+            self.player.active_regions[region] = own_tokens_used
         self._turn_stage = _TurnStage.USED_DICE
-        if tokens_on_hand + dice_value < tokens_required:
-            return  # Failed conquest.
-        own_tokens_used = max(tokens_required - dice_value, 1)
-        self._kick_out_owner(region)
-        self.player.tokens_on_hand -= own_tokens_used
-        self.player.active_regions[region] = own_tokens_used
+        self._hooks["on_dice_rolled"](self, dice_value, is_success)
 
     def _owner(self, region: int) -> Optional[int]:
         """Return the owner of the given `region` or `None` if there's none."""

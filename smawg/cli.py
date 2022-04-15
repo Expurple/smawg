@@ -121,6 +121,11 @@ class Client:
             print(f"Player {game.player_id} starts turn "
                   f"{game.current_turn}/{game.n_turns}.")
 
+        def on_dice_rolled(game: Game, value: int,
+                           conquest_success: bool) -> None:
+            description = "successful" if conquest_success else "unsuccessful"
+            print(f"Rolled {value} on the dice, conquest was {description}.")
+
         def on_redeploy(game: Game) -> None:
             print(f"Player {game.player_id} redeploys "
                   f"{game.player.tokens_on_hand} tokens.")
@@ -131,8 +136,9 @@ class Client:
             print(f"{game.n_turns} turns have passed, the game is over.")
             print("You can take a final look around and type 'quit' to quit.")
 
-        hooks = {
+        hooks: dict[str, Callable] = {
             "on_turn_start": on_turn_start,
+            "on_dice_rolled": on_dice_rolled,
             "on_redeploy": on_redeploy,
             "on_game_end": on_game_end
         }
