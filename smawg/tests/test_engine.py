@@ -6,6 +6,7 @@ This module can also be seen as a collection of usage examples.
 import json
 import unittest
 from contextlib import nullcontext
+from typing import ContextManager
 
 import jsonschema.exceptions
 
@@ -84,7 +85,8 @@ class TestRace(unittest.TestCase):
 class TestGame(unittest.TestCase):
     """General tests for `smawg.engine.Game` class.
 
-    Test for particular methods are extracted into separate test fixtures.
+    Tests for hooks and particular methods
+    are extracted into separate test fixtures.
     """
 
     @classmethod
@@ -93,12 +95,8 @@ class TestGame(unittest.TestCase):
         with open(f"{_ASSETS_DIR}/tiny.json") as file:
             cls.TINY_ASSETS: dict = json.load(file)
 
-    def test_tiny_game_scenario(self):
-        """Run a full game based on `tiny.json` asssets.
-
-        Make sure that valid gameplay doesn't raise any exceptions.
-        Then, check if all `Game` methods raise `GameEnded` after the game end.
-        """
+    def test_game_end(self):
+        """Run a full game and then check if it's in end state."""
         game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
@@ -196,6 +194,122 @@ class TestGame(unittest.TestCase):
             game.deploy(1, 0)
         with self.assertRaises(GameEnded):
             game.end_turn()
+
+
+class TestGameHooks(unittest.TestCase):
+    """Tests for `Game` hooks."""
+
+    def setUp(self):
+        """Declare an internal attribute that underlies `assertFiresHook()`."""
+        self._hook_has_fired = False
+
+    def test_on_turn_start(self):
+        """Check if `"on_turn_start"` hook fires when expected."""
+        assets = {**TestGame.TINY_ASSETS, "n_players": 3}
+        with self.assertFiresHook():
+            game = Game(assets, shuffle_data=False,
+                        hooks={"on_turn_start": self.default_hook_handler()})
+        game.select_combo(0)
+        game.conquer(0)
+        game.conquer(1)
+        game.conquer(2)
+        with self.assertFiresHook():
+            game.end_turn()
+
+    def test_on_dice_rolled(self):
+        """Check if `"on_dice_rolled"` hook fires with proper arguments."""
+        def on_dice_rolled(game: Game, value: int, conquest_success: bool):
+            self.assertEqual(value, 2)
+            self.assertEqual(conquest_success, True)
+            self._hook_has_fired = True
+
+        assets = {**TestGame.TINY_ASSETS, "n_players": 3}
+        game = Game(assets, shuffle_data=False, dice_roll_func=lambda: 2,
+                    hooks={"on_dice_rolled": on_dice_rolled})
+        game.select_combo(0)
+        with self.assertFiresHook():
+            game.conquer(0, use_dice=True)
+
+    def test_on_turn_end(self):
+        """Check if `"on_turn_end"` hook fires when expected."""
+        assets = {**TestGame.TINY_ASSETS, "n_players": 3}
+        game = Game(assets, shuffle_data=False,
+                    hooks={"on_turn_end": self.default_hook_handler()})
+        game.select_combo(0)
+        game.conquer(0)
+        game.deploy(game.player.tokens_on_hand, 0)
+        with self.assertFiresHook():
+            game.end_turn()
+
+    def test_on_redeploy(self):
+        """Check if `"on_redeploy"` hook fires when expected."""
+        assets = {**TestGame.TINY_ASSETS, "n_players": 3}
+        game = Game(assets, shuffle_data=False,
+                    hooks={"on_redeploy": self.default_hook_handler()})
+        with nullcontext("Player 0, turn 1:"):
+            game.select_combo(0)
+            game.conquer(0)
+            game.conquer(1)
+            game.conquer(2)
+            game.end_turn()
+        with nullcontext("Player 1, turn 1:"):
+            game.select_combo(0)
+            game.conquer(3)
+            game.conquer(0)  # Region owned by player 0.
+            with self.assertFiresHook():
+                game.end_turn()
+
+    def test_on_game_end(self):
+        """Check if `"on_game_end"` hook fires when expected."""
+        game = Game(TestGame.TINY_ASSETS, shuffle_data=False,
+                    hooks={"on_game_end": self.default_hook_handler()})
+        with nullcontext("Player 0, turn 1:"):
+            game.select_combo(1)
+            game.conquer(0)
+            game.conquer(1)
+            game.conquer(2)
+            game.end_turn()
+        with nullcontext("Player 1, turn 1:"):
+            game.select_combo(0)
+            game.conquer(3)
+            game.conquer(0)
+            game.end_turn()
+        with nullcontext("Both players do nothing on turns 2-3:"):
+            game.deploy(game.player.tokens_on_hand, 1)
+            game.end_turn()
+            game.deploy(game.player.tokens_on_hand, 3)
+            game.end_turn()
+            game.deploy(game.player.tokens_on_hand, 1)
+            game.end_turn()
+            game.deploy(game.player.tokens_on_hand, 3)
+            with self.assertFiresHook():
+                game.end_turn()
+
+    def default_hook_handler(self):
+        """Return a simple hook handler that makes `assertFiresHook()` work."""
+        def handler(game: Game, *args, **kwargs):
+            self._hook_has_fired = True
+        return handler
+
+    def assertFiresHook(self) -> ContextManager:
+        """Assert that a `Game` hook is fired inside of the wrapped block.
+
+        Depends on an appropriate handler that sets `_hook_has_fired` to `True`
+        """
+        test_case = self
+
+        class AssertFiresHook:
+            def __enter__(self):
+                test_case._hook_has_fired = False
+                return self
+
+            def __exit__(self, exc_type, exc_value, exc_traceback):
+                if not test_case._hook_has_fired:
+                    msg = "Expected a Game hook to be executed, but it wasn't"
+                    test_case.fail(msg)
+                test_case._hook_has_fired = False
+
+        return AssertFiresHook()
 
 
 class TestGameDecline(unittest.TestCase):
