@@ -14,6 +14,16 @@ from smawg import _ASSETS_DIR
 from smawg.engine import Ability, Game, GameEnded, Race, RulesViolation
 
 
+TINY_ASSETS: dict = {}
+
+
+def setUpModule():
+    """Preload game assets only once and only when running the tests."""
+    global TINY_ASSETS
+    with open(f"{_ASSETS_DIR}/tiny.json") as file:
+        TINY_ASSETS = json.load(file)
+
+
 class TestAbility(unittest.TestCase):
     """Tests for `smawg.engine.Ability` class."""
 
@@ -89,15 +99,9 @@ class TestGame(unittest.TestCase):
     are extracted into separate test fixtures.
     """
 
-    @classmethod
-    def setUpClass(cls):
-        """Preload game assets once."""
-        with open(f"{_ASSETS_DIR}/tiny.json") as file:
-            cls.TINY_ASSETS: dict = json.load(file)
-
     def test_game_end(self):
         """Run a full game and then check if it's in end state."""
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
             game.conquer(0)
@@ -119,7 +123,7 @@ class TestGame(unittest.TestCase):
 
     def test_redeployment_pseudo_turn(self):
         """Check if redeployment pseudo-turn works as expected."""
-        assets = {**TestGame.TINY_ASSETS, "n_players": 3}
+        assets = {**TINY_ASSETS, "n_players": 3}
         game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
@@ -151,7 +155,7 @@ class TestGame(unittest.TestCase):
 
     def test_coin_rewards(self):
         """Check if coin rewards work as expected."""
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS, shuffle_data=False)
         self.assertBalances(game, [1, 1])  # Initial coin balances
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
@@ -207,7 +211,7 @@ class TestGameHooks(unittest.TestCase):
 
     def test_on_turn_start(self):
         """Check if `"on_turn_start"` hook fires when expected."""
-        assets = {**TestGame.TINY_ASSETS, "n_players": 3}
+        assets = {**TINY_ASSETS, "n_players": 3}
         with self.assertFiresHook():
             game = Game(assets, shuffle_data=False,
                         hooks={"on_turn_start": self.default_hook_handler()})
@@ -225,7 +229,7 @@ class TestGameHooks(unittest.TestCase):
             self.assertEqual(conquest_success, True)
             self._hook_has_fired = True
 
-        assets = {**TestGame.TINY_ASSETS, "n_players": 3}
+        assets = {**TINY_ASSETS, "n_players": 3}
         game = Game(assets, shuffle_data=False, dice_roll_func=lambda: 2,
                     hooks={"on_dice_rolled": on_dice_rolled})
         game.select_combo(0)
@@ -234,7 +238,7 @@ class TestGameHooks(unittest.TestCase):
 
     def test_on_turn_end(self):
         """Check if `"on_turn_end"` hook fires when expected."""
-        assets = {**TestGame.TINY_ASSETS, "n_players": 3}
+        assets = {**TINY_ASSETS, "n_players": 3}
         game = Game(assets, shuffle_data=False,
                     hooks={"on_turn_end": self.default_hook_handler()})
         game.select_combo(0)
@@ -245,7 +249,7 @@ class TestGameHooks(unittest.TestCase):
 
     def test_on_redeploy(self):
         """Check if `"on_redeploy"` hook fires when expected."""
-        assets = {**TestGame.TINY_ASSETS, "n_players": 3}
+        assets = {**TINY_ASSETS, "n_players": 3}
         game = Game(assets, shuffle_data=False,
                     hooks={"on_redeploy": self.default_hook_handler()})
         with nullcontext("Player 0, turn 1:"):
@@ -263,7 +267,7 @@ class TestGameHooks(unittest.TestCase):
 
     def test_on_game_end(self):
         """Check if `"on_game_end"` hook fires when expected."""
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False,
+        game = Game(TINY_ASSETS, shuffle_data=False,
                     hooks={"on_game_end": self.default_hook_handler()})
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
@@ -323,7 +327,7 @@ class TestGameDecline(unittest.TestCase):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             with self.assertRaises(RulesViolation):
@@ -355,7 +359,7 @@ class TestGameSelectCombo(unittest.TestCase):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             for combo in [-10, -1, len(game.combos), 999]:
@@ -379,7 +383,7 @@ class TestGameAbandon(unittest.TestCase):
 
     def test_functionality(self):
         """Check if the method behaves as expected when used correctly."""
-        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
@@ -403,7 +407,7 @@ class TestGameAbandon(unittest.TestCase):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
@@ -412,7 +416,7 @@ class TestGameAbandon(unittest.TestCase):
             game.conquer(0)
             with self.assertRaises(RulesViolation):
                 game.abandon(0)  # Has made conquests during this turn.
-            for region in [-1, len(TestGame.TINY_ASSETS["map"]["tiles"]), 99]:
+            for region in [-1, len(TINY_ASSETS["map"]["tiles"]), 99]:
                 # "region must be between 0 and {len(assets["map"]["tiles"])}"
                 with self.assertRaises(ValueError):
                     game.abandon(region)
@@ -431,7 +435,7 @@ class TestGameConquer(unittest.TestCase):
 
     def test_diceless_functionality(self):
         """Check if the method behaves as expected with `use_dice=False`."""
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
             self.assertEqual(game.players[0].tokens_on_hand, 9)
@@ -459,7 +463,7 @@ class TestGameConquer(unittest.TestCase):
 
     def test_dice_win(self):
         """Common victory cases with `use_dice=True`."""
-        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False, dice_roll_func=lambda: 1)
         with nullcontext("Player 0, turn 1:"):
             # The dice isn't necessary and results in using less tokens:
@@ -479,8 +483,7 @@ class TestGameConquer(unittest.TestCase):
 
     def test_dice_rolled_3_when_needed_3(self):
         """1 token should be put on a region."""
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False,
-                    dice_roll_func=lambda: 3)
+        game = Game(TINY_ASSETS, shuffle_data=False, dice_roll_func=lambda: 3)
         game.select_combo(0)
         initial_tokens = game.player.tokens_on_hand
         game.conquer(0, use_dice=True)
@@ -489,8 +492,7 @@ class TestGameConquer(unittest.TestCase):
 
     def test_dice_fail(self):
         """Check if conquest fails when given insufficient dice value."""
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False,
-                    dice_roll_func=lambda: 1)
+        game = Game(TINY_ASSETS, shuffle_data=False, dice_roll_func=lambda: 1)
         game.select_combo(0)
         game.conquer(0)
         game.deploy(game.player.tokens_on_hand - 1, 0)  # Leave 1 in hand.
@@ -504,7 +506,7 @@ class TestGameConquer(unittest.TestCase):
         Conquests should work in the same way
         as if the player has just chosen a new race.
         """
-        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
@@ -529,13 +531,13 @@ class TestGameConquer(unittest.TestCase):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             with self.assertRaises(RulesViolation):
                 game.conquer(0)  # Attempt to conquer without an active race.
             game.select_combo(0)
-            for region in [-1, len(TestGame.TINY_ASSETS["map"]["tiles"]), 99]:
+            for region in [-1, len(TINY_ASSETS["map"]["tiles"]), 99]:
                 # "region must be between 0 and {len(assets["map"]["tiles"])}"
                 with self.assertRaises(ValueError):
                     game.conquer(region)
@@ -558,7 +560,7 @@ class TestGameConquer(unittest.TestCase):
 
     def test_diceless_exceptions(self):
         """Check if method raises exceptions specific to `use_dice=False`."""
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS, shuffle_data=False)
         game.select_combo(0)
         game.conquer(0)
         game.deploy(game.player.tokens_on_hand - 2, 0)
@@ -567,7 +569,7 @@ class TestGameConquer(unittest.TestCase):
 
     def test_dice_only_exceptions(self):
         """Check if method raises exceptions specific to `use_dice=True`."""
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
             game.conquer(0)
@@ -594,7 +596,7 @@ class TestGameStartRedeployment(unittest.TestCase):
 
     def test_functionality(self):
         """Check if the method behaves as expected when used correctly."""
-        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False)
         game.select_combo(0)
         TOKENS_TOTAL = game.player.tokens_on_hand
@@ -612,7 +614,7 @@ class TestGameStartRedeployment(unittest.TestCase):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             with self.assertRaises(RulesViolation):
@@ -637,7 +639,7 @@ class TestGameDeploy(unittest.TestCase):
 
     def test_functionality(self):
         """Check if the method behaves as expected when used correctly."""
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS, shuffle_data=False)
         CHOSEN_COMBO = 0
         CHOSEN_REGION = 0
         game.select_combo(CHOSEN_COMBO)
@@ -657,7 +659,7 @@ class TestGameDeploy(unittest.TestCase):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS, shuffle_data=False)
         CHOSEN_COMBO = 0
         CHOSEN_REGION = 0
         game.select_combo(CHOSEN_COMBO)
@@ -672,7 +674,7 @@ class TestGameDeploy(unittest.TestCase):
             # "n_tokens must be greater then 0"
             with self.assertRaises(ValueError):
                 game.deploy(n_tokens, CHOSEN_REGION)
-        for region in [-10, -1, len(TestGame.TINY_ASSETS["map"]["tiles"]), 99]:
+        for region in [-10, -1, len(TINY_ASSETS["map"]["tiles"]), 99]:
             # "region must be between 0 and {len(assets["map"]["tiles"])}"
             with self.assertRaises(ValueError):
                 game.deploy(1, region)
@@ -687,7 +689,7 @@ class TestGameEndTurn(unittest.TestCase):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        game = Game(TestGame.TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS, shuffle_data=False)
         with self.assertRaises(RulesViolation):  # Must pick a combo first.
             game.end_turn()
         game.select_combo(0)
