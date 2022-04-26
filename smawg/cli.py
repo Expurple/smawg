@@ -33,6 +33,7 @@ Available commands:
     show-players           show general player stats
     show-regions <player>  show regions owned by <player>
     combo <index>          pick race+ability combo by <index>
+    abandon <region>       abandon <region> by index
     conquer <region>       conquer <region> by index
     conquer-dice <region>  conquer <region>, using the reinforcements dice
     deploy <n> <region>    deploy <n> tokens from hand to <region>
@@ -188,6 +189,8 @@ class Client:
             self._command_show_regions(args)
         elif command == "combo":
             self._command_combo(args)
+        elif command == "abandon":
+            self._command_abandon(args)
         elif command == "conquer":
             self._command_conquer(args)
         elif command == "conquer-dice":
@@ -243,6 +246,10 @@ class Client:
     def _command_combo(self, args: list[str]) -> None:
         i = self._parse_ints(args, n=1)[0]
         self.game.select_combo(i)
+
+    def _command_abandon(self, args: list[str]) -> None:
+        i = self._parse_ints(args, n=1)[0]
+        self.game.abandon(i)
 
     def _command_conquer(self, args: list[str]) -> None:
         i = self._parse_ints(args, n=1)[0]

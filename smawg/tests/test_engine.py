@@ -187,6 +187,8 @@ class TestGame(unittest.TestCase):
         with self.assertRaises(GameEnded):
             game.decline()
         with self.assertRaises(GameEnded):
+            game.abandon(0)
+        with self.assertRaises(GameEnded):
             game.conquer(0)
         with self.assertRaises(GameEnded):
             game.start_redeployment()
@@ -372,6 +374,58 @@ class TestGameSelectCombo(unittest.TestCase):
                 game.select_combo(0)  # Has just declined during this turn.
 
 
+class TestGameAbandon(unittest.TestCase):
+    """Tests for `smawg.engine.Game.abandon()` method."""
+
+    def test_functionality(self):
+        """Check if the method behaves as expected when used correctly."""
+        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        game = Game(assets, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            game.select_combo(0)
+            game.conquer(0)
+            game.conquer(1)
+            game.conquer(2)
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            self.assertEqual(game.player.active_regions, {0: 1, 1: 1, 2: 1})
+            self.assertEqual(game.player.tokens_on_hand, 6)
+            game.abandon(0)
+            self.assertEqual(game.player.active_regions, {1: 1, 2: 1})
+            self.assertEqual(game.player.tokens_on_hand, 7)
+            game.abandon(1)
+            self.assertEqual(game.player.active_regions, {2: 1})
+            self.assertEqual(game.player.tokens_on_hand, 8)
+
+    def test_exceptions(self):
+        """Check if the method raises expected exceptions.
+
+        This doesn't include `GameEnded`, which is tested separately for
+        convenience.
+        """
+        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        game = Game(assets, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            game.select_combo(0)
+            with self.assertRaises(RulesViolation):
+                game.abandon(0)  # Must control the region.
+            game.conquer(0)
+            with self.assertRaises(RulesViolation):
+                game.abandon(0)  # Has made conquests during this turn.
+            for region in [-1, len(TestGame.TINY_ASSETS["map"]["tiles"]), 99]:
+                # "region must be between 0 and {len(assets["map"]["tiles"])}"
+                with self.assertRaises(ValueError):
+                    game.abandon(region)
+            game.deploy(game.player.tokens_on_hand, 0)
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            game.start_redeployment()
+            # No conquests during this turn,
+            # but anyway not allowed during redeployment.
+            with self.assertRaises(RulesViolation):
+                game.abandon(0)
+
+
 class TestGameConquer(unittest.TestCase):
     """Tests for `smawg.engine.Game.conquer()` method."""
 
@@ -443,6 +497,31 @@ class TestGameConquer(unittest.TestCase):
         game.conquer(1, use_dice=True)  # Needs to roll at least 2, but gets 1.
         self.assertNotIn(1, game.player.active_regions)
         self.assertEqual(game.player.tokens_on_hand, 1)
+
+    def test_after_abandoning_all_regions(self):
+        """Test the unlikely case where the player has abandoned all regions.
+
+        Conquests should work in the same way
+        as if the player has just chosen a new race.
+        """
+        assets = {**TestGame.TINY_ASSETS, "n_players": 1}
+        game = Game(assets, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            game.select_combo(0)
+            game.conquer(0)
+            game.deploy(game.player.tokens_on_hand, 0)
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            game.abandon(0)
+            # If the player didn't abandon region 0, region 2 would be
+            # available to be conquered, because it's adjacent.
+            # But now it must be at the edge of the map (which it isn't).
+            with self.assertRaises(RulesViolation):
+                game.conquer(2)
+            # Region 4 isn't adjacent to region 0,
+            # but it's at the edge of the map, which is what we need right now.
+            game.conquer(4)
+            self.assertEqual(game.player.active_regions, {4: 3})
 
     def test_common_exceptions(self):
         """Check if the method raises expected exceptions on common checks.

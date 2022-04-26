@@ -203,6 +203,8 @@ class _TurnStage(Enum):
     """Just declined and must `end_turn()` now."""
     ACTIVE = auto()
     """Selected/used an active race during the turn and can't decline now."""
+    CONQUESTS = auto()
+    """Started conquering regions and can't abandon regions now."""
     USED_DICE = auto()
     """Done conquering, can only (re)deploy tokens and end turn."""
     REDEPLOYMENT = auto()
@@ -349,7 +351,8 @@ class Game:
             * If this method is called during the redeployment phase.
         * `GameEnded` - if this method is called after the game has ended.
         """
-        if self._turn_stage in (_TurnStage.ACTIVE, _TurnStage.USED_DICE):
+        if self._turn_stage in (_TurnStage.ACTIVE, _TurnStage.CONQUESTS,
+                                _TurnStage.USED_DICE):
             msg = "You've already used your active race during this turn. " \
                   "You can only decline during the next turn"
             raise RulesViolation(msg)
@@ -384,6 +387,30 @@ class Game:
         self._pay_for_combo(combo_index)
         self.player._set_active(self.combos[combo_index])
         self._pop_combo(combo_index)
+        self._turn_stage = _TurnStage.ACTIVE
+
+    @_check_rules(require_active=True, allow_during_redeployment=False)
+    def abandon(self, region: int) -> None:
+        """Abandon the given map `region`.
+
+        Exceptions raised:
+        * `ValueError` - if not `0 <= region < len(assets["map"]["tiles"])`.
+        * `RulesViolation` - if the player:
+            * Doesn't control the specified `region` with his active race.
+            * Has made conquests during this turn.
+            * Or if this method is called during the redeployment phase.
+        * `GameEnded` - if this method is called after the game has ended.
+        """
+        if not 0 <= region < len(self._regions):
+            msg = f"region must be between 0 and {len(self._regions)}"
+            raise ValueError(msg)
+        if region not in self.player.active_regions:
+            msg = "The region must be controlled by your active race"
+            raise RulesViolation(msg)
+        if self._turn_stage in (_TurnStage.CONQUESTS, _TurnStage.USED_DICE):
+            msg = "You can't abandon regions after making conquests"
+            raise RulesViolation(msg)
+        self.player.tokens_on_hand += self.player.active_regions.pop(region)
         self._turn_stage = _TurnStage.ACTIVE
 
     @_check_rules(require_active=True, allow_during_redeployment=False)
@@ -547,7 +574,7 @@ class Game:
         self._kick_out_owner(region)
         self.player.tokens_on_hand -= tokens_required
         self.player.active_regions[region] = tokens_required
-        self._turn_stage = _TurnStage.ACTIVE
+        self._turn_stage = _TurnStage.CONQUESTS
 
     def _conquer_with_dice(self, region: int) -> None:
         """Implementation of `conquer()` with `use_dice=True`.

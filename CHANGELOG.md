@@ -7,7 +7,10 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-\-
+### Added
+- The mechanic of abandoning regions.
+- Related `Game` method: `abandon()`.
+- Related `cli` command: `abandon`.
 
 ## [0.5.0] - 2022-04-18
 ### Added
