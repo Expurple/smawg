@@ -58,11 +58,26 @@
     ],
     "map": {
         "tiles": [
-            {"is_at_map_border": true},
-            {"is_at_map_border": true},
-            {"is_at_map_border": false},
-            {"is_at_map_border": true},
-            {"is_at_map_border": true}
+            {
+                "has_a_lost_tribe": false,
+                "is_at_map_border": true
+            },
+            {
+                "has_a_lost_tribe": false,
+                "is_at_map_border": true
+            },
+            {
+                "has_a_lost_tribe": false,
+                "is_at_map_border": false
+            },
+            {
+                "has_a_lost_tribe": false,
+                "is_at_map_border": true
+            },
+            {
+                "has_a_lost_tribe": false,
+                "is_at_map_border": true
+            }
         ],
         "tile_borders": [
             [0, 1],

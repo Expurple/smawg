@@ -5,6 +5,7 @@ This module can also be seen as a collection of usage examples.
 
 import json
 import unittest
+from copy import deepcopy
 from contextlib import nullcontext
 from typing import ContextManager
 
@@ -499,6 +500,30 @@ class TestGameConquer(unittest.TestCase):
         game.conquer(1, use_dice=True)  # Needs to roll at least 2, but gets 1.
         self.assertNotIn(1, game.player.active_regions)
         self.assertEqual(game.player.tokens_on_hand, 1)
+
+    def test_lost_tribe(self):
+        """Test on regions with Lost Tribes."""
+        assets = deepcopy(TINY_ASSETS)
+        assets["map"]["tiles"][0]["has_a_lost_tribe"] = True
+        assets["n_players"] = 1
+        game = Game(assets, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            game.select_combo(0)
+            # Conquest should require 4 tokens instead of 3.
+            tokens_total = game.player.tokens_on_hand
+            game.conquer(0)
+            self.assertEqual(game.player.tokens_on_hand, tokens_total - 4)
+            self.assertEqual(game.player.active_regions, {0: 4})
+            game.deploy(game.player.tokens_on_hand, 0)
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            # After the region is conquested,
+            # the Lost Tribe shouldn't be there anymore.
+            # If we abandon the region, conquest should cost 3 tokens.
+            game.abandon(0)
+            game.conquer(0)
+            self.assertEqual(game.player.tokens_on_hand, tokens_total - 3)
+            self.assertEqual(game.player.active_regions, {0: 3})
 
     def test_after_abandoning_all_regions(self):
         """Test the unlikely case where the player has abandoned all regions.

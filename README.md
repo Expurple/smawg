@@ -19,7 +19,6 @@ and easy interoperability with other programming languages.
 
 ### **Missing features** (in progress):
 
-* Lost Tribes.
 * Different region types (Seas, Mountains, etc).
 * Unique Race and Special Power abilities.
 

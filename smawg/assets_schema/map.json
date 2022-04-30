@@ -12,12 +12,16 @@
                 "description": "One tile on a map.",
                 "type": "object",
                 "properties": {
+                    "has_a_lost_tribe": {
+                        "description": "Whether a tile has a Lost Tribe token.",
+                        "type": "boolean"
+                    },
                     "is_at_map_border": {
                         "description": "Whether a tile is located at the map's border.",
                         "type": "boolean"
                     }
                 },
-                "required": ["is_at_map_border"]
+                "required": ["has_a_lost_tribe", "is_at_map_border"]
             }
         },
         "tile_borders": {

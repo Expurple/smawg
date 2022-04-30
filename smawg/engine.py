@@ -617,6 +617,8 @@ class Game:
         if owner_idx is not None:
             owner = self.players[owner_idx]
             cost += owner.active_regions.get(region, 1)  # 1 if declined
+        elif self._regions[region]["has_a_lost_tribe"]:
+            cost += 1
         return cost
 
     def _kick_out_owner(self, region: int) -> None:
@@ -624,6 +626,7 @@ class Game:
 
         If the `region` has no owner, do nothing.
         """
+        self._regions[region]["has_a_lost_tribe"] = False
         owner_idx = self._owner(region)
         if owner_idx is None:
             return
