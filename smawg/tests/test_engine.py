@@ -399,9 +399,6 @@ class TestGameAbandon(unittest.TestCase):
             game.abandon(0)
             self.assertEqual(game.player.active_regions, {1: 1, 2: 1})
             self.assertEqual(game.player.tokens_on_hand, 7)
-            game.abandon(1)
-            self.assertEqual(game.player.active_regions, {2: 1})
-            self.assertEqual(game.player.tokens_on_hand, 8)
 
     def test_exceptions(self):
         """Check if the method raises expected exceptions.
@@ -678,18 +675,14 @@ class TestGameDeploy(unittest.TestCase):
     def test_functionality(self):
         """Check if the method behaves as expected when used correctly."""
         game = Game(TINY_ASSETS, shuffle_data=False)
-        CHOSEN_COMBO = 0
-        CHOSEN_REGION = 0
-        game.select_combo(CHOSEN_COMBO)
-        TOKENS_TOTAL = game.combos[CHOSEN_COMBO].base_n_tokens
-        game.conquer(CHOSEN_REGION)
+        game.select_combo(0)
+        TOKENS_TOTAL = game.player.tokens_on_hand
+        game.conquer(0)
         self.assertEqual(game.player.tokens_on_hand, TOKENS_TOTAL - 3)
-        self.assertEqual(game.player.active_regions,
-                         {CHOSEN_REGION: 3})
-        game.deploy(game.player.tokens_on_hand, CHOSEN_REGION)
+        self.assertEqual(game.player.active_regions, {0: 3})
+        game.deploy(game.player.tokens_on_hand, 0)
         self.assertEqual(game.player.tokens_on_hand, 0)
-        self.assertEqual(game.player.active_regions,
-                         {CHOSEN_REGION: TOKENS_TOTAL})
+        self.assertEqual(game.player.active_regions, {0: TOKENS_TOTAL})
 
     def test_exceptions(self):
         """Check if the method raises expected exceptions.
@@ -698,20 +691,18 @@ class TestGameDeploy(unittest.TestCase):
         convenience.
         """
         game = Game(TINY_ASSETS, shuffle_data=False)
-        CHOSEN_COMBO = 0
-        CHOSEN_REGION = 0
-        game.select_combo(CHOSEN_COMBO)
+        game.select_combo(0)
         with self.assertRaises(RulesViolation):
             # Must control the region.
-            game.deploy(1, CHOSEN_REGION)
-        game.conquer(CHOSEN_REGION)
+            game.deploy(1, 0)
+        game.conquer(0)
         with self.assertRaises(RulesViolation):
             # Not enough tokens on hand.
-            game.deploy(game.player.tokens_on_hand + 1, CHOSEN_REGION)
+            game.deploy(game.player.tokens_on_hand + 1, 0)
         for n_tokens in [-99, -1, 0]:
             # "n_tokens must be greater then 0"
             with self.assertRaises(ValueError):
-                game.deploy(n_tokens, CHOSEN_REGION)
+                game.deploy(n_tokens, 0)
         for region in [-10, -1, len(TINY_ASSETS["map"]["tiles"]), 99]:
             # "region must be between 0 and {len(assets["map"]["tiles"])}"
             with self.assertRaises(ValueError):
