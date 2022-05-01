@@ -609,21 +609,23 @@ class TestGameConquer(unittest.TestCase):
         # Dark magic to implicitly get it from the calling test method.
         game: Game = inspect.stack()[1][0].f_locals["game"]
 
-        class AssertConquests:
+        class AssertConquers:
             def __enter__(self):
                 self._tokens_before = game.player.tokens_on_hand
                 return self
 
             def __exit__(self, exc_type, exc_value, exc_traceback):
-                test.assertIn(region, game.player.active_regions)
+                msg = "Expected a successfull conquest"
+                test.assertIn(region, game.player.active_regions, msg=msg)
                 if cost is not None:
+                    msg = "Conquest is using an unexpected amount of tokens"
                     tokens_in_region = game.player.active_regions[region]
-                    test.assertEqual(tokens_in_region, cost)
+                    test.assertEqual(tokens_in_region, cost, msg=msg)
                     delta_tokens_in_hand = \
                         self._tokens_before - game.player.tokens_on_hand
-                    test.assertEqual(delta_tokens_in_hand, cost)
+                    test.assertEqual(delta_tokens_in_hand, cost, msg=msg)
 
-        return AssertConquests()
+        return AssertConquers()
 
 
 class TestGameStartRedeployment(unittest.TestCase):
