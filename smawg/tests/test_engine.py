@@ -3,11 +3,12 @@
 This module can also be seen as a collection of usage examples.
 """
 
+import inspect
 import json
 import unittest
 from copy import deepcopy
 from contextlib import nullcontext
-from typing import ContextManager
+from typing import ContextManager, Optional
 
 import jsonschema.exceptions
 
@@ -439,26 +440,19 @@ class TestGameConquer(unittest.TestCase):
         game = Game(TINY_ASSETS, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
-            self.assertEqual(game.players[0].tokens_on_hand, 9)
-            game.conquer(0)
-            self.assertEqual(game.players[0].tokens_on_hand, 6)
-            self.assertEqual(game.players[0].active_regions, {0: 3})
-            game.conquer(1)
-            self.assertEqual(game.players[0].tokens_on_hand, 3)
-            self.assertEqual(game.players[0].active_regions, {0: 3, 1: 3})
-            game.conquer(2)
-            self.assertEqual(game.players[0].tokens_on_hand, 0)
-            self.assertEqual(game.players[0].active_regions,
-                             {0: 3, 1: 3, 2: 3})
+            with self.assertConquers(0, cost=3):
+                game.conquer(0)
+            with self.assertConquers(1, cost=3):
+                game.conquer(1)
+            with self.assertConquers(2, cost=3):
+                game.conquer(2)
             game.end_turn()
         with nullcontext("Player 1, turn 1:"):
             game.select_combo(0)
-            game.conquer(3)
-            self.assertEqual(game.players[1].tokens_on_hand, 6)
-            self.assertEqual(game.players[1].active_regions, {3: 3})
-            game.conquer(0)
-            self.assertEqual(game.players[1].tokens_on_hand, 0)
-            self.assertEqual(game.players[1].active_regions, {0: 6, 3: 3})
+            with self.assertConquers(3, cost=3):
+                game.conquer(3)
+            with self.assertConquers(0, cost=6):
+                game.conquer(0)
             self.assertEqual(game.players[0].tokens_on_hand, 2)
             self.assertEqual(game.players[0].active_regions, {1: 3, 2: 3})
 
@@ -469,27 +463,22 @@ class TestGameConquer(unittest.TestCase):
         with nullcontext("Player 0, turn 1:"):
             # The dice isn't necessary and results in using less tokens:
             game.select_combo(0)
-            tokens_before = game.player.tokens_on_hand
-            game.conquer(0, use_dice=True)
-            self.assertEqual(game.player.active_regions, {0: 2})
-            self.assertEqual(game.player.tokens_on_hand, tokens_before - 2)
+            with self.assertConquers(0, cost=2):
+                game.conquer(0, use_dice=True)
             game.deploy(game.player.tokens_on_hand, 0)
             game.end_turn()
         with nullcontext("Player 0, turn 2:"):
             # The dice is necessary, all tokens are used:
             game.deploy(game.player.tokens_on_hand - 2, 0)
-            game.conquer(1, use_dice=True)
-            self.assertEqual(game.player.active_regions, {0: 7, 1: 2})
-            self.assertEqual(game.player.tokens_on_hand, 0)
+            with self.assertConquers(1, cost=2):
+                game.conquer(1, use_dice=True)
 
     def test_dice_rolled_3_when_needed_3(self):
         """1 token should be put on a region."""
         game = Game(TINY_ASSETS, shuffle_data=False, dice_roll_func=lambda: 3)
         game.select_combo(0)
-        initial_tokens = game.player.tokens_on_hand
-        game.conquer(0, use_dice=True)
-        self.assertEqual(game.player.active_regions, {0: 1})
-        self.assertEqual(game.player.tokens_on_hand, initial_tokens - 1)
+        with self.assertConquers(0, cost=1):
+            game.conquer(0, use_dice=True)
 
     def test_dice_fail(self):
         """Check if conquest fails when given insufficient dice value."""
@@ -510,10 +499,8 @@ class TestGameConquer(unittest.TestCase):
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
             # Conquest should require 4 tokens instead of 3.
-            tokens_total = game.player.tokens_on_hand
-            game.conquer(0)
-            self.assertEqual(game.player.tokens_on_hand, tokens_total - 4)
-            self.assertEqual(game.player.active_regions, {0: 4})
+            with self.assertConquers(0, cost=4):
+                game.conquer(0)
             game.deploy(game.player.tokens_on_hand, 0)
             game.end_turn()
         with nullcontext("Player 0, turn 2:"):
@@ -521,9 +508,8 @@ class TestGameConquer(unittest.TestCase):
             # the Lost Tribe shouldn't be there anymore.
             # If we abandon the region, conquest should cost 3 tokens.
             game.abandon(0)
-            game.conquer(0)
-            self.assertEqual(game.player.tokens_on_hand, tokens_total - 3)
-            self.assertEqual(game.player.active_regions, {0: 3})
+            with self.assertConquers(0, cost=3):
+                game.conquer(0)
 
     def test_after_abandoning_all_regions(self):
         """Test the unlikely case where the player has abandoned all regions.
@@ -547,8 +533,8 @@ class TestGameConquer(unittest.TestCase):
                 game.conquer(2)
             # Region 4 isn't adjacent to region 0,
             # but it's at the edge of the map, which is what we need right now.
-            game.conquer(4)
-            self.assertEqual(game.player.active_regions, {4: 3})
+            with self.assertConquers(4, cost=3):
+                game.conquer(4)
 
     def test_common_exceptions(self):
         """Check if the method raises expected exceptions on common checks.
@@ -614,6 +600,33 @@ class TestGameConquer(unittest.TestCase):
             # 12 tokens are needed to conquer it, which is more than 6+3.
             with self.assertRaises(RulesViolation):
                 game.conquer(3, use_dice=True)
+
+    def assertConquers(self, region: int, *,
+                       cost: Optional[int] = None) -> ContextManager:
+        """Assert that the `region` is conquered inside of the wrapped block.
+
+        When `cost` is specified,
+        also assert that `cost` amount of tokens is used.
+        """
+        test = self
+        # Dark magic to implicitly get it from the calling test method.
+        game: Game = inspect.stack()[1][0].f_locals["game"]
+
+        class AssertConquests:
+            def __enter__(self):
+                self._tokens_before = game.player.tokens_on_hand
+                return self
+
+            def __exit__(self, exc_type, exc_value, exc_traceback):
+                test.assertIn(region, game.player.active_regions)
+                if cost is not None:
+                    tokens_in_region = game.player.active_regions[region]
+                    test.assertEqual(tokens_in_region, cost)
+                    delta_tokens_in_hand = \
+                        self._tokens_before - game.player.tokens_on_hand
+                    test.assertEqual(delta_tokens_in_hand, cost)
+
+        return AssertConquests()
 
 
 class TestGameStartRedeployment(unittest.TestCase):
