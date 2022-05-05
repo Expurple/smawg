@@ -7,7 +7,13 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-\-
+### Added
+- `smawg.exceptions` module with new exception subtypes.
+
+### Changed
+- `RulesViolation` and `GameEnded` are moved to the new module.
+- `smawg.engine` now throws more precise subtypes of `RulesViolation` instead
+    of using it directly (but it still catches all cases as a base class).
 
 ## [0.7.0] - 2022-05-01
 ### Added

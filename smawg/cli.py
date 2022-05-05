@@ -19,7 +19,8 @@ from typing import Callable, Optional
 from tabulate import tabulate
 
 from smawg import _PACKAGE_DIR, VERSION
-from smawg.engine import Game, RulesViolation
+from smawg.engine import Game
+from smawg.exceptions import RulesViolation
 
 
 TITLE = f"smawg CLI v{VERSION}"
@@ -172,10 +173,12 @@ class Client:
         """Interpret and execute the given `command`.
 
         Raise:
-        * `InvalidCommand` - if an unkown `command` or wrong number of `args`
-            is given.
-        * `ValueError` - if some argument has invalid type or value.
-        * `RulesViolation` - if given command violates the game rules.
+        * `smawg.cli.InvalidCommand`
+            if an unkown `command` or wrong number of `args` is given.
+        * `ValueError`
+            if some argument has invalid type or value.
+        * `smawg.exceptions.RulesViolation` subtypes
+            if given command violates the game rules.
         """
         if command in COMMANDS_WITHOUT_ARGS and len(args) > 0:
             raise InvalidCommand(f"'{command}' does not accept any arguments")

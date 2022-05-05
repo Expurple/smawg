@@ -14,6 +14,7 @@ from typing import Callable, Mapping, Optional
 
 import jsonschema
 
+import smawg.exceptions as exc
 from smawg import _SCHEMA_DIR
 
 
@@ -174,21 +175,6 @@ def _borders(borders_from_json: list[list[int]]) -> list[set[int]]:
     return borders
 
 
-class RulesViolation(Exception):
-    """Exception raised from `Game` methods when rules are violated."""
-
-    pass
-
-
-class GameEnded(RulesViolation):
-    """Exception raised from `Game` methods when calling after the game end."""
-
-    def __init__(self, *args) -> None:
-        """Construct an exception with default `GameEnded` message."""
-        msg = "The game is over, this action is not available anymore"
-        super().__init__(msg, *args)
-
-
 class _TurnStage(Enum):
     """The current stage of the player's turn.
 
@@ -217,6 +203,8 @@ def _check_rules(*, require_active: bool = False,
                  allow_during_redeployment: bool = True):
     """Add boilerplate rule checks to public `Game` methods.
 
+    By default, it only checks for `GameEnded`.
+
     `require_active` specifies whether an action requires an active race.
 
     `allow_when_redeploying` specifies whether an action is allowed during the
@@ -228,14 +216,12 @@ def _check_rules(*, require_active: bool = False,
             # Perform necessary checks
             self: "Game" = args[0]
             if self.has_ended:
-                raise GameEnded()
+                raise exc.GameEnded()
             if require_active and self.player.active_race is None:
-                msg = "To do this, you need to control an active race"
-                raise RulesViolation(msg)
+                raise exc.NoActiveRace()
             if not allow_during_redeployment and self._turn_stage in \
                     (_TurnStage.REDEPLOYMENT, _TurnStage.REDEPLOYMENT_TURN):
-                msg = "This action is not allowed during redeployment"
-                raise RulesViolation(msg)
+                raise exc.ForbiddenDuringRedeployment()
             # And then just execute the wrapped method
             return game_method(*args, **kwargs)
         return wrapper
@@ -273,7 +259,7 @@ class Game:
         For details, see `docs/hooks.md`
 
         Exceptions raised:
-        * `jsonschema.exceptions.ValidationError` -
+        * `jsonschema.exceptions.ValidationError`
             if `assets` dict doesn't match `assets_schema/assets.json`.
         """
         jsonschema.validate(assets, ASSETS_SCHEMA, resolver=_JS_REF_RESOLVER)
@@ -345,17 +331,18 @@ class Game:
         """Put player's active race in decline state.
 
         Exceptions raised:
-        * `RulesViolation`:
-            * If the player is already in decline.
-            * If the player has already used his active race during this turn.
-            * If this method is called during the redeployment phase.
-        * `GameEnded` - if this method is called after the game has ended.
+        * `smawg.exceptions.NoActiveRace`
+            if the player is already in decline.
+        * `smawg.exceptions.DecliningWhenActive`
+            if the player has already used his active race during this turn.
+        * `smawg.exceptions.ForbiddenDuringRedeployment`
+            if this method is called during the redeployment phase.
+        * `smawg.exceptions.GameEnded`
+            if this method is called after the game has ended.
         """
         if self._turn_stage in (_TurnStage.ACTIVE, _TurnStage.CONQUESTS,
                                 _TurnStage.USED_DICE):
-            msg = "You've already used your active race during this turn. " \
-                  "You can only decline during the next turn"
-            raise RulesViolation(msg)
+            raise exc.DecliningWhenActive()
         self.player._decline()
         self._turn_stage = _TurnStage.DECLINED
 
@@ -369,21 +356,26 @@ class Game:
         * Then, the next combo is revealed.
 
         Exceptions raised:
-        * `ValueError` - if not `0 <= combo_index < len(combos)`.
-        * `RulesViolation`:
-            * If the player already has an active race.
-            * If the player has just declined during this turn.
-            * If the player doesn't have enough coins.
-        * `GameEnded` - if this method is called after the game has ended.
+        * `ValueError`
+            if not `0 <= combo_index < len(combos)`.
+        * `smawg.exceptions.SelectingWhenActive`
+            if the player already has an active race.
+        * `smawg.exceptions.SelectingOnDeclineTurn`
+            if the player has just declined during this turn.
+        * `smawg.exceptions.NotEnoughCoins`
+            if the player doesn't have enough coins.
+        * `smawg.exceptions.ForbiddenDuringRedeployment`
+            if this method is called during the redeployment phase.
+        * `smawg.exceptions.GameEnded`
+            if this method is called after the game has ended.
         """
         if not 0 <= combo_index < len(self.combos):
             msg = f"combo_index must be between 0 and {len(self.combos)}"
             raise ValueError(msg)
         if self._turn_stage == _TurnStage.DECLINED:
-            raise RulesViolation("You need to finish your turn now and select "
-                                 "a new race during the next turn")
+            raise exc.SelectingOnDeclineTurn()
         if self._turn_stage != _TurnStage.SELECT_COMBO:
-            raise RulesViolation("You need to decline first")
+            raise exc.SelectingWhenActive()
         self._pay_for_combo(combo_index)
         self.player._set_active(self.combos[combo_index])
         self._pop_combo(combo_index)
@@ -394,22 +386,26 @@ class Game:
         """Abandon the given map `region`.
 
         Exceptions raised:
-        * `ValueError` - if not `0 <= region < len(assets["map"]["tiles"])`.
-        * `RulesViolation` - if the player:
-            * Doesn't control the specified `region` with his active race.
-            * Has made conquests during this turn.
-            * Or if this method is called during the redeployment phase.
-        * `GameEnded` - if this method is called after the game has ended.
+        * `ValueError`
+            if not `0 <= region < len(assets["map"]["tiles"])`.
+        * `smawg.exceptions.NoActiveRace`
+            if the player doesn't have an active race.
+        * `smawg.exceptions.NonControlledRegion`
+            if player doesn't control the `region` with his active race.
+        * `smawg.exceptions.AbandoningAfterConquests`
+            if the player has made conquests during this turn.
+        * `smawg.exceptions.ForbiddenDuringRedeployment`
+            if this method is called during the redeployment phase.
+        * `smawg.exceptions.GameEnded`
+            if this method is called after the game has ended.
         """
         if not 0 <= region < len(self._regions):
             msg = f"region must be between 0 and {len(self._regions)}"
             raise ValueError(msg)
         if region not in self.player.active_regions:
-            msg = "The region must be controlled by your active race"
-            raise RulesViolation(msg)
+            raise exc.NonControlledRegion()
         if self._turn_stage in (_TurnStage.CONQUESTS, _TurnStage.USED_DICE):
-            msg = "You can't abandon regions after making conquests"
-            raise RulesViolation(msg)
+            raise exc.AbandoningAfterConquests()
         self.player.tokens_on_hand += self.player.active_regions.pop(region)
         self._turn_stage = _TurnStage.ACTIVE
 
@@ -420,36 +416,43 @@ class Game:
         When `use_dice=True` is given, attempt to use reinforcements.
 
         Exceptions raised:
-        * `ValueError` - if not `0 <= region < len(assets["map"]["tiles"])`.
-        * `RulesViolation` - if the player attempts to:
-            * Do the first conquest of a new race not at the map border.
-            * Conquer a region that isn't adjacent to any owned regions.
-            * Conquer a region occupied by their own active race.
-            * Conquer without dice and without having enough tokens on hand.
-            * Conquer with dice, without having at least 1 token on hand.
-            * Conquer with dice, while needing more than 3 additional tokens.
-            * Conquer again after rolling the reinforcements dice.
-            * Conquer during the redeployment phase.
-        * `GameEnded` - if this method is called after the game has ended.
+        * `ValueError`
+            if not `0 <= region < len(assets["map"]["tiles"])`.
+        * `smawg.exceptions.NoActiveRace`
+            if the player doesn't have an active race.
+        * `smawg.exceptions.NotAtBorder`
+            if the first conquest of a new race is not at the map border.
+        * `smawg.exceptions.NonAdjacentRegion`
+            if `region` isn't adjacent to any owned regions.
+        * `smawg.exceptions.ConqueringOwnRegion`
+            if `region` is occupied by player's own active race.
+        * `smawg.exceptions.NotEnoughTokensToConquer`
+            if conquering without dice and without enough tokens on hand.
+        * `smawg.exceptions.RollingWithoutTokens`
+            if conquering with dice while having 0 tokens on hand.
+        * `smawg.exceptions.NotEnoughTokensToRoll`
+            if conquering with dice, while needing >3 additional tokens.
+        * `smawg.exceptions.NotEnoughTokensToRoll`
+            if conquering again after rolling the reinforcements dice.
+        * `smawg.exceptions.ForbiddenDuringRedeployment`
+            if this method is called during the redeployment phase.
+        * `smawg.exceptions.GameEnded`
+            if this method is called after the game has ended.
         """
         if self._turn_stage == _TurnStage.USED_DICE:
-            msg = "You've already rolled the dice during this turn and " \
-                "can't make any more conquests"
-            raise RulesViolation(msg)
+            raise exc.AlreadyUsedDice()
         if not 0 <= region < len(self._regions):
             msg = f"region must be between 0 and {len(self._regions)}"
             raise ValueError(msg)
         if len(self.player.active_regions) == 0 \
                 and not self._regions[region]["is_at_map_border"]:
-            msg = "The initial conquest must be at the map border"
-            raise RulesViolation(msg)
+            raise exc.NotAtBorder()
         if region in self.player.active_regions:
-            raise RulesViolation("Can't conquer your own region")
+            raise exc.ConqueringOwnRegion()
         has_adjacent = any(region in self._borders[own]
                            for own in self.player.active_regions)
         if len(self.player.active_regions) > 0 and not has_adjacent:
-            msg = "The region must be adjacent to any of your active regions"
-            raise RulesViolation(msg)
+            raise exc.NonAdjacentRegion()
         if use_dice:
             self._conquer_with_dice(region)
         else:
@@ -463,13 +466,17 @@ class Game:
         the player should deploy tokens from hand and then end the turn.
 
         Exceptions raised:
-        * `RulesViolation`:
-            * If the player doesn't control any region with his active race.
-            * If this method is called during the redeployment phase.
-        * `GameEnded` - if this method is called after the game has ended.
+        * `smawg.exceptions.NoActiveRace`
+            if the player doesn't have an active race.
+        * `smawg.exceptions.NoActiveRegions`
+            if the player doesn't control any regions with his active race.
+        * `smawg.exceptions.ForbiddenDuringRedeployment`
+            if this method is called during the redeployment phase.
+        * `smawg.exceptions.GameEnded`
+            if this method is called after the game has ended.
         """
         if not self.player.active_regions:
-            raise RulesViolation("You must control at least one active region")
+            raise exc.NoActiveRegions()
         self.player._pick_up_tokens()
         self._turn_stage = _TurnStage.REDEPLOYMENT
 
@@ -478,13 +485,17 @@ class Game:
         """Deploy `n_tokens` from hand to the specified own `region`.
 
         Exceptions raised:
-        * `ValueError`:
-            * if `n_tokens < 1`
-            * if not `0 <= region < len(assets["map"]["tiles"])`.
-        * `RulesViolation` - if the player:
-            * Doesn't control the specified `region` with his active race.
-            * Doesn't have `n_tokens` on hand.
-        * `GameEnded` - if this method is called after the game has ended.
+        * `ValueError`
+            if `n_tokens < 1`; or
+            if not `0 <= region < len(assets["map"]["tiles"])`.
+        * `smawg.exceptions.NoActiveRace`
+            if the player doesn't have an active race.
+        * `smawg.exceptions.NonControlledRegion`
+            if the player doesn't control the `region` with his active race.
+        * `smawg.exceptions.NotEnoughTokensToDeploy`
+            if the player doesn't have `n_tokens` on hand.
+        * `smawg.exceptions.GameEnded`
+            if this method is called after the game has ended.
         """
         if n_tokens < 1:
             raise ValueError("n_tokens must be greater then 0")
@@ -492,11 +503,10 @@ class Game:
             msg = f"region must be between 0 and {len(self._regions)}"
             raise ValueError(msg)
         if region not in self.player.active_regions:
-            raise RulesViolation("Can only deploy to owned region")
+            raise exc.NonControlledRegion()
         tokens_on_hand = self.player.tokens_on_hand
         if n_tokens > tokens_on_hand:
-            msg = f"Not enough tokens on hand (you have {tokens_on_hand})"
-            raise RulesViolation(msg)
+            raise exc.NotEnoughTokensToDeploy(tokens_on_hand)
         self.player.tokens_on_hand -= n_tokens
         self.player.active_regions[region] += n_tokens
         if self._turn_stage == _TurnStage.CAN_DECLINE:
@@ -509,20 +519,19 @@ class Game:
         Automatically calculate+pay coin rewards and fire appropriate hooks.
 
         Exceptions raised:
-        * `RulesViolation` - if the player:
-            * Must select a new combo and haven't done that yet.
-            * Must deploy tokens from hand and haven't done that yet.
-        * `GameEnded` - if this method is called after the game has ended.
+        * `smawg.exceptions.EndBeforeSelect`
+            if the player must select a new combo and haven't done that yet.
+        * `smawg.exceptions.UndeployedTokens`
+            if player must deploy tokens from hand and haven't done that yet.
+        * `smawg.exceptions.GameEnded`
+            if this method is called after the game has ended.
         """
         if self._turn_stage == _TurnStage.SELECT_COMBO:
-            raise RulesViolation("You need to select a new race+ability combo "
-                                 "before ending this turn")
+            raise exc.EndBeforeSelect()
         tokens_on_hand = self.player.tokens_on_hand
         if tokens_on_hand > 0:
-            msg = f"You need to use remaining {tokens_on_hand} tokens on hand"
-            if self._turn_stage == _TurnStage.CAN_DECLINE:
-                msg += " or decline"
-            raise RulesViolation(msg)
+            can_decline = self._turn_stage == _TurnStage.CAN_DECLINE
+            raise exc.UndeployedTokens(tokens_on_hand, can_decline=can_decline)
         if self._turn_stage != _TurnStage.REDEPLOYMENT_TURN:
             self._reward_coins_for_turn()
             self._hooks["on_turn_end"](self)
@@ -535,11 +544,15 @@ class Game:
         * Gets all coins that have been put on the specified combo.
         * Puts 1 coin on each combo above that (`combo_index` coins in total).
 
-        If the player doesn't have enough coins, `RulesViolation` is raised.
+        Exceptions raised:
+        * `smawg.exceptions.NotEnoughCoins`
+            if the player doesn't have enough coins.
+
+        All other rules are expected to be already checked in `select_combo()`.
         """
         coins_getting = self.combos[combo_index].coins
         if combo_index > self.player.coins + coins_getting:
-            raise RulesViolation("Not enough coins, select a different race")
+            raise exc.NotEnoughCoins()
         self.player.coins += coins_getting - combo_index
         for combo in self.combos[:combo_index]:
             combo.coins += 1
@@ -563,14 +576,15 @@ class Game:
         """Implementation of `conquer()` with `use_dice=False`.
 
         Exceptions raised:
-        * `RulesViolation` - if the player doesn't have enough tokens at hand.
+        * `smawg.exceptions.NotEnoughTokensToConquer`
+            if the player doesn't have enough tokens at hand.
+
+        All the other rules are expected to be already checked in `conquer()`.
         """
         tokens_required = self._get_conquest_cost(region)
         tokens_on_hand = self.player.tokens_on_hand
         if tokens_on_hand < tokens_required:
-            msg = f"Not enough tokens on hand (you have {tokens_on_hand}, " \
-                  f"but need {tokens_required})"
-            raise RulesViolation(msg)
+            raise exc.NotEnoughTokensToConquer(tokens_on_hand, tokens_required)
         self._kick_out_owner(region)
         self.player.tokens_on_hand -= tokens_required
         self.player.active_regions[region] = tokens_required
@@ -580,19 +594,20 @@ class Game:
         """Implementation of `conquer()` with `use_dice=True`.
 
         Exceptions raised:
-        * `RulesViolation` - if the player:
-            * Doesn't have at least 1 token on hand.
-            * Needs more than 3 additional tokens.
+        * `smawg.exceptions.RollingWithoutTokens`
+            if the player doesn't have at least 1 token on hand.
+        * `smawg.exceptions.NotEnoughTokensToRoll`
+            if the player needs more than 3 additional tokens to succeed.
+
+        All the other rules are expected to be already checked in `conquer()`.
         """
         tokens_required = self._get_conquest_cost(region)
         tokens_on_hand = self.player.tokens_on_hand
         if tokens_on_hand < 1:
-            msg = "To roll the dice, you need to have at least 1 token on hand"
-            raise RulesViolation(msg)
-        if tokens_required - tokens_on_hand > 3:
-            msg = f"Not enough tokens on hand (you have {tokens_on_hand}, " \
-                  f"but need at least {tokens_required - 3} to have a chance)"
-            raise RulesViolation(msg)
+            raise exc.RollingWithoutTokens()
+        minimum_required = tokens_required - 3
+        if tokens_on_hand < minimum_required:
+            raise exc.NotEnoughTokensToRoll(tokens_on_hand, minimum_required)
         dice_value = self._roll_dice()
         is_success = tokens_on_hand + dice_value >= tokens_required
         if is_success:

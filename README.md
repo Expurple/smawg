@@ -96,9 +96,9 @@ It should guide you through the usage.
 ```python
 import json
 
-# If you're dealing with (possibly invalid) user input,
-# you might want to also import `RulesViolation` for catching it.
 from smawg.engine import Game
+# If you're dealing with (possibly invalid) user input:
+from smawg.exceptions import RulesViolation
 
 
 # If you want, you can directly construct `assets` dict
