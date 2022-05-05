@@ -145,6 +145,8 @@ class TestGame(unittest.TestCase):
             with self.assertRaises(exc.ForbiddenDuringRedeployment):
                 game.select_combo(0)
             with self.assertRaises(exc.ForbiddenDuringRedeployment):
+                game.abandon(1)
+            with self.assertRaises(exc.ForbiddenDuringRedeployment):
                 game.conquer(4)
             with self.assertRaises(exc.ForbiddenDuringRedeployment):
                 game.decline()
@@ -362,13 +364,15 @@ class TestGameSelectCombo(unittest.TestCase):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        assets = {**TINY_ASSETS, "n_players": 1}
+        assets = {**TINY_ASSETS, "n_players": 1, "n_coins_on_start": 0}
         game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             for combo in [-10, -1, len(game.combos), 999]:
                 # "combo_index must be between 0 and {len(game.combos)}"
                 with self.assertRaises(ValueError):
                     game.select_combo(combo)
+            with self.assertRaises(exc.NotEnoughCoins):
+                game.select_combo(1)
             game.select_combo(0)
             with self.assertRaises(exc.SelectingWhenActive):
                 game.select_combo(0)
@@ -410,6 +414,8 @@ class TestGameAbandon(unittest.TestCase):
         assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
+            with self.assertRaises(exc.NoActiveRace):
+                game.abandon(0)
             game.select_combo(0)
             with self.assertRaises(exc.NonControlledRegion):
                 game.abandon(0)
@@ -692,6 +698,8 @@ class TestGameDeploy(unittest.TestCase):
         convenience.
         """
         game = Game(TINY_ASSETS, shuffle_data=False)
+        with self.assertRaises(exc.NoActiveRace):
+            game.deploy(1, 0)
         game.select_combo(0)
         with self.assertRaises(exc.NonControlledRegion):
             game.deploy(1, 0)
