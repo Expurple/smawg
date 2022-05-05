@@ -20,7 +20,7 @@ from smawg import _SCHEMA_DIR
 
 # ------------------------ JSON schemas for assets ----------------------------
 
-_JS_REF_RESOLVER = jsonschema.RefResolver(f"file://{_SCHEMA_DIR}/", None)
+_JS_REF_RESOLVER = jsonschema.RefResolver(f"file://{_SCHEMA_DIR}/", {})
 """Fixes references to local schemas.
 
 Should be used in every `jsonschema.validate()` call.
