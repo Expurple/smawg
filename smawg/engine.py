@@ -35,8 +35,29 @@ with open(f"{_SCHEMA_DIR}/ability.json") as file:
 with open(f"{_SCHEMA_DIR}/race.json") as file:
     RACE_SCHEMA: dict = json.load(file)
 
+with open(f"{_SCHEMA_DIR}/tile.json") as file:
+    TILE_SCHEMA: dict = json.load(file)
+
 
 # -------------------------- "dumb" data objects ------------------------------
+
+class Region:
+    """Info about a region from the game map.
+
+    `has_a_lost_tribe` is mutable -
+    it becomes `False` after the region is conquered.
+    """
+
+    def __init__(self, json: dict) -> None:
+        """Construct strongly typed `Region` from json object.
+
+        Raise `jsonschema.exceptions.ValidationError`
+        if `json` doesn't match `assets_schema/tile.json`.
+        """
+        jsonschema.validate(json, TILE_SCHEMA, resolver=_JS_REF_RESOLVER)
+        self.has_a_lost_tribe: bool = json["has_a_lost_tribe"]
+        self.is_at_map_border: bool = json["is_at_map_border"]
+
 
 class Ability:
     """Immutable description of an ability (just like on a physical banner)."""
@@ -266,7 +287,7 @@ class Game:
         assets = shuffle(assets) if shuffle_data else deepcopy(assets)
         n_coins: int = assets["n_coins_on_start"]
         n_players: int = assets["n_players"]
-        self._regions: list[dict] = assets["map"]["tiles"]
+        self._regions = [Region(t) for t in assets["map"]["tiles"]]
         self._borders = _borders(assets["map"]["tile_borders"])
         self._abilities = [Ability(a) for a in assets["abilities"]]
         self._races = [Race(r) for r in assets["races"]]
@@ -445,7 +466,7 @@ class Game:
             msg = f"region must be between 0 and {len(self._regions)}"
             raise ValueError(msg)
         if len(self.player.active_regions) == 0 \
-                and not self._regions[region]["is_at_map_border"]:
+                and not self._regions[region].is_at_map_border:
             raise exc.NotAtBorder()
         if region in self.player.active_regions:
             raise exc.ConqueringOwnRegion()
@@ -632,7 +653,7 @@ class Game:
         if owner_idx is not None:
             owner = self.players[owner_idx]
             cost += owner.active_regions.get(region, 1)  # 1 if declined
-        elif self._regions[region]["has_a_lost_tribe"]:
+        elif self._regions[region].has_a_lost_tribe:
             cost += 1
         return cost
 
@@ -641,7 +662,7 @@ class Game:
 
         If the `region` has no owner, do nothing.
         """
-        self._regions[region]["has_a_lost_tribe"] = False
+        self._regions[region].has_a_lost_tribe = False
         owner_idx = self._owner(region)
         if owner_idx is None:
             return
