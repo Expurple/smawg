@@ -328,6 +328,11 @@ class Game:
         return self.current_turn > self.n_turns
 
     @property
+    def regions(self) -> list[Region]:
+        """Info about regions on the map."""
+        return self._regions
+
+    @property
     def combos(self) -> list[Combo]:
         """The list of race+ability combos available to be selected."""
         return self._combos
