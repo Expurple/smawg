@@ -44,6 +44,8 @@ with open(f"{_SCHEMA_DIR}/tile.json") as file:
 class Region:
     """Info about a region from the game map.
 
+    `is_at_map_border` and `terrain` are immutable.
+
     `has_a_lost_tribe` is mutable -
     it becomes `False` after the region is conquered.
     """
@@ -57,6 +59,7 @@ class Region:
         jsonschema.validate(json, TILE_SCHEMA, resolver=_JS_REF_RESOLVER)
         self.has_a_lost_tribe: bool = json["has_a_lost_tribe"]
         self.is_at_map_border: bool = json["is_at_map_border"]
+        self.terrain: str = json["terrain"]
 
 
 class Ability:

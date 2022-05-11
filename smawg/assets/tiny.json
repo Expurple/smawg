@@ -60,23 +60,28 @@
         "tiles": [
             {
                 "has_a_lost_tribe": false,
-                "is_at_map_border": true
+                "is_at_map_border": true,
+                "terrain": "Forest"
             },
             {
                 "has_a_lost_tribe": false,
-                "is_at_map_border": true
+                "is_at_map_border": true,
+                "terrain": "Forest"
             },
             {
                 "has_a_lost_tribe": false,
-                "is_at_map_border": false
+                "is_at_map_border": false,
+                "terrain": "Forest"
             },
             {
                 "has_a_lost_tribe": false,
-                "is_at_map_border": true
+                "is_at_map_border": true,
+                "terrain": "Forest"
             },
             {
                 "has_a_lost_tribe": false,
-                "is_at_map_border": true
+                "is_at_map_border": true,
+                "terrain": "Forest"
             }
         ],
         "tile_borders": [

@@ -12,7 +12,11 @@
         "is_at_map_border": {
             "description": "Whether a tile is located at the map's border.",
             "type": "boolean"
+        },
+        "terrain": {
+            "description": "The type of terrain (Forest, Mountain, etc.)",
+            "type": "string"
         }
     },
-    "required": ["has_a_lost_tribe", "is_at_map_border"]
+    "required": ["has_a_lost_tribe", "is_at_map_border", "terrain"]
 }

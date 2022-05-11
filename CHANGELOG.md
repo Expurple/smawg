@@ -9,6 +9,7 @@ and this project adheres to
 ## [Unreleased]
 ### Added
 - `Game.regions` property.
+- `terrain` property for regions (which doesn't affect anything yet).
 
 ## [0.8.0] - 2022-05-11
 ### Added
