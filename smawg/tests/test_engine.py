@@ -7,8 +7,8 @@ import inspect
 import json
 import unittest
 from copy import deepcopy
-from contextlib import nullcontext
-from typing import ContextManager, Optional
+from contextlib import AbstractContextManager, nullcontext
+from typing import Any, Callable, Optional
 
 import jsonschema.exceptions
 
@@ -17,10 +17,10 @@ from smawg import _ASSETS_DIR
 from smawg.engine import Ability, Game, Race
 
 
-TINY_ASSETS: dict = {}
+TINY_ASSETS: dict[str, Any] = {}
 
 
-def setUpModule():
+def setUpModule() -> None:
     """Preload game assets only once and only when running the tests."""
     global TINY_ASSETS
     with open(f"{_ASSETS_DIR}/tiny.json") as file:
@@ -30,13 +30,13 @@ def setUpModule():
 class TestAbility(unittest.TestCase):
     """Tests for `smawg.engine.Ability` class."""
 
-    def test_valid_json(self):
+    def test_valid_json(self) -> None:
         """Check if `Ability.__init__` propetly parses the given json."""
         ability = Ability({"name": "Some Name", "n_tokens": 4})
         self.assertEqual(ability.name, "Some Name")
         self.assertEqual(ability.n_tokens, 4)
 
-    def test_invalid_jsons(self):
+    def test_invalid_jsons(self) -> None:
         """Check if `Ability.__init__` raises when given invalid jsons."""
         # Missing "name" and "n_tokens"
         self.assertInvalid({"random keys": "and values"})
@@ -52,7 +52,7 @@ class TestAbility(unittest.TestCase):
         # Invalid value of "n_tokens"
         self.assertInvalid({"name": "Some Name", "n_tokens": -4})
 
-    def assertInvalid(self, json: dict):
+    def assertInvalid(self, json: dict[str, Any]) -> None:
         """Check if `Ability.__init__` raises when given this `json`."""
         with self.assertRaises(jsonschema.exceptions.ValidationError):
             _ = Ability(json)
@@ -61,7 +61,7 @@ class TestAbility(unittest.TestCase):
 class TestRace(unittest.TestCase):
     """Tests for `smawg.engine.Race` class."""
 
-    INVALID_JSONS = [
+    INVALID_JSONS: list[dict[str, Any]] = [
         # Missing required properties
         {"random keys": "and values"},
         {},
@@ -77,19 +77,19 @@ class TestRace(unittest.TestCase):
         {"name": "Some Name", "n_tokens": 4, "max_n_tokens": -9}
     ]
 
-    def test_valid_json(self):
+    def test_valid_json(self) -> None:
         """Check if `Race.__init__` propetly parses the given json."""
         race = Race({"name": "Some Name", "n_tokens": 4, "max_n_tokens": 9})
         self.assertEqual(race.name, "Some Name")
         self.assertEqual(race.n_tokens, 4)
         self.assertEqual(race.max_n_tokens, 9)
 
-    def test_invalid_jsons(self):
+    def test_invalid_jsons(self) -> None:
         """Check if `Race.__init__` raises when given invalid jsons."""
         for j in TestRace.INVALID_JSONS:
             self.assertInvalid(j)
 
-    def assertInvalid(self, json: dict):
+    def assertInvalid(self, json: dict[str, Any]) -> None:
         """Check if `Race.__init__` raises when given this `json`."""
         with self.assertRaises(jsonschema.exceptions.ValidationError):
             _ = Race(json)
@@ -102,7 +102,7 @@ class TestGame(unittest.TestCase):
     are extracted into separate test fixtures.
     """
 
-    def test_game_end(self):
+    def test_game_end(self) -> None:
         """Run a full game and then check if it's in end state."""
         game = Game(TINY_ASSETS, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
@@ -124,7 +124,7 @@ class TestGame(unittest.TestCase):
                 game.end_turn()
         self.assertEnded(game)
 
-    def test_redeployment_pseudo_turn(self):
+    def test_redeployment_pseudo_turn(self) -> None:
         """Check if redeployment pseudo-turn works as expected."""
         assets = {**TINY_ASSETS, "n_players": 3}
         game = Game(assets, shuffle_data=False)
@@ -158,7 +158,7 @@ class TestGame(unittest.TestCase):
             self.assertEqual(game.current_turn, 1)
             self.assertEqual(game.player_id, 2)
 
-    def test_coin_rewards(self):
+    def test_coin_rewards(self) -> None:
         """Check if coin rewards work as expected."""
         game = Game(TINY_ASSETS, shuffle_data=False)
         self.assertBalances(game, [1, 1])  # Initial coin balances
@@ -182,13 +182,13 @@ class TestGame(unittest.TestCase):
             game.end_turn()
         self.assertBalances(game, [5, 4])  # Reward for decline regions 1 and 2
 
-    def assertBalances(self, game: Game, expected: list[int]):
+    def assertBalances(self, game: Game, expected: list[int]) -> None:
         """Check if all player balances match the `expected`."""
         actual = [p.coins for p in game.players]
         msg = "Player has incorrect amount of coins"
         self.assertListEqual(actual, expected, msg=msg)
 
-    def assertEnded(self, game: Game):
+    def assertEnded(self, game: Game) -> None:
         """Check if `game` is in end state and all methods raise GameEnded."""
         self.assertTrue(game.has_ended)
         with self.assertRaises(exc.GameEnded):
@@ -210,11 +210,11 @@ class TestGame(unittest.TestCase):
 class TestGameHooks(unittest.TestCase):
     """Tests for `Game` hooks."""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Declare an internal attribute that underlies `assertFiresHook()`."""
         self._hook_has_fired = False
 
-    def test_on_turn_start(self):
+    def test_on_turn_start(self) -> None:
         """Check if `"on_turn_start"` hook fires when expected."""
         assets = {**TINY_ASSETS, "n_players": 3}
         with self.assertFiresHook():
@@ -227,9 +227,10 @@ class TestGameHooks(unittest.TestCase):
         with self.assertFiresHook():
             game.end_turn()
 
-    def test_on_dice_rolled(self):
+    def test_on_dice_rolled(self) -> None:
         """Check if `"on_dice_rolled"` hook fires with proper arguments."""
-        def on_dice_rolled(game: Game, value: int, conquest_success: bool):
+        def on_dice_rolled(game: Game, value: int,
+                           conquest_success: bool) -> None:
             self.assertEqual(value, 2)
             self.assertEqual(conquest_success, True)
             self._hook_has_fired = True
@@ -241,7 +242,7 @@ class TestGameHooks(unittest.TestCase):
         with self.assertFiresHook():
             game.conquer(0, use_dice=True)
 
-    def test_on_turn_end(self):
+    def test_on_turn_end(self) -> None:
         """Check if `"on_turn_end"` hook fires when expected."""
         assets = {**TINY_ASSETS, "n_players": 3}
         game = Game(assets, shuffle_data=False,
@@ -252,7 +253,7 @@ class TestGameHooks(unittest.TestCase):
         with self.assertFiresHook():
             game.end_turn()
 
-    def test_on_redeploy(self):
+    def test_on_redeploy(self) -> None:
         """Check if `"on_redeploy"` hook fires when expected."""
         assets = {**TINY_ASSETS, "n_players": 3}
         game = Game(assets, shuffle_data=False,
@@ -270,7 +271,7 @@ class TestGameHooks(unittest.TestCase):
             with self.assertFiresHook():
                 game.end_turn()
 
-    def test_on_game_end(self):
+    def test_on_game_end(self) -> None:
         """Check if `"on_game_end"` hook fires when expected."""
         game = Game(TINY_ASSETS, shuffle_data=False,
                     hooks={"on_game_end": self.default_hook_handler()})
@@ -296,13 +297,13 @@ class TestGameHooks(unittest.TestCase):
             with self.assertFiresHook():
                 game.end_turn()
 
-    def default_hook_handler(self):
+    def default_hook_handler(self) -> Callable[[Game], None]:
         """Return a simple hook handler that makes `assertFiresHook()` work."""
-        def handler(game: Game, *args, **kwargs):
+        def handler(game: Game) -> None:
             self._hook_has_fired = True
         return handler
 
-    def assertFiresHook(self) -> ContextManager:
+    def assertFiresHook(self) -> AbstractContextManager[Any]:
         """Assert that a `Game` hook is fired inside of the wrapped block.
 
         Depends on an appropriate handler that sets `_hook_has_fired` to `True`
@@ -310,11 +311,11 @@ class TestGameHooks(unittest.TestCase):
         test_case = self
 
         class AssertFiresHook:
-            def __enter__(self):
+            def __enter__(self) -> "AssertFiresHook":
                 test_case._hook_has_fired = False
                 return self
 
-            def __exit__(self, exc_type, exc_value, exc_traceback):
+            def __exit__(self, *_: Any) -> None:
                 if not test_case._hook_has_fired:
                     msg = "Expected a Game hook to be executed, but it wasn't"
                     test_case.fail(msg)
@@ -326,7 +327,7 @@ class TestGameHooks(unittest.TestCase):
 class TestGameDecline(unittest.TestCase):
     """Tests for `smawg.engine.Game.decline()` method."""
 
-    def test_exceptions(self):
+    def test_exceptions(self) -> None:
         """Check if the method raises expected exceptions.
 
         This doesn't include `GameEnded`, which is tested separately for
@@ -358,7 +359,7 @@ class TestGameDecline(unittest.TestCase):
 class TestGameSelectCombo(unittest.TestCase):
     """Tests for `smawg.engine.Game.select_combo()` method."""
 
-    def test_exceptions(self):
+    def test_exceptions(self) -> None:
         """Check if the method raises expected exceptions.
 
         This doesn't include `GameEnded`, which is tested separately for
@@ -388,7 +389,7 @@ class TestGameSelectCombo(unittest.TestCase):
 class TestGameAbandon(unittest.TestCase):
     """Tests for `smawg.engine.Game.abandon()` method."""
 
-    def test_functionality(self):
+    def test_functionality(self) -> None:
         """Check if the method behaves as expected when used correctly."""
         assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False)
@@ -405,7 +406,7 @@ class TestGameAbandon(unittest.TestCase):
             self.assertEqual(game.player.active_regions, {1: 1, 2: 1})
             self.assertEqual(game.player.tokens_on_hand, 7)
 
-    def test_exceptions(self):
+    def test_exceptions(self) -> None:
         """Check if the method raises expected exceptions.
 
         This doesn't include `GameEnded`, which is tested separately for
@@ -437,7 +438,7 @@ class TestGameAbandon(unittest.TestCase):
 class TestGameConquer(unittest.TestCase):
     """Tests for `smawg.engine.Game.conquer()` method."""
 
-    def test_diceless_functionality(self):
+    def test_diceless_functionality(self) -> None:
         """Check if the method behaves as expected with `use_dice=False`."""
         game = Game(TINY_ASSETS, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
@@ -458,7 +459,7 @@ class TestGameConquer(unittest.TestCase):
             self.assertEqual(game.players[0].tokens_on_hand, 2)
             self.assertEqual(game.players[0].active_regions, {1: 3, 2: 3})
 
-    def test_dice_win(self):
+    def test_dice_win(self) -> None:
         """Common victory cases with `use_dice=True`."""
         assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False, dice_roll_func=lambda: 1)
@@ -475,14 +476,14 @@ class TestGameConquer(unittest.TestCase):
             with self.assertConquers(1, cost=2):
                 game.conquer(1, use_dice=True)
 
-    def test_dice_rolled_3_when_needed_3(self):
+    def test_dice_rolled_3_when_needed_3(self) -> None:
         """1 token should be put on a region."""
         game = Game(TINY_ASSETS, shuffle_data=False, dice_roll_func=lambda: 3)
         game.select_combo(0)
         with self.assertConquers(0, cost=1):
             game.conquer(0, use_dice=True)
 
-    def test_dice_fail(self):
+    def test_dice_fail(self) -> None:
         """Check if conquest fails when given insufficient dice value."""
         game = Game(TINY_ASSETS, shuffle_data=False, dice_roll_func=lambda: 1)
         game.select_combo(0)
@@ -492,7 +493,7 @@ class TestGameConquer(unittest.TestCase):
         self.assertNotIn(1, game.player.active_regions)
         self.assertEqual(game.player.tokens_on_hand, 1)
 
-    def test_lost_tribe(self):
+    def test_lost_tribe(self) -> None:
         """Test on regions with Lost Tribes."""
         assets = deepcopy(TINY_ASSETS)
         assets["map"]["tiles"][0]["has_a_lost_tribe"] = True
@@ -513,7 +514,7 @@ class TestGameConquer(unittest.TestCase):
             with self.assertConquers(0, cost=3):
                 game.conquer(0)
 
-    def test_after_abandoning_all_regions(self):
+    def test_after_abandoning_all_regions(self) -> None:
         """Test the unlikely case where the player has abandoned all regions.
 
         Conquests should work in the same way
@@ -538,7 +539,7 @@ class TestGameConquer(unittest.TestCase):
             with self.assertConquers(4, cost=3):
                 game.conquer(4)
 
-    def test_common_exceptions(self):
+    def test_common_exceptions(self) -> None:
         """Check if the method raises expected exceptions on common checks.
 
         This doesn't include `GameEnded`, which is tested separately for
@@ -571,7 +572,7 @@ class TestGameConquer(unittest.TestCase):
             with self.assertRaises(exc.AlreadyUsedDice):
                 game.conquer(2)
 
-    def test_diceless_exceptions(self):
+    def test_diceless_exceptions(self) -> None:
         """Check if method raises exceptions specific to `use_dice=False`."""
         game = Game(TINY_ASSETS, shuffle_data=False)
         game.select_combo(0)
@@ -580,7 +581,7 @@ class TestGameConquer(unittest.TestCase):
         with self.assertRaises(exc.NotEnoughTokensToConquer):  # Need 3, have 2
             game.conquer(1)
 
-    def test_dice_only_exceptions(self):
+    def test_dice_only_exceptions(self) -> None:
         """Check if method raises exceptions specific to `use_dice=True`."""
         game = Game(TINY_ASSETS, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
@@ -603,8 +604,8 @@ class TestGameConquer(unittest.TestCase):
             with self.assertRaises(exc.NotEnoughTokensToRoll):
                 game.conquer(3, use_dice=True)
 
-    def assertConquers(self, region: int, *,
-                       cost: Optional[int] = None) -> ContextManager:
+    def assertConquers(self, region: int, *, cost: Optional[int] = None
+                       ) -> AbstractContextManager[Any]:
         """Assert that the `region` is conquered inside of the wrapped block.
 
         When `cost` is specified,
@@ -615,11 +616,11 @@ class TestGameConquer(unittest.TestCase):
         game: Game = inspect.stack()[1][0].f_locals["game"]
 
         class AssertConquers:
-            def __enter__(self):
+            def __enter__(self) -> "AssertConquers":
                 self._tokens_before = game.player.tokens_on_hand
                 return self
 
-            def __exit__(self, exc_type, exc_value, exc_traceback):
+            def __exit__(self, *_: Any) -> None:
                 msg = "Expected a successfull conquest"
                 test.assertIn(region, game.player.active_regions, msg=msg)
                 if cost is not None:
@@ -636,7 +637,7 @@ class TestGameConquer(unittest.TestCase):
 class TestGameStartRedeployment(unittest.TestCase):
     """Tests for `smawg.engine.Game.start_redeployment()` method."""
 
-    def test_functionality(self):
+    def test_functionality(self) -> None:
         """Check if the method behaves as expected when used correctly."""
         assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False)
@@ -650,7 +651,7 @@ class TestGameStartRedeployment(unittest.TestCase):
         self.assertDictEqual(game.player.active_regions, {0: 1, 1: 1})
         self.assertEqual(game.player.tokens_on_hand, TOKENS_TOTAL - 2)
 
-    def test_exceptions(self):
+    def test_exceptions(self) -> None:
         """Check if the method raises expected exceptions.
 
         This doesn't include `GameEnded`, which is tested separately for
@@ -679,7 +680,7 @@ class TestGameStartRedeployment(unittest.TestCase):
 class TestGameDeploy(unittest.TestCase):
     """Tests for `smawg.engine.Game.deploy()` method."""
 
-    def test_functionality(self):
+    def test_functionality(self) -> None:
         """Check if the method behaves as expected when used correctly."""
         game = Game(TINY_ASSETS, shuffle_data=False)
         game.select_combo(0)
@@ -691,7 +692,7 @@ class TestGameDeploy(unittest.TestCase):
         self.assertEqual(game.player.tokens_on_hand, 0)
         self.assertEqual(game.player.active_regions, {0: TOKENS_TOTAL})
 
-    def test_exceptions(self):
+    def test_exceptions(self) -> None:
         """Check if the method raises expected exceptions.
 
         This doesn't include `GameEnded`, which is tested separately for
@@ -719,7 +720,7 @@ class TestGameDeploy(unittest.TestCase):
 class TestGameEndTurn(unittest.TestCase):
     """Tests for `smawg.engine.Game.end_turn()` method."""
 
-    def test_exceptions(self):
+    def test_exceptions(self) -> None:
         """Check if the method raises expected exceptions.
 
         This doesn't include `GameEnded`, which is tested separately for

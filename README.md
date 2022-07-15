@@ -36,7 +36,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 
 # Requirements
 
-* Python 3.9+ (currently, only 3.9 is tested)
+* Python 3.10+ (currently, only 3.10 is tested)
 * [jsonschema](https://github.com/Julian/jsonschema)
 * [tabulate](https://github.com/astanin/python-tabulate)
 

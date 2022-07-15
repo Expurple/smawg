@@ -10,7 +10,9 @@ from copy import deepcopy
 from enum import auto, Enum
 from functools import wraps
 from itertools import islice
-from typing import Callable, Mapping, Optional
+from typing import (
+    Any, Callable, cast, Optional, ParamSpec, TypedDict, TypeVar
+)
 
 import jsonschema
 
@@ -27,16 +29,16 @@ Should be used in every `jsonschema.validate()` call.
 """
 
 with open(f"{_SCHEMA_DIR}/assets.json") as file:
-    ASSETS_SCHEMA: dict = json.load(file)
+    ASSETS_SCHEMA: dict[str, Any] = json.load(file)
 
 with open(f"{_SCHEMA_DIR}/ability.json") as file:
-    ABILITY_SCHEMA: dict = json.load(file)
+    ABILITY_SCHEMA: dict[str, Any] = json.load(file)
 
 with open(f"{_SCHEMA_DIR}/race.json") as file:
-    RACE_SCHEMA: dict = json.load(file)
+    RACE_SCHEMA: dict[str, Any] = json.load(file)
 
 with open(f"{_SCHEMA_DIR}/tile.json") as file:
-    TILE_SCHEMA: dict = json.load(file)
+    TILE_SCHEMA: dict[str, Any] = json.load(file)
 
 
 # -------------------------- "dumb" data objects ------------------------------
@@ -50,7 +52,7 @@ class Region:
     it becomes `False` after the region is conquered.
     """
 
-    def __init__(self, json: dict) -> None:
+    def __init__(self, json: dict[str, Any]) -> None:
         """Construct strongly typed `Region` from json object.
 
         Raise `jsonschema.exceptions.ValidationError`
@@ -65,7 +67,7 @@ class Region:
 class Ability:
     """Immutable description of an ability (just like on a physical banner)."""
 
-    def __init__(self, json: dict) -> None:
+    def __init__(self, json: dict[str, Any]) -> None:
         """Construct strongly typed `Ability` from json object.
 
         Raise `jsonschema.exceptions.ValidationError`
@@ -79,7 +81,7 @@ class Ability:
 class Race:
     """Immutable description of a race (just like on a physical banner)."""
 
-    def __init__(self, json: dict) -> None:
+    def __init__(self, json: dict[str, Any]) -> None:
         """Construct strongly typed `Race` from json object.
 
         Raise `jsonschema.exceptions.ValidationError`
@@ -154,7 +156,7 @@ class Player:
 
 # ------------------------ randomization utilities ----------------------------
 
-def shuffle(assets: dict) -> dict:
+def shuffle(assets: dict[str, Any]) -> dict[str, Any]:
     """Shuffle the order of `Race` and `Ability` banners in `assets`.
 
     Just like you would do in a physical Small World game.
@@ -172,7 +174,7 @@ def roll_dice() -> int:
 
 # --------------------- the Small World engine itself -------------------------
 
-def _do_nothing(*args, **kwargs) -> None:
+def _do_nothing(*args: Any, **kwargs: Any) -> None:
     """Just accept any arguments and do nothing."""
     pass
 
@@ -223,8 +225,13 @@ class _TurnStage(Enum):
     """Pseudo-turn for redeploying tokens after attack from other player."""
 
 
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
 def _check_rules(*, require_active: bool = False,
-                 allow_during_redeployment: bool = True):
+                 allow_during_redeployment: bool = True
+                 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Add boilerplate rule checks to public `Game` methods.
 
     By default, it only checks for `GameEnded`.
@@ -234,11 +241,12 @@ def _check_rules(*, require_active: bool = False,
     `allow_when_redeploying` specifies whether an action is allowed during the
     redeployment phase.
     """
-    def decorator(game_method: Callable):
+    def decorator(game_method: Callable[P, R]) -> Callable[P, R]:
         @wraps(game_method)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             # Perform necessary checks
-            self: "Game" = args[0]
+            self = args[0]
+            assert isinstance(self, Game), "Wrapped func must be a Game method"
             if self.has_ended:
                 raise exc.GameEnded()
             if require_active and self.player.active_race is None:
@@ -250,6 +258,16 @@ def _check_rules(*, require_active: bool = False,
             return game_method(*args, **kwargs)
         return wrapper
     return decorator
+
+
+class Hooks(TypedDict, total=False):
+    """`TypedDict` annotation for `Game` hooks."""
+
+    on_turn_start: Callable[["Game"], None]
+    on_dice_rolled: Callable[["Game", int, bool], None]
+    on_turn_end: Callable[["Game"], None]
+    on_redeploy: Callable[["Game"], None]
+    on_game_end: Callable[["Game"], None]
 
 
 class Game:
@@ -264,10 +282,10 @@ class Game:
     or raise exceptions if the call violates the rules.
     """
 
-    def __init__(self, assets: dict, *,
+    def __init__(self, assets: dict[str, Any], *,
                  shuffle_data: bool = True,
                  dice_roll_func: Callable[[], int] = roll_dice,
-                 hooks: Mapping[str, Callable] = dict()) -> None:
+                 hooks: Hooks = {}) -> None:
         """Initialize a game based on given `assets`.
 
         When initialization is finished, the object is ready to be used by
@@ -305,8 +323,7 @@ class Game:
         """Helper to preserve `_current_player_id` during redeployment."""
         self._roll_dice = dice_roll_func
         self._turn_stage = _TurnStage.SELECT_COMBO
-        self._hooks: Mapping[str, Callable] \
-            = defaultdict(lambda: _do_nothing, **hooks)
+        self._hooks = cast(Hooks, defaultdict(lambda: _do_nothing, **hooks))
         self._hooks["on_turn_start"](self)
 
     @property
@@ -439,7 +456,7 @@ class Game:
         self._turn_stage = _TurnStage.ACTIVE
 
     @_check_rules(require_active=True, allow_during_redeployment=False)
-    def conquer(self, region: int, *, use_dice=False) -> None:
+    def conquer(self, region: int, *, use_dice: bool = False) -> None:
         """Conquer the given map `region`.
 
         When `use_dice=True` is given, attempt to use reinforcements.

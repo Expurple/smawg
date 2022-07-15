@@ -11,6 +11,12 @@ and this project adheres to
 - `Game.regions` property.
 - `terrain` property for regions (which doesn't affect anything yet).
 
+### Changed
+- Type annotations became stricter.
+
+### Removed
+- Support for Python 3.9.
+
 ### Fixed
 - Code examples in documentation.
 

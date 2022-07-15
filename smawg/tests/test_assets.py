@@ -13,7 +13,7 @@ from smawg.engine import ASSETS_SCHEMA, _JS_REF_RESOLVER
 class TestAssets(unittest.TestCase):
     """Tests for JSON files in `smawg/assets/`."""
 
-    def test_against_schema(self):
+    def test_against_schema(self) -> None:
         """Test all asset files against `smawg/assets_schema/assets.json`."""
         # Fail on keys which are not documented in the schema.
         # This is useful if I commit new keys and forget to document.
@@ -29,7 +29,7 @@ class TestAssets(unittest.TestCase):
 class TestSchemaValidation(unittest.TestCase):
     """Meta-tests for `smawg/assets_schema/` and the validation process."""
 
-    def test_invalid_nested_objects(self):
+    def test_invalid_nested_objects(self) -> None:
         """Test if invalid nested objects fail to match against nested schemas.
 
         Prevents a category of bugs where `TestAssets` passes on invalid assets

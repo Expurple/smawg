@@ -4,7 +4,7 @@ cat > .git/hooks/pre-commit << EOF
 #!/bin/sh
 
 echo 'Running mypy:'
-mypy --config-file= smawg/ || exit 1
+mypy --config-file= --strict smawg/ || exit 1
 echo
 
 # https://stackoverflow.com/questions/70680757

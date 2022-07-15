@@ -14,12 +14,12 @@ See https://github.com/expurple/smawg for more info about the project.
 import json
 import readline
 from argparse import ArgumentParser, Namespace
-from typing import Callable, Optional
+from typing import Optional
 
 from tabulate import tabulate
 
 from smawg import _PACKAGE_DIR, VERSION
-from smawg.engine import Game
+from smawg.engine import Game, Hooks
 from smawg.exceptions import RulesViolation
 
 
@@ -91,7 +91,7 @@ def read_dice() -> int:
             prompt = "The result must be an integer, try again: "
 
 
-def init_game(args: Namespace, hooks: dict[str, Callable]) -> Game:
+def init_game(args: Namespace, hooks: Hooks) -> Game:
     """Construct `Game` with respect to command line `args`."""
     if args.relative_path:
         args.assets_file = f"{_PACKAGE_DIR}/{args.assets_file}"
@@ -138,7 +138,7 @@ class Client:
             print(f"{game.n_turns} turns have passed, the game is over.")
             print("You can take a final look around and type 'quit' to quit.")
 
-        hooks: dict[str, Callable] = {
+        hooks: Hooks = {
             "on_turn_start": on_turn_start,
             "on_dice_rolled": on_dice_rolled,
             "on_redeploy": on_redeploy,
