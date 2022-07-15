@@ -51,13 +51,13 @@ def on_game_end(game: Game) -> None:
 
 ```python
 def on_turn_start(game: Game) -> None:
-    player_id = game.current_player_id
+    player_id = game.player_id
     print(f"Player {player_id} is starting its turn...")
     ai = ais[player_id]
     ai.do_its_thing(game)
 
 def on_redeploy(game: Game) -> None:
-    player_id = game.current_player_id
+    player_id = game.player_id
     ai = ais[player_id]
     ai.redeploy_tokens(game)
 

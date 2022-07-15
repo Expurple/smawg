@@ -11,6 +11,9 @@ and this project adheres to
 - `Game.regions` property.
 - `terrain` property for regions (which doesn't affect anything yet).
 
+### Fixed
+- Code examples in documentation.
+
 ## [0.8.0] - 2022-05-11
 ### Added
 - `smawg.exceptions` module with new exception subtypes.
