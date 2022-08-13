@@ -64,20 +64,26 @@ def parse_args() -> Namespace:
     On error, print usage and exit.
     """
     parser = ArgumentParser(description=TITLE, epilog=VISIT_HOME_PAGE)
-    parser.add_argument("assets_file",
-                        metavar="<assets_file>",
-                        help="path to JSON file with assets")
-    parser.add_argument("-s", "--no-shuffle",
-                        action="store_true",
-                        help="don't shuffle data from <assets_file>")
-    parser.add_argument("-d", "--read-dice",
-                        action="store_true",
-                        help="read dice roll results from stdin instead of "
-                             "generating randomly")
-    parser.add_argument("-r", "--relative-path",
-                        action="store_true",
-                        help="search for `assets_file` inside of `smawg` "
-                             "package directory")
+    parser.add_argument(
+        "assets_file",
+        metavar="<assets_file>",
+        help="path to JSON file with assets"
+    )
+    parser.add_argument(
+        "-s", "--no-shuffle",
+        action="store_true",
+        help="don't shuffle data from <assets_file>"
+    )
+    parser.add_argument(
+        "-d", "--read-dice",
+        action="store_true",
+        help="read dice roll results from stdin instead of generating randomly"
+    )
+    parser.add_argument(
+        "-r", "--relative-path",
+        action="store_true",
+        help="search for `assets_file` inside of `smawg` package directory"
+    )
     return parser.parse_args()
 
 
