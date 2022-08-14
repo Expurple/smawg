@@ -18,9 +18,9 @@ from typing import Optional
 
 from tabulate import tabulate
 
-from smawg import _PACKAGE_DIR, VERSION
 from smawg.engine import Game, Hooks
 from smawg.exceptions import RulesViolation
+from smawg._metadata import PACKAGE_DIR, VERSION
 
 
 TITLE = f"smawg CLI v{VERSION}"
@@ -100,7 +100,7 @@ def read_dice() -> int:
 def init_game(args: Namespace, hooks: Hooks) -> Game:
     """Construct `Game` with respect to command line `args`."""
     if args.relative_path:
-        args.assets_file = f"{_PACKAGE_DIR}/{args.assets_file}"
+        args.assets_file = f"{PACKAGE_DIR}/{args.assets_file}"
     with open(args.assets_file) as file:
         assets = json.load(file)
     if args.read_dice:

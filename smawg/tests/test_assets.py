@@ -6,8 +6,8 @@ import unittest
 import jsonschema
 import jsonschema.exceptions
 
-from smawg import _ASSETS_DIR
 from smawg.engine import ASSETS_SCHEMA, _JS_REF_RESOLVER
+from smawg._metadata import ASSETS_DIR
 
 
 class TestAssets(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestAssets(unittest.TestCase):
         # Fail on keys which are not documented in the schema.
         # This is useful if I commit new keys and forget to document.
         strict_schema = {**ASSETS_SCHEMA, "additionalProperties": False}
-        for assets_file_name in _ASSETS_DIR.glob("*.json"):
+        for assets_file_name in ASSETS_DIR.glob("*.json"):
             with open(assets_file_name) as assets_file:
                 assets_json = json.load(assets_file)
             # Fails the test if `ValidationError` is raised.
@@ -40,7 +40,7 @@ class TestSchemaValidation(unittest.TestCase):
             ("abilities", [{"not a": "ability"}]),
             ("map", [{"not a": "map"}])
         ]
-        with open(f"{_ASSETS_DIR}/tiny.json") as assets_file:
+        with open(f"{ASSETS_DIR}/tiny.json") as assets_file:
             assets = json.load(assets_file)
         for key, value in invalid_values:
             invalid_assets = {**assets, key: value}

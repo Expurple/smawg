@@ -16,6 +16,7 @@ and this project adheres to
 
 ### Removed
 - Support for Python 3.9.
+- `smawg.VERSION` constant that shouldn't have been public.
 
 ### Fixed
 - Code examples in documentation.

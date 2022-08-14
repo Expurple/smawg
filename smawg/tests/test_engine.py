@@ -13,8 +13,8 @@ from typing import Any, Callable, Optional
 import jsonschema.exceptions
 
 import smawg.exceptions as exc
-from smawg import _ASSETS_DIR
 from smawg.engine import Ability, Game, Race
+from smawg._metadata import ASSETS_DIR
 
 
 TINY_ASSETS: dict[str, Any] = {}
@@ -23,7 +23,7 @@ TINY_ASSETS: dict[str, Any] = {}
 def setUpModule() -> None:
     """Preload game assets only once and only when running the tests."""
     global TINY_ASSETS
-    with open(f"{_ASSETS_DIR}/tiny.json") as file:
+    with open(f"{ASSETS_DIR}/tiny.json") as file:
         TINY_ASSETS = json.load(file)
 
 

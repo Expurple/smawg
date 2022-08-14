@@ -17,27 +17,27 @@ from typing import (
 import jsonschema
 
 import smawg.exceptions as exc
-from smawg import _SCHEMA_DIR
+from smawg._metadata import SCHEMA_DIR
 
 
 # ------------------------ JSON schemas for assets ----------------------------
 
-_JS_REF_RESOLVER = jsonschema.RefResolver(f"file://{_SCHEMA_DIR}/", {})
+_JS_REF_RESOLVER = jsonschema.RefResolver(f"file://{SCHEMA_DIR}/", {})
 """Fixes references to local schemas.
 
 Should be used in every `jsonschema.validate()` call.
 """
 
-with open(f"{_SCHEMA_DIR}/assets.json") as file:
+with open(f"{SCHEMA_DIR}/assets.json") as file:
     ASSETS_SCHEMA: dict[str, Any] = json.load(file)
 
-with open(f"{_SCHEMA_DIR}/ability.json") as file:
+with open(f"{SCHEMA_DIR}/ability.json") as file:
     ABILITY_SCHEMA: dict[str, Any] = json.load(file)
 
-with open(f"{_SCHEMA_DIR}/race.json") as file:
+with open(f"{SCHEMA_DIR}/race.json") as file:
     RACE_SCHEMA: dict[str, Any] = json.load(file)
 
-with open(f"{_SCHEMA_DIR}/tile.json") as file:
+with open(f"{SCHEMA_DIR}/tile.json") as file:
     TILE_SCHEMA: dict[str, Any] = json.load(file)
 
 
