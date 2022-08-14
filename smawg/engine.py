@@ -22,12 +22,6 @@ from smawg._metadata import SCHEMA_DIR
 
 # ------------------------ JSON schemas for assets ----------------------------
 
-_JS_REF_RESOLVER = jsonschema.RefResolver(f"file://{SCHEMA_DIR}/", {})
-"""Fixes references to local schemas.
-
-Should be used in every `jsonschema.validate()` call.
-"""
-
 with open(f"{SCHEMA_DIR}/assets.json") as file:
     ASSETS_SCHEMA: dict[str, Any] = json.load(file)
 
@@ -39,6 +33,18 @@ with open(f"{SCHEMA_DIR}/race.json") as file:
 
 with open(f"{SCHEMA_DIR}/tile.json") as file:
     TILE_SCHEMA: dict[str, Any] = json.load(file)
+
+_LOCAL_REF_RESOLVER = jsonschema.RefResolver(f"file://{SCHEMA_DIR}/", {})
+"""Fixes references to local schemas."""
+
+
+def validate(obj: object, schema: dict[str, Any]) -> None:
+    """Validate a json object against a local schema.
+
+    It just calls `jsonschema.validate()`, but makes sure to properly resolve
+    references to local schemas from `assets_schema/` directory.
+    """
+    jsonschema.validate(obj, schema, resolver=_LOCAL_REF_RESOLVER)
 
 
 # -------------------------- "dumb" data objects ------------------------------
@@ -58,7 +64,7 @@ class Region:
         Raise `jsonschema.exceptions.ValidationError`
         if `json` doesn't match `assets_schema/tile.json`.
         """
-        jsonschema.validate(json, TILE_SCHEMA, resolver=_JS_REF_RESOLVER)
+        validate(json, TILE_SCHEMA)
         self.has_a_lost_tribe: bool = json["has_a_lost_tribe"]
         self.is_at_map_border: bool = json["is_at_map_border"]
         self.terrain: str = json["terrain"]
@@ -73,7 +79,7 @@ class Ability:
         Raise `jsonschema.exceptions.ValidationError`
         if `json` doesn't match `assets_schema/ability.json`.
         """
-        jsonschema.validate(json, ABILITY_SCHEMA, resolver=_JS_REF_RESOLVER)
+        validate(json, ABILITY_SCHEMA)
         self.name: str = json["name"]
         self.n_tokens: int = json["n_tokens"]
 
@@ -87,7 +93,7 @@ class Race:
         Raise `jsonschema.exceptions.ValidationError`
         if `json` doesn't match `assets_schema/race.json`.
         """
-        jsonschema.validate(json, RACE_SCHEMA, resolver=_JS_REF_RESOLVER)
+        validate(json, RACE_SCHEMA)
         self.name: str = json["name"]
         self.n_tokens: int = json["n_tokens"]
         self.max_n_tokens: int = json["max_n_tokens"]
@@ -304,7 +310,7 @@ class Game:
         * `jsonschema.exceptions.ValidationError`
             if `assets` dict doesn't match `assets_schema/assets.json`.
         """
-        jsonschema.validate(assets, ASSETS_SCHEMA, resolver=_JS_REF_RESOLVER)
+        validate(assets, ASSETS_SCHEMA)
         assets = shuffle(assets) if shuffle_data else deepcopy(assets)
         n_coins: int = assets["n_coins_on_start"]
         n_players: int = assets["n_players"]

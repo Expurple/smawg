@@ -10,6 +10,7 @@ and this project adheres to
 ### Added
 - `Game.regions` property.
 - `terrain` property for regions (which doesn't affect anything yet).
+- `validate()` function.
 
 ### Changed
 - Type annotations became stricter.

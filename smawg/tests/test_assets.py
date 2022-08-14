@@ -3,10 +3,9 @@
 import json
 import unittest
 
-import jsonschema
 import jsonschema.exceptions
 
-from smawg.engine import ASSETS_SCHEMA, _JS_REF_RESOLVER
+from smawg.engine import ASSETS_SCHEMA, validate
 from smawg._metadata import ASSETS_DIR
 
 
@@ -22,8 +21,7 @@ class TestAssets(unittest.TestCase):
             with open(assets_file_name) as assets_file:
                 assets_json = json.load(assets_file)
             # Fails the test if `ValidationError` is raised.
-            jsonschema.validate(assets_json, strict_schema,
-                                resolver=_JS_REF_RESOLVER)
+            validate(assets_json, strict_schema)
 
 
 class TestSchemaValidation(unittest.TestCase):
@@ -45,5 +43,4 @@ class TestSchemaValidation(unittest.TestCase):
         for key, value in invalid_values:
             invalid_assets = {**assets, key: value}
             with self.assertRaises(jsonschema.exceptions.ValidationError):
-                jsonschema.validate(invalid_assets, ASSETS_SCHEMA,
-                                    resolver=_JS_REF_RESOLVER)
+                validate(invalid_assets, ASSETS_SCHEMA)
