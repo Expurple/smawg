@@ -582,8 +582,14 @@ class Game:
             raise exc.EndBeforeSelect()
         tokens_on_hand = self.player.tokens_on_hand
         if tokens_on_hand > 0:
-            can_decline = self._turn_stage == _TurnStage.CAN_DECLINE
-            raise exc.UndeployedTokens(tokens_on_hand, can_decline=can_decline)
+            if self._turn_stage == _TurnStage.USED_DICE \
+                    and len(self.player.active_regions) == 0:
+                # The player has no regions and no ability to conquer, so
+                # he can't possibly deploy his tokens. Don't raise the error.
+                pass
+            else:
+                cd = self._turn_stage == _TurnStage.CAN_DECLINE
+                raise exc.UndeployedTokens(tokens_on_hand, can_decline=cd)
         if self._turn_stage != _TurnStage.REDEPLOYMENT_TURN:
             self._reward_coins_for_turn()
             self._hooks["on_turn_end"](self)

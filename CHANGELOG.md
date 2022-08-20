@@ -21,6 +21,8 @@ and this project adheres to
 
 ### Fixed
 - Code examples in documentation.
+- Impossible requirement to deploy tokens from hand
+    when the player has no regions and has already used the dice.
 
 ## [0.8.0] - 2022-05-11
 ### Added

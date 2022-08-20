@@ -720,6 +720,28 @@ class TestGameDeploy(unittest.TestCase):
 class TestGameEndTurn(unittest.TestCase):
     """Tests for `smawg.engine.Game.end_turn()` method."""
 
+    def test_after_failed_dice_and_no_regions(self) -> None:
+        """Check if issue #1 is fixed.
+
+        If conquest with dice fails and the player has no regions,
+        then he shouldn't be required to deploy his tokens from hand
+        (because there's nowhere to deploy to and no way to conquer anymore).
+        """
+        # Set up a combo with 2 tokens and a dice that always fails.
+        assets = deepcopy(TINY_ASSETS)
+        assets["races"][0]["n_tokens"] = 1
+        assets["abilities"][0]["n_tokens"] = 1
+        game = Game(assets, shuffle_data=False, dice_roll_func=lambda: 0)
+        game.select_combo(0)
+        # Make a failed conquest with dice.
+        game.conquer(0, use_dice=True)
+        self.assertNotIn(0, game.player.active_regions)
+        self.assertEqual(game.player.active_regions, {})
+        self.assertEqual(game.player.tokens_on_hand, 2)
+        # The turn should end fine without an UndeployedTokens error.
+        game.end_turn()
+        self.assertEqual(game.player_id, 1)
+
     def test_exceptions(self) -> None:
         """Check if the method raises expected exceptions.
 
