@@ -11,6 +11,7 @@ and this project adheres to
 - `Game.regions` property.
 - `terrain` property for regions (which doesn't affect anything yet).
 - `validate()` function.
+- `smawg.viz` utility.
 
 ### Changed
 - Type annotations became stricter.
