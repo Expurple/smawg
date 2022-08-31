@@ -2,7 +2,6 @@
 
 TODO: write about the general idea.
 
-
 ## List of events and hook signatures
 
 All hooks accept `Game` instance as the first parameter.
@@ -46,7 +45,6 @@ def on_game_end(game: Game) -> None:
     """
 ```
 
-
 ## Example of defining hooks
 
 ```python
@@ -78,7 +76,6 @@ game.end_turn()
 # You can also do this in "on_turn_start" body,
 # but this leads to horrible recursing stack traces.
 ```
-
 
 You can find another example of hook definition in
 [smawg/cli.py](../smawg/cli.py)

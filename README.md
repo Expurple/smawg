@@ -8,7 +8,7 @@ designed for writing third-party AIs and clients around it.
 It has a bundled CLI client for interactive use
 and easy interoperability with other programming languages.
 
-## Features:
+## Features
 
 * High level API for performing in-game actions and getting current stats.
     * Imperatively or by setting hooks on game events.
@@ -17,39 +17,35 @@ and easy interoperability with other programming languages.
 * Support for custom maps, races and other assets.
 * Deterministic or randomized outcomes.
 
-### **Missing features** (in progress):
+### Missing features (in progress)
 
 * Effects from different region types (Seas, Mountains, etc).
 * Unique Race and Special Power abilities.
 
-### Future plans:
+### Future plans
 
 * Options for more machine-readable CLI output.
 * In-house AI and GUI examples.
 * Support for plugins with new ability types ???
 
-
-# Releases
+## Releases
 
 See [CHANGELOG.md](./CHANGELOG.md)
 
-
-# Requirements
+## Requirements
 
 * Python 3.10+ (currently, only 3.10 is tested)
 * [jsonschema](https://github.com/Julian/jsonschema)
 * [tabulate](https://github.com/astanin/python-tabulate) (only for `smawg.cli`)
 * [graphviz](https://github.com/xflr6/graphviz) (only for `smawg.viz`)
 
-
-# Installation
+## Installation
 
 * `git clone https://github.com/Expurple/smawg.git`
 * `cd smawg/`
 * `pip install --user .`
 
-
-# Assets
+## Assets
 
 `smawg` usually gets static assets (like a list of races) from a JSON file.
 
@@ -66,7 +62,8 @@ The schema doesn't specify a visual layout for game maps.
 I imagine the map from `tiny.json` as `1)`, but it may be as well represented
 as something like `2)` or `3)` and it will still work properly,
 because functionally it's the same map:
-```
+
+```text
     1)               2)               3)
 +-------+        +-------+        +--------+
 | 0 | 1 |        | 1 ^ 0 |        | 4 |  3 |
@@ -86,19 +83,25 @@ Typical usage:
 python3 -m smawg.viz --view <ASSETS_FILE>
 ```
 
-# Usage
+## Usage
 
-## As a CLI app
+### As a CLI app
 
 Generally, it's invoked as
-* `python3 -m smawg.cli`
+
+```bash
+python3 -m smawg.cli
+```
 
 A simple example set of options would be
-* `python3 -m smawg.cli --relative-path assets/tiny.json`
+
+```bash
+python3 -m smawg.cli --relative-path assets/tiny.json
+```
 
 It should guide you through the usage.
 
-## As a library
+### As a library
 
 ```python
 import json
@@ -125,40 +128,36 @@ game = Game(assets)
 You can also find "real world" usage examples in
 [cli.py](./smawg/cli.py) and [test_engine.py](./smawg/tests/test_engine.py)
 
-
-# Contributing
+## Contributing
 
 Feel free to open a
 [Github issue](https://github.com/Expurple/smawg/issues/new/choose)
 or contact me personally.
 
 If you wish to participate in development, this should get you started:
+
 * Fork this repo on Github.
 * `git clone git@github.com:YOUR-USERNAME/smawg.git`
 * `cd smawg/`
 * `pip install --user .[dev]`
 * `bin/add-pre-commit-hook.sh`
 
-Any contributions are welcome, but [missing featues](##Features:) and
+Any contributions are welcome, but [missing featues](#features) and
 [open issues](https://github.com/Expurple/smawg/issues) should be prioritized.
 
 Before submitting a pull request, please test and document your changes.
 
-## Tests
+Tests can be run using
 
-Can be run using the standard library's
-* `python3 -m unittest discover smawg/tests/`
+* the standard library's `python3 -m unittest discover smawg/tests/`
 * or any other test runner that supports `unittest` format.
 
-
-# Contacts
+## Contacts
 
 * **Home page** - [smawg](https://github.com/expurple/smawg)
-
 * **Author** - Dmitry Alexandrov <adk230@yandex.ru\>
 
-
-# License
+## License
 
 Copyright (c) 2022 Dmitry Alexandrov.
 
