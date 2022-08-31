@@ -7,6 +7,9 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+\-
+
+## [0.9.0] - 2022-08-31
 ### Added
 - `Game.regions` property.
 - `terrain` property for regions (which doesn't affect anything yet).
