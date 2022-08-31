@@ -99,9 +99,10 @@ def read_dice() -> int:
 
 def init_game(args: Namespace, hooks: Hooks) -> Game:
     """Construct `Game` with respect to command line `args`."""
+    assets_file = args.assets_file
     if args.relative_path:
-        args.assets_file = f"{PACKAGE_DIR}/{args.assets_file}"
-    with open(args.assets_file) as file:
+        assets_file = f"{PACKAGE_DIR}/{assets_file}"
+    with open(assets_file) as file:
         assets = json.load(file)
     if args.read_dice:
         return Game(assets, shuffle_data=not args.no_shuffle,

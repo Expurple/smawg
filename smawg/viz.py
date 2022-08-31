@@ -107,9 +107,10 @@ def _on_save(filename: str) -> None:
 
 if __name__ == "__main__":
     args = _parse_args()
+    assets_file = args.assets_file
     if args.relative_path:
-        args.assets_file = f"{PACKAGE_DIR}/{args.assets_file}"
-    with open(args.assets_file) as file:
+        assets_file = f"{PACKAGE_DIR}/{assets_file}"
+    with open(assets_file) as file:
         assets = json.load(file)
     graph = build_graph(assets)
     format = None if args.no_render else args.format
