@@ -10,10 +10,8 @@ from copy import deepcopy
 from contextlib import AbstractContextManager, nullcontext
 from typing import Any, Callable, Optional
 
-import jsonschema.exceptions
-
 import smawg.exceptions as exc
-from smawg.engine import Ability, Game, Race
+from smawg.engine import Game
 from smawg._metadata import ASSETS_DIR
 
 
@@ -25,74 +23,6 @@ def setUpModule() -> None:
     global TINY_ASSETS
     with open(f"{ASSETS_DIR}/tiny.json") as file:
         TINY_ASSETS = json.load(file)
-
-
-class TestAbility(unittest.TestCase):
-    """Tests for `smawg.engine.Ability` class."""
-
-    def test_valid_json(self) -> None:
-        """Check if `Ability.__init__` propetly parses the given json."""
-        ability = Ability({"name": "Some Name", "n_tokens": 4})
-        self.assertEqual(ability.name, "Some Name")
-        self.assertEqual(ability.n_tokens, 4)
-
-    def test_invalid_jsons(self) -> None:
-        """Check if `Ability.__init__` raises when given invalid jsons."""
-        # Missing "name" and "n_tokens"
-        self.assertInvalid({"random keys": "and values"})
-        self.assertInvalid({})
-        # Missing "name"
-        self.assertInvalid({"n_tokens": 4})
-        # Missing "n_tokens"
-        self.assertInvalid({"name": "Some Name"})
-        # Invalid type of "n_tokens"
-        self.assertInvalid({"name": "Some Name", "n_tokens": None})
-        self.assertInvalid({"name": "Some Name", "n_tokens": 4.5})
-        self.assertInvalid({"name": "Some Name", "n_tokens": "4"})
-        # Invalid value of "n_tokens"
-        self.assertInvalid({"name": "Some Name", "n_tokens": -4})
-
-    def assertInvalid(self, json: dict[str, Any]) -> None:
-        """Check if `Ability.__init__` raises when given this `json`."""
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
-            _ = Ability(json)
-
-
-class TestRace(unittest.TestCase):
-    """Tests for `smawg.engine.Race` class."""
-
-    INVALID_JSONS: list[dict[str, Any]] = [
-        # Missing required properties
-        {"random keys": "and values"},
-        {},
-        {"n_tokens": 4, "max_n_tokens": 9},
-        {"name": "Some Name", "max_n_tokens": 9},
-        {"name": "Some Name", "n_tokens": 4},
-        # Invalid types
-        {"name": None, "n_tokens": 4, "max_n_tokens": 9},
-        {"name": "Some Name", "n_tokens": 4.5, "max_n_tokens": 9},
-        {"name": "Some Name", "n_tokens": 4, "max_n_tokens": None},
-        # Invalid values
-        {"name": "Some Name", "n_tokens": -4, "max_n_tokens": 9},
-        {"name": "Some Name", "n_tokens": 4, "max_n_tokens": -9}
-    ]
-
-    def test_valid_json(self) -> None:
-        """Check if `Race.__init__` propetly parses the given json."""
-        race = Race({"name": "Some Name", "n_tokens": 4, "max_n_tokens": 9})
-        self.assertEqual(race.name, "Some Name")
-        self.assertEqual(race.n_tokens, 4)
-        self.assertEqual(race.max_n_tokens, 9)
-
-    def test_invalid_jsons(self) -> None:
-        """Check if `Race.__init__` raises when given invalid jsons."""
-        for j in TestRace.INVALID_JSONS:
-            self.assertInvalid(j)
-
-    def assertInvalid(self, json: dict[str, Any]) -> None:
-        """Check if `Race.__init__` raises when given this `json`."""
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
-            _ = Race(json)
 
 
 class TestGame(unittest.TestCase):

@@ -9,7 +9,13 @@ and this project adheres to
 
 ## [Unreleased]
 
-\-
+### Changed
+
+- Constructors of `Ability`, `Race` and `Region`.
+
+### Removed
+
+- `ABILITY_SCHEMA`, `RACE_SCHEMA` and `TILE_SCHEMA`.
 
 ## [0.9.1] - 2022-09-01
 

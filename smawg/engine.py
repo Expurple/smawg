@@ -7,6 +7,7 @@ import json
 import random
 from collections import defaultdict, deque
 from copy import deepcopy
+from dataclasses import dataclass
 from enum import auto, Enum
 from itertools import islice
 from typing import Any, Callable, cast, Optional, TypedDict
@@ -17,19 +18,10 @@ import smawg.exceptions as exc
 from smawg._metadata import SCHEMA_DIR
 
 
-# ------------------------ JSON schemas for assets ----------------------------
+# ---------------------------- JSON validation --------------------------------
 
 with open(f"{SCHEMA_DIR}/assets.json") as file:
     ASSETS_SCHEMA: dict[str, Any] = json.load(file)
-
-with open(f"{SCHEMA_DIR}/ability.json") as file:
-    ABILITY_SCHEMA: dict[str, Any] = json.load(file)
-
-with open(f"{SCHEMA_DIR}/race.json") as file:
-    RACE_SCHEMA: dict[str, Any] = json.load(file)
-
-with open(f"{SCHEMA_DIR}/tile.json") as file:
-    TILE_SCHEMA: dict[str, Any] = json.load(file)
 
 _LOCAL_REF_RESOLVER = jsonschema.RefResolver(f"file://{SCHEMA_DIR}/", {})
 """Fixes references to local schemas."""
@@ -46,6 +38,7 @@ def validate(obj: object, schema: dict[str, Any]) -> None:
 
 # -------------------------- "dumb" data objects ------------------------------
 
+@dataclass
 class Region:
     """Info about a region from the game map.
 
@@ -55,45 +48,26 @@ class Region:
     it becomes `False` after the region is conquered.
     """
 
-    def __init__(self, json: dict[str, Any]) -> None:
-        """Construct strongly typed `Region` from json object.
-
-        Raise `jsonschema.exceptions.ValidationError`
-        if `json` doesn't match `assets_schema/tile.json`.
-        """
-        validate(json, TILE_SCHEMA)
-        self.has_a_lost_tribe: bool = json["has_a_lost_tribe"]
-        self.is_at_map_border: bool = json["is_at_map_border"]
-        self.terrain: str = json["terrain"]
+    has_a_lost_tribe: bool
+    is_at_map_border: bool
+    terrain: str
 
 
+@dataclass(frozen=True)
 class Ability:
     """Immutable description of an ability (just like on a physical banner)."""
 
-    def __init__(self, json: dict[str, Any]) -> None:
-        """Construct strongly typed `Ability` from json object.
-
-        Raise `jsonschema.exceptions.ValidationError`
-        if `json` doesn't match `assets_schema/ability.json`.
-        """
-        validate(json, ABILITY_SCHEMA)
-        self.name: str = json["name"]
-        self.n_tokens: int = json["n_tokens"]
+    name: str
+    n_tokens: int
 
 
+@dataclass(frozen=True)
 class Race:
     """Immutable description of a race (just like on a physical banner)."""
 
-    def __init__(self, json: dict[str, Any]) -> None:
-        """Construct strongly typed `Race` from json object.
-
-        Raise `jsonschema.exceptions.ValidationError`
-        if `json` doesn't match `assets_schema/race.json`.
-        """
-        validate(json, RACE_SCHEMA)
-        self.name: str = json["name"]
-        self.n_tokens: int = json["n_tokens"]
-        self.max_n_tokens: int = json["max_n_tokens"]
+    name: str
+    n_tokens: int
+    max_n_tokens: int
 
 
 class Combo:
@@ -241,13 +215,13 @@ class _GameState:
         assets = deepcopy(assets)
         n_coins: int = assets["n_coins_on_start"]
         n_players: int = assets["n_players"]
-        self._regions = [Region(t) for t in assets["map"]["tiles"]]
+        self._regions = [Region(**t) for t in assets["map"]["tiles"]]
         self._borders = _borders(assets["map"]["tile_borders"])
         self._n_combos: int = assets["n_selectable_combos"]
         self._n_turns: int = assets["n_turns"]
         self._current_turn: int = 1
-        abilities = (Ability(a) for a in assets["abilities"])
-        races = (Race(r) for r in assets["races"])
+        abilities = (Ability(**a) for a in assets["abilities"])
+        races = (Race(**r) for r in assets["races"])
         visible_ra = islice(zip(races, abilities), self._n_combos)
         self._combos = [Combo(r, a) for r, a in visible_ra]
         self._invisible_abilities = deque(abilities)
