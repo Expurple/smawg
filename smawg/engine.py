@@ -228,10 +228,91 @@ class _TurnStage(Enum):
     """Pseudo-turn for redeploying tokens after attack from other player."""
 
 
+class _GameState:
+    """An interface for accessing the `Game` state."""
+
+    def __init__(self, assets: dict[str, Any]) -> None:
+        """Initialize the game state from `assets`.
+
+        Exceptions raised:
+        * `jsonschema.exceptions.ValidationError`
+            if `assets` dict doesn't match `assets_schema/assets.json`.
+        """
+        validate(assets, ASSETS_SCHEMA)
+        assets = deepcopy(assets)
+        n_coins: int = assets["n_coins_on_start"]
+        n_players: int = assets["n_players"]
+        self._regions = [Region(t) for t in assets["map"]["tiles"]]
+        self._borders = _borders(assets["map"]["tile_borders"])
+        self._abilities = [Ability(a) for a in assets["abilities"]]
+        self._races = [Race(r) for r in assets["races"]]
+        self._n_combos: int = assets["n_selectable_combos"]
+        self._n_turns: int = assets["n_turns"]
+        self._current_turn: int = 1
+        visible_ra = islice(zip(self._races, self._abilities), self._n_combos)
+        self._combos = [Combo(r, a) for r, a in visible_ra]
+        self._players = [Player(n_coins) for _ in range(n_players)]
+        self._player_id = 0
+        self._turn_stage = _TurnStage.SELECT_COMBO
+
+    @property
+    def n_turns(self) -> int:
+        """The total number of turns in the `Game`.
+
+        After the last turn is finished, the `Game` ends.
+        """
+        return self._n_turns
+
+    @property
+    def current_turn(self) -> int:
+        """The number of the current turn (starting on `1`)."""
+        return self._current_turn
+
+    @property
+    def has_ended(self) -> bool:
+        """Indicates whether the game has already ended.
+
+        If this is `True`, all methods raise `GameEnded`.
+        """
+        return self.current_turn > self.n_turns
+
+    @property
+    def regions(self) -> list[Region]:
+        """Info about regions on the map."""
+        return self._regions
+
+    @property
+    def combos(self) -> list[Combo]:
+        """The list of race+ability combos available to be selected."""
+        return self._combos
+
+    @property
+    def players(self) -> list[Player]:
+        """Stats for every player, accessed with a 0-based player_id."""
+        return self._players
+
+    @property
+    def player_id(self) -> int:
+        """0-based index of the current active player in `players`."""
+        return self._player_id
+
+    @property
+    def player(self) -> Player:
+        """The current active `Player`."""
+        return self.players[self.player_id]
+
+    def _owner(self, region: int) -> Optional[int]:
+        """Return the owner of the given `region` or `None` if there's none."""
+        for i, p in enumerate(self.players):
+            if p._is_owning(region):
+                return i
+        return None
+
+
 class _Rules:
     """Implements the game rules."""
 
-    def __init__(self, game: "Game") -> None:
+    def __init__(self, game: _GameState) -> None:
         self.game = game
 
     def check_decline(self) -> None:
@@ -391,7 +472,7 @@ class Hooks(TypedDict, total=False):
     on_game_end: Callable[["Game"], None]
 
 
-class Game:
+class Game(_GameState):
     """High-level representation of a single Small World game.
 
     Provides:
@@ -403,8 +484,9 @@ class Game:
     or raise exceptions if the call violates the rules.
     """
 
-    # Under the hood, rules are checked by a `_Rules` object.
-    # `Game` just manages the state and provides a public interface.
+    # Under the hood, rules are implemented in `_Rules`
+    # and properties are implemented in the base class.
+    # This class only implements game actions and hooks.
 
     def __init__(self, assets: dict[str, Any], *,
                  shuffle_data: bool = True,
@@ -430,74 +512,15 @@ class Game:
         """
         validate(assets, ASSETS_SCHEMA)
         assets = shuffle(assets) if shuffle_data else deepcopy(assets)
-        n_coins: int = assets["n_coins_on_start"]
-        n_players: int = assets["n_players"]
-        self._regions = [Region(t) for t in assets["map"]["tiles"]]
-        self._borders = _borders(assets["map"]["tile_borders"])
-        self._abilities = [Ability(a) for a in assets["abilities"]]
-        self._races = [Race(r) for r in assets["races"]]
-        self._n_combos: int = assets["n_selectable_combos"]
-        self._n_turns: int = assets["n_turns"]
-        self._current_turn: int = 1
-        visible_ra = islice(zip(self._races, self._abilities), self._n_combos)
-        self._combos = [Combo(r, a) for r, a in visible_ra]
-        self._players = [Player(n_coins) for _ in range(n_players)]
-        self._player_id = 0
+        super().__init__(assets)
         self._next_player_id = self._increment(self._player_id)
         """Helper to preserve `_current_player_id` during redeployment."""
         self._roll_dice = dice_roll_func
-        self._turn_stage = _TurnStage.SELECT_COMBO
         self._hooks = cast(Hooks, defaultdict(lambda: _do_nothing, **hooks))
         # Only after all other fields have been initialized.
         self._rules = _Rules(self)
         # Only after `self` has been fully initialized.
         self._hooks["on_turn_start"](self)
-
-    @property
-    def n_turns(self) -> int:
-        """The total number of turns in the `Game`.
-
-        After the last turn is finished, the `Game` ends.
-        """
-        return self._n_turns
-
-    @property
-    def current_turn(self) -> int:
-        """The number of the current turn (starting on `1`)."""
-        return self._current_turn
-
-    @property
-    def has_ended(self) -> bool:
-        """Indicates whether the game has already ended.
-
-        If this is `True`, all methods raise `GameEnded`.
-        """
-        return self.current_turn > self.n_turns
-
-    @property
-    def regions(self) -> list[Region]:
-        """Info about regions on the map."""
-        return self._regions
-
-    @property
-    def combos(self) -> list[Combo]:
-        """The list of race+ability combos available to be selected."""
-        return self._combos
-
-    @property
-    def players(self) -> list[Player]:
-        """Stats for every player, accessed with a 0-based player_id."""
-        return self._players
-
-    @property
-    def player_id(self) -> int:
-        """0-based index of the current active player in `players`."""
-        return self._player_id
-
-    @property
-    def player(self) -> Player:
-        """The current active `Player`."""
-        return self.players[self.player_id]
 
     def decline(self) -> None:
         """Put player's active race in decline state.
@@ -717,13 +740,6 @@ class Game:
             self.player.active_regions[region] = own_tokens_used
         self._turn_stage = _TurnStage.USED_DICE
         self._hooks["on_dice_rolled"](self, dice_value, is_success)
-
-    def _owner(self, region: int) -> Optional[int]:
-        """Return the owner of the given `region` or `None` if there's none."""
-        for i, p in enumerate(self.players):
-            if p._is_owning(region):
-                return i
-        return None
 
     def _kick_out_owner(self, region: int) -> None:
         """Move tokens from `region` to the storage tray and owner's hand.
