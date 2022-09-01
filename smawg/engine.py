@@ -341,8 +341,8 @@ class _Rules:
         self._assert_game_has_not_ended()
         self._assert_has_active_race()
         self._assert_not_in_redeployment()
-        if not 0 <= region < len(self.game._regions):
-            msg = f"region must be between 0 and {len(self.game._regions)}"
+        if not 0 <= region < len(self.game.regions):
+            msg = f"region must be between 0 and {len(self.game.regions)}"
             raise ValueError(msg)
         if region not in self.game.player.active_regions:
             raise exc.NonControlledRegion()
@@ -368,8 +368,8 @@ class _Rules:
         self._assert_has_active_race()
         if n_tokens < 1:
             raise ValueError("n_tokens must be greater then 0")
-        if not 0 <= region < len(self.game._regions):
-            msg = f"region must be between 0 and {len(self.game._regions)}"
+        if not 0 <= region < len(self.game.regions):
+            msg = f"region must be between 0 and {len(self.game.regions)}"
             raise ValueError(msg)
         if region not in self.game.player.active_regions:
             raise exc.NonControlledRegion()
@@ -403,7 +403,7 @@ class _Rules:
         if owner_idx is not None:
             owner = self.game.players[owner_idx]
             cost += owner.active_regions.get(region, 1)  # 1 if declined
-        elif self.game._regions[region].has_a_lost_tribe:
+        elif self.game.regions[region].has_a_lost_tribe:
             cost += 1
         return cost
 
@@ -435,11 +435,11 @@ class _Rules:
         self._assert_not_in_redeployment()
         if self.game._turn_stage == _TurnStage.USED_DICE:
             raise exc.AlreadyUsedDice()
-        if not 0 <= region < len(self.game._regions):
-            msg = f"region must be between 0 and {len(self.game._regions)}"
+        if not 0 <= region < len(self.game.regions):
+            msg = f"region must be between 0 and {len(self.game.regions)}"
             raise ValueError(msg)
         if len(self.game.player.active_regions) == 0 \
-                and not self.game._regions[region].is_at_map_border:
+                and not self.game.regions[region].is_at_map_border:
             raise exc.NotAtBorder()
         if region in self.game.player.active_regions:
             raise exc.ConqueringOwnRegion()
@@ -513,7 +513,7 @@ class Game(_GameState):
         validate(assets, ASSETS_SCHEMA)
         assets = shuffle(assets) if shuffle_data else deepcopy(assets)
         super().__init__(assets)
-        self._next_player_id = self._increment(self._player_id)
+        self._next_player_id = self._increment(self.player_id)
         """Helper to preserve `_current_player_id` during redeployment."""
         self._roll_dice = dice_roll_func
         self._hooks = cast(Hooks, defaultdict(lambda: _do_nothing, **hooks))
@@ -746,7 +746,7 @@ class Game(_GameState):
 
         If the `region` has no owner, do nothing.
         """
-        self._regions[region].has_a_lost_tribe = False
+        self.regions[region].has_a_lost_tribe = False
         owner_idx = self._owner(region)
         if owner_idx is None:
             return
@@ -770,8 +770,8 @@ class Game(_GameState):
                 return
         # This part performs the actual switch to the next turn:
         self._player_id = self._next_player_id
-        self._next_player_id = self._increment(self._player_id)
-        if self._player_id == 0:
+        self._next_player_id = self._increment(self.player_id)
+        if self.player_id == 0:
             self._current_turn += 1
         if self.player.active_race is None:
             self._turn_stage = _TurnStage.SELECT_COMBO
