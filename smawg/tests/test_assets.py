@@ -42,3 +42,7 @@ class TestSchemaValidation(unittest.TestCase):
             invalid_assets = {**assets, key: value}
             with self.assertRaises(jsonschema.exceptions.ValidationError):
                 validate(invalid_assets)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -720,3 +720,7 @@ class TestGameEndTurn(unittest.TestCase):
         game.select_combo(0)
         with self.assertRaises(exc.UndeployedTokens):
             game.end_turn()
+
+
+if __name__ == "__main__":
+    unittest.main()
