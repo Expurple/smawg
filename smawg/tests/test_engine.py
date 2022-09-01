@@ -245,7 +245,9 @@ class TestGameHooks(unittest.TestCase):
                 test_case._hook_has_fired = False
                 return self
 
-            def __exit__(self, *_: Any) -> None:
+            def __exit__(self, exc_type: Any, exc_value: Any, tb: Any) -> None:
+                if exc_value is not None:
+                    return  # Propagate the exception.
                 if not test_case._hook_has_fired:
                     msg = "Expected a Game hook to be executed, but it wasn't"
                     test_case.fail(msg)
@@ -585,7 +587,9 @@ class TestGameConquer(unittest.TestCase):
                 self._tokens_before = game.player.tokens_on_hand
                 return self
 
-            def __exit__(self, *_: Any) -> None:
+            def __exit__(self, exc_type: Any, exc_value: Any, tb: Any) -> None:
+                if exc_value is not None:
+                    return  # Propagate the exception.
                 msg = "Expected a successfull conquest"
                 test.assertIn(region, game.player.active_regions, msg=msg)
                 if cost is not None:
