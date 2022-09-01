@@ -34,7 +34,7 @@ def _parse_args() -> Namespace:
     default_format = "png"
     parser.add_argument(
         "-f", "--format",
-        metavar="fmt",
+        metavar="FMT",
         default=default_format,
         help=f"the output file format (default: {default_format})",
     )
@@ -51,11 +51,11 @@ def _parse_args() -> Namespace:
     parser.add_argument(
         "-r", "--relative-path",
         action="store_true",
-        help="search for `assets_file` inside of `smawg` package directory"
+        help="search for ASSETS_FILE inside of smawg package directory"
     )
     parser.add_argument(
         "assets_file",
-        metavar="<assets_file>",
+        metavar="ASSETS_FILE",
         help="path to JSON file with assets"
     )
     return parser.parse_args()

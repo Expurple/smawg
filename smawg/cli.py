@@ -66,7 +66,7 @@ def parse_args() -> Namespace:
     parser = ArgumentParser(description=TITLE, epilog=VISIT_HOME_PAGE)
     parser.add_argument(
         "assets_file",
-        metavar="<assets_file>",
+        metavar="ASSETS_FILE",
         help="path to JSON file with assets"
     )
     parser.add_argument(
@@ -82,7 +82,7 @@ def parse_args() -> Namespace:
     parser.add_argument(
         "-r", "--relative-path",
         action="store_true",
-        help="search for `assets_file` inside of `smawg` package directory"
+        help="search for ASSETS_FILE inside of smawg package directory"
     )
     return parser.parse_args()
 
