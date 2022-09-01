@@ -6,7 +6,6 @@ See https://github.com/expurple/smawg for more info.
 import json
 import random
 from collections import defaultdict, deque
-from copy import deepcopy
 from dataclasses import dataclass
 from enum import auto, Enum
 from itertools import islice
@@ -141,8 +140,23 @@ def shuffle(assets: dict[str, Any]) -> dict[str, Any]:
     """Shuffle the order of `Race` and `Ability` banners in `assets`.
 
     Just like you would do in a physical Small World game.
+
+    Returns a copy as shallow as possible:
+
+    ```python
+    # New root assets dict
+    {
+        "races":       [...],  # New list with references to the same objects
+        "abilities":   [...],  # New list with references to the same objects
+        "other fields": ...    # References to the same objects
+    }
+    ```
     """
-    assets = deepcopy(assets)
+    assets = {
+        **assets,
+        "races": list(assets["races"]),
+        "abilities": list(assets["abilities"])
+    }
     random.shuffle(assets["races"])
     random.shuffle(assets["abilities"])
     return assets
@@ -212,12 +226,8 @@ class _GameState:
     def __init__(self, assets: dict[str, Any]) -> None:
         """Initialize the game state from `assets`.
 
-        Exceptions raised:
-        * `jsonschema.exceptions.ValidationError`
-            if `assets` dict doesn't match `assets_schema/assets.json`.
+        Assume thet `assets` are already validated by the caller.
         """
-        validate(assets)
-        assets = deepcopy(assets)
         n_coins: int = assets["n_coins_on_start"]
         n_players: int = assets["n_players"]
         self._regions = [Region(**t) for t in assets["map"]["tiles"]]
@@ -491,7 +501,8 @@ class Game(_GameState):
             if `assets` dict doesn't match `assets_schema/assets.json`.
         """
         validate(assets)
-        assets = shuffle(assets) if shuffle_data else deepcopy(assets)
+        if shuffle_data:
+            assets = shuffle(assets)
         super().__init__(assets)
         self._next_player_id = self._increment(self.player_id)
         """Helper to preserve `_current_player_id` during redeployment."""

@@ -13,6 +13,7 @@ and this project adheres to
 
 - Constructors of `Ability`, `Race` and `Region`.
 - Parameters of `validate()`.
+- Speed up `Game` construction.
 
 ### Removed
 
