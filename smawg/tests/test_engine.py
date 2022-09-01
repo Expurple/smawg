@@ -87,6 +87,34 @@ class TestGame(unittest.TestCase):
             self.assertEqual(game.current_turn, 1)
             self.assertEqual(game.player_id, 2)
 
+    def test_no_redeployment_pseudo_turn_with_no_regions(self) -> None:
+        """Check that with no regions there's no redeployment pseudo-turn."""
+        assets = {**TINY_ASSETS, "n_players": 3}
+        game = Game(assets, shuffle_data=False, dice_roll_func=lambda: 3)
+        with nullcontext("Player 0, turn 1:"):
+            game.select_combo(0)
+            game.conquer(0)
+            game.deploy(game.player.tokens_on_hand, 0)
+            game.end_turn()
+        with nullcontext("Player 1, turn 1:"):
+            game.select_combo(0)
+            game.conquer(1)
+            game.deploy(game.player.tokens_on_hand, 1)
+            game.end_turn()
+        with nullcontext("Player 2, turn 1:"):
+            game.select_combo(0)
+            game.conquer(3)
+            game.deploy(game.player.tokens_on_hand, 3)
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            game.abandon(0)
+            game.conquer(3, use_dice=True)  # The only region owned by player 2
+            game.end_turn()
+        # Player 2 should do his "first conquest" on his own turn.
+        # Now, there's no redeployment turn. Player 1 should start his turn.
+        with nullcontext("Player 1, turn 2:"):
+            self.assertEqual(game.player_id, 1)
+
     def test_coin_rewards(self) -> None:
         """Check if coin rewards work as expected."""
         game = Game(TINY_ASSETS, shuffle_data=False)
