@@ -327,6 +327,41 @@ class TestGameHooks(unittest.TestCase):
 class TestGameDecline(unittest.TestCase):
     """Tests for `smawg.engine.Game.decline()` method."""
 
+    def test_discarded_abilities(self) -> None:
+        """Check if discarded abilities are re-introduced in correct order."""
+        assets = deepcopy(TINY_ASSETS)
+        assets["n_selectable_combos"] = 1
+        assets["abilities"] = assets["abilities"][:3]
+        game = Game(assets, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            # Grab (Race0, Ability0).
+            game.select_combo(0)
+            game.conquer(0)
+            game.deploy(game.player.tokens_on_hand, 0)
+            game.end_turn()
+        with nullcontext("Player 1, turn 1:"):
+            # Grab (Race1, Ability1).
+            game.select_combo(0)
+            game.conquer(1)
+            game.deploy(game.player.tokens_on_hand, 1)
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            game.deploy(game.player.tokens_on_hand, 0)
+            game.end_turn()
+        with nullcontext("Player 1, turn 2:"):
+            # Ability1 gets discarded here.
+            game.decline()
+            game.end_turn()
+        with nullcontext("Player 0, turn 3:"):
+            # Ability0 gets discarded here.
+            game.decline()
+            game.end_turn()
+        with nullcontext("Player 1, turn 3:"):
+            # Grab (Race2, Ability2).
+            game.select_combo(0)
+            # The next available ability should be Ability1, not Ability0.
+            self.assertEqual(game.combos[-1].ability.name, "Ability1")
+
     def test_exceptions(self) -> None:
         """Check if the method raises expected exceptions.
 

@@ -5,7 +5,7 @@ See https://github.com/expurple/smawg for more info.
 
 import json
 import random
-from collections import defaultdict
+from collections import defaultdict, deque
 from copy import deepcopy
 from enum import auto, Enum
 from itertools import islice
@@ -140,7 +140,6 @@ class Player:
         self.active_regions.clear()
         self.tokens_on_hand = 0
         self.decline_race = self.active_race
-        self.decline_ability = self.active_ability
         self.active_race = None
         self.active_ability = None
 
@@ -244,13 +243,15 @@ class _GameState:
         n_players: int = assets["n_players"]
         self._regions = [Region(t) for t in assets["map"]["tiles"]]
         self._borders = _borders(assets["map"]["tile_borders"])
-        self._abilities = [Ability(a) for a in assets["abilities"]]
-        self._races = [Race(r) for r in assets["races"]]
         self._n_combos: int = assets["n_selectable_combos"]
         self._n_turns: int = assets["n_turns"]
         self._current_turn: int = 1
-        visible_ra = islice(zip(self._races, self._abilities), self._n_combos)
+        abilities = (Ability(a) for a in assets["abilities"])
+        races = (Race(r) for r in assets["races"])
+        visible_ra = islice(zip(races, abilities), self._n_combos)
         self._combos = [Combo(r, a) for r, a in visible_ra]
+        self._invisible_abilities = deque(abilities)
+        self._invisible_races = deque(races)
         self._players = [Player(n_coins) for _ in range(n_players)]
         self._player_id = 0
         self._turn_stage = _TurnStage.SELECT_COMBO
@@ -536,6 +537,14 @@ class Game(_GameState):
             if this method is called after the game has ended.
         """
         self._rules.check_decline()
+
+        # Mark the current ability and decline race as available for reuse.
+        ability = self.player.active_ability
+        assert ability is not None, "Always true, this is just type narrowing."
+        self._invisible_abilities.append(ability)
+        if self.player.decline_race is not None:
+            self._invisible_races.append(self.player.decline_race)
+
         self.player._decline()
         self._turn_stage = _TurnStage.DECLINED
 
@@ -563,9 +572,13 @@ class Game(_GameState):
         """
         self._rules.check_combo(combo_index)
         self._pay_for_combo(combo_index)
-        self.player._set_active(self.combos[combo_index])
-        self._pop_combo(combo_index)
+        chosen_combo = self.combos.pop(combo_index)
+        self.player._set_active(chosen_combo)
         self._turn_stage = _TurnStage.ACTIVE
+        # Reveal the next combo
+        next_race = self._invisible_races.popleft()
+        next_ability = self._invisible_abilities.popleft()
+        self.combos.append(Combo(next_race, next_ability))
 
     def abandon(self, region: int) -> None:
         """Abandon the given map `region`.
@@ -698,20 +711,6 @@ class Game(_GameState):
         for combo in self.combos[:combo_index]:
             combo.coins += 1
         self.combos[combo_index].coins = 0
-
-    def _pop_combo(self, index: int) -> None:
-        """Remove the specified combo from the list of available combos.
-
-        Then, append a new combo to the list.
-        """
-        chosen_race = self._races.pop(index)
-        chosen_ability = self._abilities.pop(index)
-        self._races.append(chosen_race)
-        self._abilities.append(chosen_ability)
-        self.combos.pop(index)
-        next_combo = Combo(self._races[self._n_combos - 1],
-                           self._abilities[self._n_combos - 1])
-        self.combos.append(next_combo)
 
     def _conquer_without_dice(self, region: int) -> None:
         """Implementation of `conquer()` with `use_dice=False`.

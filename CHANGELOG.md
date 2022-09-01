@@ -9,7 +9,9 @@ and this project adheres to
 
 ## [Unreleased]
 
-\-
+### Fixed
+
+- Incorrect order of re-introducing races and abilities.
 
 ## [0.9.0] - 2022-08-31
 
