@@ -3,12 +3,11 @@
 This module can also be seen as a collection of usage examples.
 """
 
-import inspect
 import json
 import unittest
 from copy import deepcopy
 from contextlib import AbstractContextManager, nullcontext
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import smawg.exceptions as exc
 from smawg.engine import Game
@@ -410,18 +409,18 @@ class TestGameConquer(unittest.TestCase):
         game = Game(TINY_ASSETS, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
-            with self.assertConquers(0, cost=3):
+            with self.assertConquers(game, 0, cost=3):
                 game.conquer(0)
-            with self.assertConquers(1, cost=3):
+            with self.assertConquers(game, 1, cost=3):
                 game.conquer(1)
-            with self.assertConquers(2, cost=3):
+            with self.assertConquers(game, 2, cost=3):
                 game.conquer(2)
             game.end_turn()
         with nullcontext("Player 1, turn 1:"):
             game.select_combo(0)
-            with self.assertConquers(3, cost=3):
+            with self.assertConquers(game, 3, cost=3):
                 game.conquer(3)
-            with self.assertConquers(0, cost=6):
+            with self.assertConquers(game, 0, cost=6):
                 game.conquer(0)
             self.assertEqual(game.players[0].tokens_on_hand, 2)
             self.assertEqual(game.players[0].active_regions, {1: 3, 2: 3})
@@ -433,21 +432,21 @@ class TestGameConquer(unittest.TestCase):
         with nullcontext("Player 0, turn 1:"):
             # The dice isn't necessary and results in using less tokens:
             game.select_combo(0)
-            with self.assertConquers(0, cost=2):
+            with self.assertConquers(game, 0, cost=2):
                 game.conquer(0, use_dice=True)
             game.deploy(game.player.tokens_on_hand, 0)
             game.end_turn()
         with nullcontext("Player 0, turn 2:"):
             # The dice is necessary, all tokens are used:
             game.deploy(game.player.tokens_on_hand - 2, 0)
-            with self.assertConquers(1, cost=2):
+            with self.assertConquers(game, 1, cost=2):
                 game.conquer(1, use_dice=True)
 
     def test_dice_rolled_3_when_needed_3(self) -> None:
         """1 token should be put on a region."""
         game = Game(TINY_ASSETS, shuffle_data=False, dice_roll_func=lambda: 3)
         game.select_combo(0)
-        with self.assertConquers(0, cost=1):
+        with self.assertConquers(game, 0, cost=1):
             game.conquer(0, use_dice=True)
 
     def test_dice_fail(self) -> None:
@@ -469,7 +468,7 @@ class TestGameConquer(unittest.TestCase):
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
             # Conquest should require 4 tokens instead of 3.
-            with self.assertConquers(0, cost=4):
+            with self.assertConquers(game, 0, cost=4):
                 game.conquer(0)
             game.deploy(game.player.tokens_on_hand, 0)
             game.end_turn()
@@ -478,7 +477,7 @@ class TestGameConquer(unittest.TestCase):
             # the Lost Tribe shouldn't be there anymore.
             # If we abandon the region, conquest should cost 3 tokens.
             game.abandon(0)
-            with self.assertConquers(0, cost=3):
+            with self.assertConquers(game, 0, cost=3):
                 game.conquer(0)
 
     def test_after_abandoning_all_regions(self) -> None:
@@ -503,7 +502,7 @@ class TestGameConquer(unittest.TestCase):
                 game.conquer(2)
             # Region 4 isn't adjacent to region 0,
             # but it's at the edge of the map, which is what we need right now.
-            with self.assertConquers(4, cost=3):
+            with self.assertConquers(game, 4, cost=3):
                 game.conquer(4)
 
     def test_common_exceptions(self) -> None:
@@ -571,16 +570,14 @@ class TestGameConquer(unittest.TestCase):
             with self.assertRaises(exc.NotEnoughTokensToRoll):
                 game.conquer(3, use_dice=True)
 
-    def assertConquers(self, region: int, *, cost: Optional[int] = None
-                       ) -> AbstractContextManager[Any]:
-        """Assert that the `region` is conquered inside of the wrapped block.
+    def assertConquers(self, game: Game, region: int, *,
+                       cost: int | None = None) -> AbstractContextManager[Any]:
+        """Assert that the `region` is conquered inside of the context.
 
         When `cost` is specified,
         also assert that `cost` amount of tokens is used.
         """
         test = self
-        # Dark magic to implicitly get it from the calling test method.
-        game: Game = inspect.stack()[1][0].f_locals["game"]
 
         class AssertConquers:
             def __enter__(self) -> "AssertConquers":
