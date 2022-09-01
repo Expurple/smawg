@@ -12,6 +12,7 @@ and this project adheres to
 ### Changed
 
 - Constructors of `Ability`, `Race` and `Region`.
+- Parameters of `validate()`.
 
 ### Removed
 

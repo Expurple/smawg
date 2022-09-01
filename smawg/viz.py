@@ -12,7 +12,7 @@ from typing import Any, Callable
 
 from graphviz import Graph  # type:ignore
 
-from smawg.engine import ASSETS_SCHEMA, validate
+from smawg.engine import validate
 from smawg._metadata import PACKAGE_DIR, VERSION
 
 
@@ -63,7 +63,7 @@ def _parse_args() -> Namespace:
 
 def build_graph(assets: dict[str, Any]) -> Graph:
     """Convert the map into a DOT representation, but don't render it yet."""
-    validate(assets, ASSETS_SCHEMA)
+    validate(assets)
     map = assets["map"]
     graph = Graph(
         name="map",

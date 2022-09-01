@@ -23,17 +23,22 @@ from smawg._metadata import SCHEMA_DIR
 with open(f"{SCHEMA_DIR}/assets.json") as file:
     ASSETS_SCHEMA: dict[str, Any] = json.load(file)
 
+_STRICT_ASSETS_SCHEMA = {**ASSETS_SCHEMA, "additionalProperties": False}
+
 _LOCAL_REF_RESOLVER = jsonschema.RefResolver(f"file://{SCHEMA_DIR}/", {})
 """Fixes references to local schemas."""
 
 
-def validate(obj: object, schema: dict[str, Any]) -> None:
-    """Validate a json object against a local schema.
+def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
+    """Validate assets JSON against the schema in `assets_schema/`.
 
-    It just calls `jsonschema.validate()`, but makes sure to properly resolve
-    references to local schemas from `assets_schema/` directory.
+    Raise `jsonschema.exceptions.ValidationError`
+    if `assets` don't match the schema.
+
+    If `strict=True`, also fail on undocumented keys.
     """
-    jsonschema.validate(obj, schema, resolver=_LOCAL_REF_RESOLVER)
+    schema = _STRICT_ASSETS_SCHEMA if strict else ASSETS_SCHEMA
+    jsonschema.validate(assets, schema, resolver=_LOCAL_REF_RESOLVER)
 
 
 # -------------------------- "dumb" data objects ------------------------------
@@ -211,7 +216,7 @@ class _GameState:
         * `jsonschema.exceptions.ValidationError`
             if `assets` dict doesn't match `assets_schema/assets.json`.
         """
-        validate(assets, ASSETS_SCHEMA)
+        validate(assets)
         assets = deepcopy(assets)
         n_coins: int = assets["n_coins_on_start"]
         n_players: int = assets["n_players"]
@@ -485,7 +490,7 @@ class Game(_GameState):
         * `jsonschema.exceptions.ValidationError`
             if `assets` dict doesn't match `assets_schema/assets.json`.
         """
-        validate(assets, ASSETS_SCHEMA)
+        validate(assets)
         assets = shuffle(assets) if shuffle_data else deepcopy(assets)
         super().__init__(assets)
         self._next_player_id = self._increment(self.player_id)
