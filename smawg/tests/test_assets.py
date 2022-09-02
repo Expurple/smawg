@@ -33,21 +33,28 @@ class TestSchemaValidation(unittest.TestCase):
         because the schema or the validation process is incorrect.
         """
         invalid_values = [
-            # jsonschema.exceptions.ValidationError:
-            ("races", [{"not a": "race"}]),
-            ("abilities", [{"not a": "ability"}]),
-            ("map", [{"not a": "map"}]),
-            ("map", {"tiles": [], "tile_borders": [[-2, -1]]}),
-            # smawg.exceptions.InvalidAssets:
-            ("races", []),
-            ("abilities", []),
-            ("map", {"tiles": [], "tile_borders": [[2, 1]]}),
+            # Bad structure of nested objects:
+            (ValidationError, "races", [{"not a": "race"}]),
+            (ValidationError, "abilities", [{"not a": "ability"}]),
+            (ValidationError, "map", {"not a": "map"}),
+            # Borders between non-existring tiles:
+            (ValidationError, "map", {
+                "tiles": [],
+                "tile_borders": [[-2, -1]]
+            }),
+            (InvalidAssets, "map", {
+                "tiles": [],
+                "tile_borders": [[2, 1]]
+            }),
+            # Impossible to achieve n_visible_combos=2:
+            (InvalidAssets, "races", []),
+            (InvalidAssets, "abilities", []),
         ]
         with open(f"{ASSETS_DIR}/tiny.json") as assets_file:
             assets = json.load(assets_file)
-        for key, value in invalid_values:
+        for exc_type, key, value in invalid_values:
             invalid_assets = {**assets, key: value}
-            with self.assertRaises((ValidationError, InvalidAssets)):
+            with self.assertRaises(exc_type):
                 validate(invalid_assets)
 
 
