@@ -17,7 +17,7 @@ import smawg.exceptions as exc
 from smawg._metadata import SCHEMA_DIR
 
 
-# ---------------------------- JSON validation --------------------------------
+# --------------------------- assets validation -------------------------------
 
 with open(f"{SCHEMA_DIR}/assets.json") as file:
     ASSETS_SCHEMA: dict[str, Any] = json.load(file)
@@ -41,10 +41,15 @@ def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
     - there are less than `n_players + n_selectable_combos` abilities; or
     - tile borders reference non-existing tiles.
     """
-    # Validate against the JSON schema:
     schema = _STRICT_ASSETS_SCHEMA if strict else ASSETS_SCHEMA
     jsonschema.validate(assets, schema, resolver=_LOCAL_REF_RESOLVER)
-    # Validate the number of races:
+    _validate_n_races(assets)
+    _validate_n_abilities(assets)
+    _validate_tile_indexes(assets)
+
+
+def _validate_n_races(assets: dict[str, Any]) -> None:
+    """Assume that `assets` are already validated against the JSON schema."""
     n_races = len(assets["races"])
     n_players = assets["n_players"]
     n_selectable_combos = assets["n_selectable_combos"]
@@ -55,8 +60,13 @@ def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
             f"{n_selectable_combos} selectable combos "
             f"for {n_players} players, need at least {safe_n_races} races"
         )
-    # Validate the number of abilities:
+
+
+def _validate_n_abilities(assets: dict[str, Any]) -> None:
+    """Assume that `assets` are already validated against the JSON schema."""
     n_abilities = len(assets["abilities"])
+    n_players = assets["n_players"]
+    n_selectable_combos = assets["n_selectable_combos"]
     safe_n_abilities = n_players + n_selectable_combos
     if n_abilities < safe_n_abilities:
         raise exc.InvalidAssets(
@@ -64,7 +74,10 @@ def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
             f"{n_selectable_combos} selectable combos for "
             f"{n_players} players, need at least {safe_n_abilities} abilities"
         )
-    # Validate tile indexes:
+
+
+def _validate_tile_indexes(assets: dict[str, Any]) -> None:
+    """Assume that `assets` are already validated against the JSON schema."""
     n_tiles = len(assets["map"]["tiles"])
     for t1, t2 in assets["map"]["tile_borders"]:
         greater_index = max(t1, t2)
