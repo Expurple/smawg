@@ -14,13 +14,17 @@ and this project adheres to
 - Constructors of `Ability`, `Race` and `Region`.
 - Parameters of `validate()`.
 - Speed up `Game` construction.
-- `Game` constructor now validates the number of `races` and `abilities`
+- `Game` constructor now validates the number of races and abilities
     in assets, and may raise `InvalidAssets` exception.
-- `assets/tiny.json` now contains more `races` to pass the checks.
+- `assets/tiny.json` now contains more races to pass the checks.
 
 ### Removed
 
 - `ABILITY_SCHEMA`, `RACE_SCHEMA` and `TILE_SCHEMA`.
+
+### Fixed
+
+- Unexpected crashes when assets contain too few races or abilities.
 
 ## [0.9.1] - 2022-09-01
 
