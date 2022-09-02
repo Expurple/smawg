@@ -25,6 +25,7 @@ and this project adheres to
 ### Fixed
 
 - Unexpected crashes when assets contain too few races or abilities.
+- Unexpected crashes when some map regions are not connected to the rest.
 
 ## [0.9.1] - 2022-09-01
 

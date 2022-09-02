@@ -200,12 +200,12 @@ def _do_nothing(*args: Any, **kwargs: Any) -> None:
     pass
 
 
-def _borders(borders_from_json: list[list[int]]) -> list[set[int]]:
+def _borders(tile_borders: list[list[int]], n_tiles: int) -> list[set[int]]:
     """Transform a list of region pairs into a list of sets for each region.
 
     Example:
     ```
-    >>> _borders([[0, 1], [1, 2]])
+    >>> _borders([[0, 1], [1, 2]], 3)
     [
         {1},    # Neighbors of region 0
         {0, 2}, # Neighbors of region 1
@@ -213,10 +213,8 @@ def _borders(borders_from_json: list[list[int]]) -> list[set[int]]:
     ]
     ```
     """
-    # This assumes that every region is listed in `borders_from_json`.
-    n_regions = max(max(pair) for pair in borders_from_json) + 1
-    borders = [set[int]() for _ in range(n_regions)]
-    for region1, region2 in borders_from_json:
+    borders = [set[int]() for _ in range(n_tiles)]
+    for region1, region2 in tile_borders:
         borders[region1].add(region2)
         borders[region2].add(region1)
     return borders
@@ -257,7 +255,8 @@ class _GameState:
         n_coins: int = assets["n_coins_on_start"]
         n_players: int = assets["n_players"]
         self._regions = [Region(**t) for t in assets["map"]["tiles"]]
-        self._borders = _borders(assets["map"]["tile_borders"])
+        self._borders = _borders(assets["map"]["tile_borders"],
+                                 len(self._regions))
         self._n_combos: int = assets["n_selectable_combos"]
         self._n_turns: int = assets["n_turns"]
         self._current_turn: int = 1

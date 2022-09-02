@@ -31,6 +31,21 @@ class TestGame(unittest.TestCase):
     are extracted into separate test fixtures.
     """
 
+    def test_disconnected_map(self) -> None:
+        """Check if the `Game` can handle disconnected maps."""
+        # Set up a map where region 4 is not connected to any other regions.
+        assets = deepcopy(TINY_ASSETS)
+        borders = assets["map"]["tile_borders"]
+        assets["map"]["tile_borders"] = [b for b in borders if 4 not in b]
+        game = Game(assets, shuffle_data=False)
+        game.select_combo(0)
+        game.conquer(4)
+        self.assertIn(4, game.player.active_regions)
+        # In older smawg versions, this call would crash
+        # with an unexpected IndexError instead of NonAdjacentRegion.
+        with self.assertRaises(exc.NonAdjacentRegion):
+            game.conquer(3)
+
     def test_game_end(self) -> None:
         """Run a full game and then check if it's in end state."""
         game = Game(TINY_ASSETS, shuffle_data=False)
