@@ -20,7 +20,8 @@
                 "maxItems": 2,
                 "items": {
                     "description": "Zero-based index of the tile.",
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 0
                 }
             }
         }

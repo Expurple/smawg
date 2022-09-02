@@ -37,6 +37,7 @@ class TestSchemaValidation(unittest.TestCase):
             ("races", [{"not a": "race"}]),
             ("abilities", [{"not a": "ability"}]),
             ("map", [{"not a": "map"}]),
+            ("map", {"tiles": [], "tile_borders": [[-2, -1]]}),
             # smawg.exceptions.InvalidAssets:
             ("races", []),
             ("abilities", []),
