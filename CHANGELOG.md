@@ -14,6 +14,9 @@ and this project adheres to
 - Constructors of `Ability`, `Race` and `Region`.
 - Parameters of `validate()`.
 - Speed up `Game` construction.
+- `Game` constructor now validates the number of `races` in assets
+    and may raise `InvalidAssets` exception.
+- `assets/tiny.json` now contains more `races` to pass the checks.
 
 ### Removed
 

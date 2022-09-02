@@ -1,7 +1,7 @@
 {
     "$schema": "../assets_schema/assets.json",
     "name": "Tiny",
-    "description": "A bare minimum working set of assets.",
+    "description": "A minimal set of assets for running tests on 1-3 players.",
 
     "n_players": 2,
     "n_coins_on_start": 1,
@@ -52,6 +52,21 @@
         },
         {
             "name": "Race4",
+            "n_tokens": 5,
+            "max_n_tokens": 10
+        },
+        {
+            "name": "Race5",
+            "n_tokens": 5,
+            "max_n_tokens": 10
+        },
+        {
+            "name": "Race6",
+            "n_tokens": 5,
+            "max_n_tokens": 10
+        },
+        {
+            "name": "Race7",
             "n_tokens": 5,
             "max_n_tokens": 10
         }

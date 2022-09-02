@@ -1,16 +1,22 @@
 """Domain exceptions raised by `smawg.engine` module.
 
-All exceptions are inherited from `RulesViolation`,
-which can be used to "catch everything".
-
 See https://github.com/expurple/smawg for more info about the project.
 """
+
+
+class InvalidAssets(Exception):
+    """Assets match the JSON schema but still violate some invariants."""
+
+
+# -----------------------------------------------------------------------------
+#                  Exceptions for runtime rule violations
+# -----------------------------------------------------------------------------
 
 
 # ----------------------------- Base classes ----------------------------------
 
 class RulesViolation(Exception):
-    """Base class for all `smawg.exceptions`."""
+    """Base class for all `smawg.exceptions` raised from `Game` methods."""
 
     MESSAGE: str = "A friendly message for the user. " \
                    "Override this in clild classes."

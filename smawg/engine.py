@@ -28,16 +28,30 @@ _LOCAL_REF_RESOLVER = jsonschema.RefResolver(f"file://{SCHEMA_DIR}/", {})
 """Fixes references to local schemas."""
 
 
+# Make sure to keep `Game.__init__` to docstring up to date with this docsting.
 def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
-    """Validate assets JSON against the schema in `assets_schema/`.
+    """Validate the game assets.
 
     Raise `jsonschema.exceptions.ValidationError`
-    if `assets` don't match the schema.
+    if `assets` don't match the schema in `assets_schema/`.
 
     If `strict=True`, also fail on undocumented keys.
+
+    Raise `smawg.exceptions.InvalidAssets` if
+    there are less than `2 * n_players + n_selectable_combos` races.
     """
     schema = _STRICT_ASSETS_SCHEMA if strict else ASSETS_SCHEMA
     jsonschema.validate(assets, schema, resolver=_LOCAL_REF_RESOLVER)
+    n_races = len(assets["races"])
+    n_players = assets["n_players"]
+    n_selectable_combos = assets["n_selectable_combos"]
+    safe_n_races = 2 * n_players + n_selectable_combos
+    if n_races < safe_n_races:
+        raise exc.InvalidAssets(
+            f"{n_races} races are not enough to always guarantee "
+            f"{n_selectable_combos} selectable combos "
+            f"for {n_players} players, need at least {safe_n_races} races"
+        )
 
 
 # -------------------------- "dumb" data objects ------------------------------
@@ -491,14 +505,17 @@ class Game(_GameState):
         the known order of races and ablities in `assets`.
 
         Provide custom `dice_roll_func` to get pre-determined
-        (or even dynamically decided) dice roll results.
+        (or even dynamically controlled) dice roll results.
 
         Provide optional `hooks` to automatically fire on certain events.
-        For details, see `docs/hooks.md`
+        For details, see `docs/hooks.md`.
 
-        Exceptions raised:
+        `assets` are validated using `validate()` function, which raises:
+
         * `jsonschema.exceptions.ValidationError`
-            if `assets` dict doesn't match `assets_schema/assets.json`.
+            if `assets` doen't match `assets_schema/assets.json`.
+        * `smawg.exceptions.InvalidAssets`
+            if there are less than `2 * n_players + n_selectable_combos` races.
         """
         validate(assets)
         if shuffle_data:

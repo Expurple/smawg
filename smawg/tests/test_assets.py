@@ -3,8 +3,9 @@
 import json
 import unittest
 
-import jsonschema.exceptions
+from jsonschema.exceptions import ValidationError
 
+from smawg.exceptions import InvalidAssets
 from smawg.engine import validate
 from smawg._metadata import ASSETS_DIR
 
@@ -32,15 +33,18 @@ class TestSchemaValidation(unittest.TestCase):
         because the schema or the validation process is incorrect.
         """
         invalid_values = [
+            # jsonschema.exceptions.ValidationError:
             ("races", [{"not a": "race"}]),
             ("abilities", [{"not a": "ability"}]),
-            ("map", [{"not a": "map"}])
+            ("map", [{"not a": "map"}]),
+            # smawg.exceptions.InvalidAssets:
+            ("races", []),
         ]
         with open(f"{ASSETS_DIR}/tiny.json") as assets_file:
             assets = json.load(assets_file)
         for key, value in invalid_values:
             invalid_assets = {**assets, key: value}
-            with self.assertRaises(jsonschema.exceptions.ValidationError):
+            with self.assertRaises((ValidationError, InvalidAssets)):
                 validate(invalid_assets)
 
 
