@@ -20,9 +20,9 @@ from smawg._metadata import SCHEMA_DIR
 # --------------------------- assets validation -------------------------------
 
 with open(f"{SCHEMA_DIR}/assets.json") as file:
-    ASSETS_SCHEMA: dict[str, Any] = json.load(file)
+    _ASSETS_SCHEMA: dict[str, Any] = json.load(file)
 
-_STRICT_ASSETS_SCHEMA = {**ASSETS_SCHEMA, "additionalProperties": False}
+_STRICT_ASSETS_SCHEMA = {**_ASSETS_SCHEMA, "additionalProperties": False}
 
 _LOCAL_REF_RESOLVER = jsonschema.RefResolver(f"file://{SCHEMA_DIR}/", {})
 """Fixes references to local schemas."""
@@ -41,7 +41,7 @@ def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
     - there are less than `n_players + n_selectable_combos` abilities; or
     - tile borders reference non-existing tiles.
     """
-    schema = _STRICT_ASSETS_SCHEMA if strict else ASSETS_SCHEMA
+    schema = _STRICT_ASSETS_SCHEMA if strict else _ASSETS_SCHEMA
     jsonschema.validate(assets, schema, resolver=_LOCAL_REF_RESOLVER)
     _validate_n_races(assets)
     _validate_n_abilities(assets)

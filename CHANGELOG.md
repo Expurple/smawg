@@ -22,7 +22,8 @@ and this project adheres to
 
 ### Removed
 
-- `ABILITY_SCHEMA`, `RACE_SCHEMA` and `TILE_SCHEMA`.
+- `ABILITY_SCHEMA`, `RACE_SCHEMA`, `TILE_SCHEMA` and `ASSETS_SCHEMA`
+    that shouldn't have been public.
 
 ### Fixed
 
