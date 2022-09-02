@@ -9,6 +9,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+\-
+
+## [0.10.0] - 2022-09-03
+
 ### Changed
 
 - Constructors of `Ability`, `Race` and `Region`.
