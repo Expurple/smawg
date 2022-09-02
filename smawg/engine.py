@@ -28,7 +28,7 @@ _LOCAL_REF_RESOLVER = jsonschema.RefResolver(f"file://{SCHEMA_DIR}/", {})
 """Fixes references to local schemas."""
 
 
-# Make sure to keep `Game.__init__` to docstring up to date with this docsting.
+# Make sure to keep `Game.__init__` docstring up to date with this docsting.
 def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
     """Validate the game assets.
 
@@ -38,10 +38,13 @@ def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
     If `strict=True`, also fail on undocumented keys.
 
     Raise `smawg.exceptions.InvalidAssets` if
-    there are less than `2 * n_players + n_selectable_combos` races.
+    - there are less than `2 * n_players + n_selectable_combos` races; or
+    - there are less than `n_players + n_selectable_combos` abilities.
     """
+    # Validate against the JSON schema:
     schema = _STRICT_ASSETS_SCHEMA if strict else ASSETS_SCHEMA
     jsonschema.validate(assets, schema, resolver=_LOCAL_REF_RESOLVER)
+    # Validate the number of races:
     n_races = len(assets["races"])
     n_players = assets["n_players"]
     n_selectable_combos = assets["n_selectable_combos"]
@@ -51,6 +54,15 @@ def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
             f"{n_races} races are not enough to always guarantee "
             f"{n_selectable_combos} selectable combos "
             f"for {n_players} players, need at least {safe_n_races} races"
+        )
+    # Validate the number of abilities:
+    n_abilities = len(assets["abilities"])
+    safe_n_abilities = n_players + n_selectable_combos
+    if n_abilities < safe_n_abilities:
+        raise exc.InvalidAssets(
+            f"{n_abilities} abilities are not enough to always guarantee "
+            f"{n_selectable_combos} selectable combos for "
+            f"{n_players} players, need at least {safe_n_abilities} abilities"
         )
 
 
@@ -513,9 +525,10 @@ class Game(_GameState):
         `assets` are validated using `validate()` function, which raises:
 
         * `jsonschema.exceptions.ValidationError`
-            if `assets` doen't match `assets_schema/assets.json`.
-        * `smawg.exceptions.InvalidAssets`
-            if there are less than `2 * n_players + n_selectable_combos` races.
+            if `assets` don't match `assets_schema/assets.json`.
+        * `smawg.exceptions.InvalidAssets` if:
+            * there are less than `2 * n_players + n_selectable_combos` races;
+            * there are less than `n_players + n_selectable_combos` abilities.
         """
         validate(assets)
         if shuffle_data:
