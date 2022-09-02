@@ -41,6 +41,7 @@ class TestSchemaValidation(unittest.TestCase):
             # smawg.exceptions.InvalidAssets:
             ("races", []),
             ("abilities", []),
+            ("map", {"tiles": [], "tile_borders": [[2, 1]]}),
         ]
         with open(f"{ASSETS_DIR}/tiny.json") as assets_file:
             assets = json.load(assets_file)

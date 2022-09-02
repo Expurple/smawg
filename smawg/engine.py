@@ -28,7 +28,6 @@ _LOCAL_REF_RESOLVER = jsonschema.RefResolver(f"file://{SCHEMA_DIR}/", {})
 """Fixes references to local schemas."""
 
 
-# Make sure to keep `Game.__init__` docstring up to date with this docsting.
 def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
     """Validate the game assets.
 
@@ -39,7 +38,8 @@ def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
 
     Raise `smawg.exceptions.InvalidAssets` if
     - there are less than `2 * n_players + n_selectable_combos` races; or
-    - there are less than `n_players + n_selectable_combos` abilities.
+    - there are less than `n_players + n_selectable_combos` abilities; or
+    - tile borders reference non-existing tiles.
     """
     # Validate against the JSON schema:
     schema = _STRICT_ASSETS_SCHEMA if strict else ASSETS_SCHEMA
@@ -64,6 +64,15 @@ def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
             f"{n_selectable_combos} selectable combos for "
             f"{n_players} players, need at least {safe_n_abilities} abilities"
         )
+    # Validate tile indexes:
+    n_tiles = len(assets["map"]["tiles"])
+    for t1, t2 in assets["map"]["tile_borders"]:
+        greater_index = max(t1, t2)
+        if greater_index >= n_tiles:
+            raise exc.InvalidAssets(
+                f"Tile border [{t1}, {t2}] references a non-existing tile: "
+                f"{greater_index} (the map only has {n_tiles} tiles)"
+            )
 
 
 # -------------------------- "dumb" data objects ------------------------------
@@ -203,13 +212,17 @@ def _do_nothing(*args: Any, **kwargs: Any) -> None:
 def _borders(tile_borders: list[list[int]], n_tiles: int) -> list[set[int]]:
     """Transform a list of region pairs into a list of sets for each region.
 
+    Assume that `tile_borders` and `n_tiles`
+    are already validated by the caller.
+
     Example:
     ```
-    >>> _borders([[0, 1], [1, 2]], 3)
+    >>> _borders([[0, 1], [1, 2]], 4)
     [
         {1},    # Neighbors of region 0
         {0, 2}, # Neighbors of region 1
-        {1}     # Neighbors of region 2
+        {1},    # Neighbors of region 2
+        {}      # Neighbors of region 3
     ]
     ```
     """
@@ -509,6 +522,8 @@ class Game(_GameState):
                  hooks: Hooks = {}) -> None:
         """Initialize a game based on given `assets`.
 
+        `assets` are validated using `validate()`, all errors are propagated.
+
         When initialization is finished, the object is ready to be used by
         player 0. `"on_turn_start"` hook is fired immediately, if provided.
 
@@ -520,14 +535,6 @@ class Game(_GameState):
 
         Provide optional `hooks` to automatically fire on certain events.
         For details, see `docs/hooks.md`.
-
-        `assets` are validated using `validate()` function, which raises:
-
-        * `jsonschema.exceptions.ValidationError`
-            if `assets` don't match `assets_schema/assets.json`.
-        * `smawg.exceptions.InvalidAssets` if:
-            * there are less than `2 * n_players + n_selectable_combos` races;
-            * there are less than `n_players + n_selectable_combos` abilities.
         """
         validate(assets)
         if shuffle_data:

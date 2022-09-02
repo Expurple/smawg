@@ -14,9 +14,10 @@ and this project adheres to
 - Constructors of `Ability`, `Race` and `Region`.
 - Parameters of `validate()`.
 - Speed up `Game` construction.
-- Tile indexes in `assets["map"]["borders"]` are now validated.
-- `Game` constructor now validates the number of races and abilities
-    in assets, and may raise `InvalidAssets` exception.
+- JSON schema now rejects negative tile indexes in
+    `assets["map"]["tile_borders"]`.
+- `Game` constructor now validates tile borders, the number of races and the
+    number of abilities, and may raise `InvalidAssets` exception.
 - `assets/tiny.json` now contains more races to pass the checks.
 
 ### Removed
@@ -28,7 +29,7 @@ and this project adheres to
 - Unexpected crashes when assets contain too few races or abilities.
 - Unexpected crashes when some map regions are not connected to the rest.
 - Crashes or silent incorrect behaviour when map contains
-    borders between tiles with negative indexes.
+    borders between non-existing tiles.
 
 ## [0.9.1] - 2022-09-01
 
