@@ -80,7 +80,7 @@ To easily reason about your maps, you can use `smawg.viz` utility.
 Typical usage:
 
 ```bash
-python3 -m smawg.viz --view <ASSETS_FILE>
+python3 -m smawg.viz --view some/path/to/assets.json
 ```
 
 ## Usage

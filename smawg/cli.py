@@ -72,7 +72,7 @@ def parse_args() -> Namespace:
     parser.add_argument(
         "-s", "--no-shuffle",
         action="store_true",
-        help="don't shuffle data from <assets_file>"
+        help="don't shuffle data from ASSETS_FILE"
     )
     parser.add_argument(
         "-d", "--read-dice",

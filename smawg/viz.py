@@ -86,7 +86,7 @@ def build_graph(assets: dict[str, Any]) -> Graph:
     return graph
 
 
-def save(graph: Graph, render_fmt: str | None = None, *, view: bool,
+def save(graph: Graph, render_fmt: str | None = None, *, view: bool = False,
          on_save: Callable[[str], None] = _do_nothing) -> None:
     """Save the graph, optionally rendering it or opening the resulting file.
 
