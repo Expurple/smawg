@@ -9,8 +9,10 @@ from copy import deepcopy
 from contextlib import AbstractContextManager, nullcontext
 from typing import Any, Callable
 
+from jsonschema.exceptions import ValidationError
+
 import smawg.exceptions as exc
-from smawg.engine import Game
+from smawg.engine import Game, validate
 from smawg._metadata import ASSETS_DIR
 
 
@@ -22,6 +24,35 @@ def setUpModule() -> None:
     global TINY_ASSETS
     with open(f"{ASSETS_DIR}/tiny.json") as file:
         TINY_ASSETS = json.load(file)
+
+
+class TestValidate(unittest.TestCase):
+    """Tests for `smawg.engine.validate()` function."""
+
+    def test_invalid_assets(self) -> None:
+        """Check if `validate()` raises an error on invalid assets."""
+        invalid_fields = [
+            # Bad structure of nested objects:
+            (ValidationError, "races", [{"not a": "race"}]),
+            (ValidationError, "abilities", [{"not a": "ability"}]),
+            (ValidationError, "map", {"not a": "map"}),
+            # Borders between non-existring tiles:
+            (ValidationError, "map", {
+                "tiles": [],
+                "tile_borders": [[-2, -1]]
+            }),
+            (exc.InvalidAssets, "map", {
+                "tiles": [],
+                "tile_borders": [[2, 1]]
+            }),
+            # Impossible to achieve n_visible_combos=2:
+            (exc.InvalidAssets, "races", []),
+            (exc.InvalidAssets, "abilities", []),
+        ]
+        for exc_type, key, value in invalid_fields:
+            invalid_assets = {**TINY_ASSETS, key: value}
+            with self.assertRaises(exc_type):
+                validate(invalid_assets)
 
 
 class TestGame(unittest.TestCase):
