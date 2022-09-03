@@ -215,7 +215,7 @@ class Rules:
 
     def __init__(self, game: GameState) -> None:
         """Create an instance that will work on provided `game` instance."""
-        self.game = game
+        self._game = game
 
     def check_decline(self) -> None:
         """Check if `decline()` violates the rules.
@@ -230,13 +230,13 @@ class Rules:
         * `GameEnded`
             if this method is called after the game has ended.
         """
-        if self.game.has_ended:
+        if self._game.has_ended:
             raise GameEnded()
-        if self.game.player.active_race is None:
+        if self._game.player.active_race is None:
             raise NoActiveRace()
-        if self.game._turn_stage in _REDEPLOYMENT_STAGES:
+        if self._game._turn_stage in _REDEPLOYMENT_STAGES:
             raise ForbiddenDuringRedeployment()
-        if self.game._turn_stage in (
+        if self._game._turn_stage in (
                 _TurnStage.ACTIVE, _TurnStage.CONQUESTS, _TurnStage.USED_DICE):
             raise DecliningWhenActive()
 
@@ -257,16 +257,16 @@ class Rules:
         * `GameEnded`
             if this method is called after the game has ended.
         """
-        if self.game.has_ended:
+        if self._game.has_ended:
             raise GameEnded()
-        if self.game._turn_stage in _REDEPLOYMENT_STAGES:
+        if self._game._turn_stage in _REDEPLOYMENT_STAGES:
             raise ForbiddenDuringRedeployment()
-        if self.game._turn_stage == _TurnStage.DECLINED:
+        if self._game._turn_stage == _TurnStage.DECLINED:
             raise SelectingOnDeclineTurn()
-        if self.game._turn_stage != _TurnStage.SELECT_COMBO:
+        if self._game._turn_stage != _TurnStage.SELECT_COMBO:
             raise SelectingWhenActive()
-        coins_getting = self.game.combos[combo_index].coins
-        if combo_index > self.game.player.coins + coins_getting:
+        coins_getting = self._game.combos[combo_index].coins
+        if combo_index > self._game.player.coins + coins_getting:
             raise NotEnoughCoins()
 
     def check_abandon(self, region: int) -> None:
@@ -286,16 +286,16 @@ class Rules:
         * `GameEnded`
             if this method is called after the game has ended.
         """
-        if self.game.has_ended:
+        if self._game.has_ended:
             raise GameEnded()
-        if self.game.player.active_race is None:
+        if self._game.player.active_race is None:
             raise NoActiveRace()
-        if self.game._turn_stage in _REDEPLOYMENT_STAGES:
+        if self._game._turn_stage in _REDEPLOYMENT_STAGES:
             raise ForbiddenDuringRedeployment()
-        if region not in self.game.player.active_regions:
+        if region not in self._game.player.active_regions:
             raise NonControlledRegion()
-        if self.game._turn_stage in (_TurnStage.CONQUESTS,
-                                     _TurnStage.USED_DICE):
+        if self._game._turn_stage in (_TurnStage.CONQUESTS,
+                                      _TurnStage.USED_DICE):
             raise AbandoningAfterConquests()
 
     def check_conquer(self, region: int, *, use_dice: bool) -> None:
@@ -342,13 +342,13 @@ class Rules:
         * `GameEnded`
             if this method is called after the game has ended.
         """
-        if self.game.has_ended:
+        if self._game.has_ended:
             raise GameEnded()
-        if self.game.player.active_race is None:
+        if self._game.player.active_race is None:
             raise NoActiveRace()
-        if self.game._turn_stage in _REDEPLOYMENT_STAGES:
+        if self._game._turn_stage in _REDEPLOYMENT_STAGES:
             raise ForbiddenDuringRedeployment()
-        if not self.game.player.active_regions:
+        if not self._game.player.active_regions:
             raise NoActiveRegions()
 
     def check_deploy(self, n_tokens: int, region: int) -> None:
@@ -366,13 +366,13 @@ class Rules:
         * `GameEnded`
             if this method is called after the game has ended.
         """
-        if self.game.has_ended:
+        if self._game.has_ended:
             raise GameEnded()
-        if self.game.player.active_race is None:
+        if self._game.player.active_race is None:
             raise NoActiveRace()
-        if region not in self.game.player.active_regions:
+        if region not in self._game.player.active_regions:
             raise NonControlledRegion()
-        tokens_on_hand = self.game.player.tokens_on_hand
+        tokens_on_hand = self._game.player.tokens_on_hand
         if n_tokens > tokens_on_hand:
             raise NotEnoughTokensToDeploy(tokens_on_hand)
 
@@ -387,19 +387,19 @@ class Rules:
         * `GameEnded`
             if this method is called after the game has ended.
         """
-        if self.game.has_ended:
+        if self._game.has_ended:
             raise GameEnded()
-        if self.game._turn_stage == _TurnStage.SELECT_COMBO:
+        if self._game._turn_stage == _TurnStage.SELECT_COMBO:
             raise EndBeforeSelect()
-        tokens_on_hand = self.game.player.tokens_on_hand
+        tokens_on_hand = self._game.player.tokens_on_hand
         if tokens_on_hand > 0:
-            if self.game._turn_stage == _TurnStage.USED_DICE \
-                    and len(self.game.player.active_regions) == 0:
+            if self._game._turn_stage == _TurnStage.USED_DICE \
+                    and len(self._game.player.active_regions) == 0:
                 # The player has no regions and no ability to conquer, so
                 # he can't possibly deploy his tokens. Don't raise the error.
                 pass
             else:
-                cd = self.game._turn_stage == _TurnStage.CAN_DECLINE
+                cd = self._game._turn_stage == _TurnStage.CAN_DECLINE
                 raise UndeployedTokens(tokens_on_hand, can_decline=cd)
 
     def conquest_cost(self, region: int) -> int:
@@ -409,22 +409,22 @@ class Rules:
         If it's not, the return value is undefined.
         """
         cost = 3
-        owner_idx = self.game._owner(region)
+        owner_idx = self._game._owner(region)
         if owner_idx is not None:
-            owner = self.game.players[owner_idx]
+            owner = self._game.players[owner_idx]
             cost += owner.active_regions.get(region, 1)  # 1 if declined
-        elif self.game.regions[region].has_a_lost_tribe:
+        elif self._game.regions[region].has_a_lost_tribe:
             cost += 1
         return cost
 
     def calculate_turn_reward(self) -> int:
         """Calculate the amount of coins to be paid for the passed turn."""
-        player = self.game.player
+        player = self._game.player
         return len(player.active_regions) + len(player.decline_regions)
 
     def _check_conquer_with_dice(self, region: int) -> None:
         self._check_conquer_common(region)
-        tokens_on_hand = self.game.player.tokens_on_hand
+        tokens_on_hand = self._game.player.tokens_on_hand
         if tokens_on_hand < 1:
             raise RollingWithoutTokens()
         minimum_required = self.conquest_cost(region) - 3
@@ -433,27 +433,27 @@ class Rules:
 
     def _check_conquer_without_dice(self, region: int) -> None:
         self._check_conquer_common(region)
-        tokens_on_hand = self.game.player.tokens_on_hand
+        tokens_on_hand = self._game.player.tokens_on_hand
         tokens_required = self.conquest_cost(region)
         if tokens_on_hand < tokens_required:
             raise NotEnoughTokensToConquer(tokens_on_hand, tokens_required)
 
     def _check_conquer_common(self, region: int) -> None:
         """Common checks for all conquests (with or without dice)."""
-        if self.game.has_ended:
+        if self._game.has_ended:
             raise GameEnded()
-        if self.game.player.active_race is None:
+        if self._game.player.active_race is None:
             raise NoActiveRace()
-        if self.game._turn_stage in _REDEPLOYMENT_STAGES:
+        if self._game._turn_stage in _REDEPLOYMENT_STAGES:
             raise ForbiddenDuringRedeployment()
-        if self.game._turn_stage == _TurnStage.USED_DICE:
+        if self._game._turn_stage == _TurnStage.USED_DICE:
             raise AlreadyUsedDice()
-        if len(self.game.player.active_regions) == 0 \
-                and not self.game.regions[region].is_at_map_border:
+        if len(self._game.player.active_regions) == 0 \
+                and not self._game.regions[region].is_at_map_border:
             raise NotAtBorder()
-        if region in self.game.player.active_regions:
+        if region in self._game.player.active_regions:
             raise ConqueringOwnRegion()
-        has_adjacent = any(region in self.game._borders[own]
-                           for own in self.game.player.active_regions)
-        if len(self.game.player.active_regions) > 0 and not has_adjacent:
+        has_adjacent = any(region in self._game._borders[own]
+                           for own in self._game.player.active_regions)
+        if len(self._game.player.active_regions) > 0 and not has_adjacent:
             raise NonAdjacentRegion()
