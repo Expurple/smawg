@@ -370,11 +370,9 @@ class _Rules:
             raise exc.DecliningWhenActive()
 
     def check_combo(self, combo_index: int) -> None:
+        """Assume that `combo_index` is in valid range."""
         self._assert_game_has_not_ended()
         self._assert_not_in_redeployment()
-        if not 0 <= combo_index < len(self.game.combos):
-            msg = f"combo_index must be between 0 and {len(self.game.combos)}"
-            raise ValueError(msg)
         if self.game._turn_stage == _TurnStage.DECLINED:
             raise exc.SelectingOnDeclineTurn()
         if self.game._turn_stage != _TurnStage.SELECT_COMBO:
@@ -384,12 +382,10 @@ class _Rules:
             raise exc.NotEnoughCoins()
 
     def check_abandon(self, region: int) -> None:
+        """Assume that `region` is in valid range."""
         self._assert_game_has_not_ended()
         self._assert_has_active_race()
         self._assert_not_in_redeployment()
-        if not 0 <= region < len(self.game.regions):
-            msg = f"region must be between 0 and {len(self.game.regions)}"
-            raise ValueError(msg)
         if region not in self.game.player.active_regions:
             raise exc.NonControlledRegion()
         if self.game._turn_stage in (_TurnStage.CONQUESTS,
@@ -397,6 +393,7 @@ class _Rules:
             raise exc.AbandoningAfterConquests()
 
     def check_conquer(self, region: int, *, use_dice: bool) -> None:
+        """Assume that `region` is in valid range."""
         if use_dice:
             self._check_conquer_with_dice(region)
         else:
@@ -410,13 +407,9 @@ class _Rules:
             raise exc.NoActiveRegions()
 
     def check_deploy(self, n_tokens: int, region: int) -> None:
+        """Assume positive `n_tokens` and that `region` is in valid range."""
         self._assert_game_has_not_ended()
         self._assert_has_active_race()
-        if n_tokens < 1:
-            raise ValueError("n_tokens must be greater then 0")
-        if not 0 <= region < len(self.game.regions):
-            msg = f"region must be between 0 and {len(self.game.regions)}"
-            raise ValueError(msg)
         if region not in self.game.player.active_regions:
             raise exc.NonControlledRegion()
         tokens_on_hand = self.game.player.tokens_on_hand
@@ -481,9 +474,6 @@ class _Rules:
         self._assert_not_in_redeployment()
         if self.game._turn_stage == _TurnStage.USED_DICE:
             raise exc.AlreadyUsedDice()
-        if not 0 <= region < len(self.game.regions):
-            msg = f"region must be between 0 and {len(self.game.regions)}"
-            raise ValueError(msg)
         if len(self.game.player.active_regions) == 0 \
                 and not self.game.regions[region].is_at_map_border:
             raise exc.NotAtBorder()
@@ -602,7 +592,7 @@ class Game(_GameState):
 
         Exceptions raised:
         * `ValueError`
-            if not `0 <= combo_index < len(combos)`.
+            if `combo_index not in range(len(self.combos))`.
         * `smawg.exceptions.SelectingWhenActive`
             if the player already has an active race.
         * `smawg.exceptions.SelectingOnDeclineTurn`
@@ -614,6 +604,9 @@ class Game(_GameState):
         * `smawg.exceptions.GameEnded`
             if this method is called after the game has ended.
         """
+        if combo_index not in range(len(self.combos)):
+            msg = f"combo_index must be between 0 and {len(self.combos)}"
+            raise ValueError(msg)
         self._rules.check_combo(combo_index)
         self._pay_for_combo(combo_index)
         chosen_combo = self.combos.pop(combo_index)
@@ -629,7 +622,7 @@ class Game(_GameState):
 
         Exceptions raised:
         * `ValueError`
-            if not `0 <= region < len(assets["map"]["tiles"])`.
+            if `region not in range(len(self.regions))`.
         * `smawg.exceptions.NoActiveRace`
             if the player doesn't have an active race.
         * `smawg.exceptions.NonControlledRegion`
@@ -641,6 +634,9 @@ class Game(_GameState):
         * `smawg.exceptions.GameEnded`
             if this method is called after the game has ended.
         """
+        if region not in range(len(self.regions)):
+            msg = f"region must be between 0 and {len(self.regions)}"
+            raise ValueError(msg)
         self._rules.check_abandon(region)
         self.player.tokens_on_hand += self.player.active_regions.pop(region)
         self._turn_stage = _TurnStage.ACTIVE
@@ -652,7 +648,7 @@ class Game(_GameState):
 
         Exceptions raised:
         * `ValueError`
-            if not `0 <= region < len(assets["map"]["tiles"])`.
+            if `region not in range(len(self.regions))`.
         * `smawg.exceptions.NoActiveRace`
             if the player doesn't have an active race.
         * `smawg.exceptions.NotAtBorder`
@@ -674,6 +670,9 @@ class Game(_GameState):
         * `smawg.exceptions.GameEnded`
             if this method is called after the game has ended.
         """
+        if region not in range(len(self.regions)):
+            msg = f"region must be between 0 and {len(self.regions)}"
+            raise ValueError(msg)
         self._rules.check_conquer(region, use_dice=use_dice)
         if use_dice:
             self._conquer_with_dice(region)
@@ -705,8 +704,8 @@ class Game(_GameState):
 
         Exceptions raised:
         * `ValueError`
-            if `n_tokens < 1`; or
-            if not `0 <= region < len(assets["map"]["tiles"])`.
+            if `n_tokens < 1` or
+            if `region not in range(len(self.regions))`.
         * `smawg.exceptions.NoActiveRace`
             if the player doesn't have an active race.
         * `smawg.exceptions.NonControlledRegion`
@@ -716,6 +715,11 @@ class Game(_GameState):
         * `smawg.exceptions.GameEnded`
             if this method is called after the game has ended.
         """
+        if n_tokens < 1:
+            raise ValueError("n_tokens must be greater then 0")
+        if region not in range(len(self.regions)):
+            msg = f"region must be between 0 and {len(self.regions)}"
+            raise ValueError(msg)
         self._rules.check_deploy(n_tokens, region)
         self.player.tokens_on_hand -= n_tokens
         self.player.active_regions[region] += n_tokens
