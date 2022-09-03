@@ -11,7 +11,7 @@ from typing import Any, Callable
 
 from jsonschema.exceptions import ValidationError
 
-import smawg.exceptions as exc
+import smawg.default_rules as exc
 from smawg._engine import Game, InvalidAssets, validate
 from smawg._metadata import ASSETS_DIR
 

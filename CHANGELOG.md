@@ -11,11 +11,13 @@ and this project adheres to
 
 ## Added
 
-- Separate `smawg.default_rules.Rules`.
+- `smawg.default_rules` module with a reusable rule checker.
 
 ## Removed
 
-- `InvalidAssets` from `smawg.exceptions` (import it from `smawg` instead).
+- `smawg.exceptions` module. Instead,
+    - import `InvalidAssets` and `RulesViolation` from `smawg`.
+    - import detailed `RulesViolation` subclasses from `smawg.default_rules`.
 - Misleading `RulesViolation.MESSAGE` attribute.
 
 ## [0.11.1] - 2022-09-03

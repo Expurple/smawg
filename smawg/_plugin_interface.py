@@ -11,8 +11,13 @@ from typing import Any
 
 
 __all__ = [
-    "Region", "Ability", "Race", "Combo", "Player", "_TurnStage", "GameState"
+    "Region", "Ability", "Race", "Combo", "Player", "_TurnStage", "GameState",
+    "RulesViolation"
 ]
+
+
+class RulesViolation(Exception):
+    """Base class for all exceptions raised from rule plugins."""
 
 
 @dataclass
