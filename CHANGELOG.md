@@ -9,7 +9,9 @@ and this project adheres to
 
 ## [Unreleased]
 
-\-
+## Added
+
+- Separate `smawg.default_rules._Rules`.
 
 ## [0.11.1] - 2022-09-03
 

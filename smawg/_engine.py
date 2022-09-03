@@ -11,9 +11,9 @@ from typing import Any, Callable, TypedDict, cast
 import jsonschema
 
 import smawg.exceptions as exc
+from smawg.default_rules import _Rules
 from smawg._metadata import SCHEMA_DIR
 from smawg._plugin_interface import Combo, _GameState, _TurnStage
-from smawg._rules import _Rules
 
 __all__ = ["Game", "Hooks", "validate"]
 

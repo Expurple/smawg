@@ -1,3 +1,8 @@
+"""Rules that are used by `smawg.Game` by default.
+
+See https://github.com/expurple/smawg for more info about the project.
+"""
+
 import smawg.exceptions as exc
 from smawg._plugin_interface import _GameState, _TurnStage
 
@@ -5,7 +10,7 @@ __all__ = ["_Rules"]
 
 
 class _Rules:
-    """Implements the game rules."""
+    """Rules that are used by `smawg.Game` by default."""
 
     def __init__(self, game: _GameState) -> None:
         """Create an instance that will work on provided `game` instance."""
