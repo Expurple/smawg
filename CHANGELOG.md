@@ -21,6 +21,7 @@ and this project adheres to
 
 - `smawg.engine` (import `smawg` instead).
 - `shuffle()` and `roll_dice()` that shouldn't have been public.
+- Unused `Player.decline_ability`.
 
 ## [0.10.0] - 2022-09-03
 

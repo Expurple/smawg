@@ -150,10 +150,9 @@ class Player:
 
     def __init__(self, coins: int) -> None:
         """Initialize `Player` with an initial supply of `coins`."""
-        self.active_race: Optional[Race] = None
         self.active_ability: Optional[Ability] = None
+        self.active_race: Optional[Race] = None
         self.decline_race: Optional[Race] = None
-        self.decline_ability: Optional[Ability] = None
         self.active_regions = dict[int, int]()
         """Dict of controlled regions, in form of `{region: n_tokens}`."""
         self.decline_regions = set[int]()
