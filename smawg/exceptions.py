@@ -8,10 +8,6 @@ See https://github.com/expurple/smawg for more info about the project.
 """
 
 
-class InvalidAssets(Exception):
-    """Assets match the JSON schema but still violate some invariants."""
-
-
 # -----------------------------------------------------------------------------
 #                  Exceptions for runtime rule violations
 # -----------------------------------------------------------------------------

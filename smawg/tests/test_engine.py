@@ -12,7 +12,7 @@ from typing import Any, Callable
 from jsonschema.exceptions import ValidationError
 
 import smawg.exceptions as exc
-from smawg._engine import Game, validate
+from smawg._engine import Game, InvalidAssets, validate
 from smawg._metadata import ASSETS_DIR
 
 TINY_ASSETS: dict[str, Any] = {}
@@ -40,13 +40,13 @@ class TestValidate(unittest.TestCase):
                 "tiles": [],
                 "tile_borders": [[-2, -1]]
             }),
-            (exc.InvalidAssets, "map", {
+            (InvalidAssets, "map", {
                 "tiles": [],
                 "tile_borders": [[2, 1]]
             }),
             # Impossible to achieve n_visible_combos=2:
-            (exc.InvalidAssets, "races", []),
-            (exc.InvalidAssets, "abilities", []),
+            (InvalidAssets, "races", []),
+            (InvalidAssets, "abilities", []),
         ]
         for exc_type, key, value in invalid_fields:
             invalid_assets = {**TINY_ASSETS, key: value}

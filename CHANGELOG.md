@@ -13,6 +13,10 @@ and this project adheres to
 
 - Separate `smawg.default_rules.Rules`.
 
+## Removed
+
+- `InvalidAssets` from `smawg.exceptions` (import it from `smawg` instead).
+
 ## [0.11.1] - 2022-09-03
 
 ### Fixed

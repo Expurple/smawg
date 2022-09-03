@@ -10,7 +10,6 @@ from typing import Any, Callable, TypedDict, cast
 
 import jsonschema
 
-import smawg.exceptions as exc
 from smawg.default_rules import Rules
 from smawg._metadata import SCHEMA_DIR
 from smawg._plugin_interface import Combo, GameState, _TurnStage
@@ -27,6 +26,10 @@ _STRICT_ASSETS_SCHEMA = {**_ASSETS_SCHEMA, "additionalProperties": False}
 
 _LOCAL_REF_RESOLVER = jsonschema.RefResolver(f"file://{SCHEMA_DIR}/", {})
 """Fixes references to local schemas."""
+
+
+class InvalidAssets(Exception):
+    """Assets match the JSON schema but still violate some invariants."""
 
 
 def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
@@ -56,7 +59,7 @@ def _validate_n_races(assets: dict[str, Any]) -> None:
     n_selectable_combos = assets["n_selectable_combos"]
     safe_n_races = 2 * n_players + n_selectable_combos
     if n_races < safe_n_races:
-        raise exc.InvalidAssets(
+        raise InvalidAssets(
             f"{n_races} races are not enough to always guarantee "
             f"{n_selectable_combos} selectable combos "
             f"for {n_players} players, need at least {safe_n_races} races"
@@ -70,7 +73,7 @@ def _validate_n_abilities(assets: dict[str, Any]) -> None:
     n_selectable_combos = assets["n_selectable_combos"]
     safe_n_abilities = n_players + n_selectable_combos
     if n_abilities < safe_n_abilities:
-        raise exc.InvalidAssets(
+        raise InvalidAssets(
             f"{n_abilities} abilities are not enough to always guarantee "
             f"{n_selectable_combos} selectable combos for "
             f"{n_players} players, need at least {safe_n_abilities} abilities"
@@ -83,7 +86,7 @@ def _validate_tile_indexes(assets: dict[str, Any]) -> None:
     for t1, t2 in assets["map"]["tile_borders"]:
         greater_index = max(t1, t2)
         if greater_index >= n_tiles:
-            raise exc.InvalidAssets(
+            raise InvalidAssets(
                 f"Tile border [{t1}, {t2}] references a non-existing tile: "
                 f"{greater_index} (the map only has {n_tiles} tiles)"
             )
