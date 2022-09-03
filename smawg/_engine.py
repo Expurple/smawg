@@ -11,9 +11,9 @@ from typing import Any, Callable, TypedDict, cast
 import jsonschema
 
 import smawg.exceptions as exc
-from smawg.default_rules import _Rules
+from smawg.default_rules import Rules
 from smawg._metadata import SCHEMA_DIR
-from smawg._plugin_interface import Combo, _GameState, _TurnStage
+from smawg._plugin_interface import Combo, GameState, _TurnStage
 
 __all__ = ["Game", "Hooks", "validate"]
 
@@ -139,7 +139,7 @@ class Hooks(TypedDict, total=False):
     on_game_end: Callable[["Game"], None]
 
 
-class Game(_GameState):
+class Game(GameState):
     """High-level representation of a single Small World game.
 
     Provides:
@@ -151,7 +151,7 @@ class Game(_GameState):
     or raise exceptions if the call violates the rules.
     """
 
-    # Under the hood, rules are implemented in `_Rules`
+    # Under the hood, rules are implemented in `Rules`
     # and properties are implemented in the base class.
     # This class only implements game actions and hooks.
 
@@ -184,7 +184,7 @@ class Game(_GameState):
         self._roll_dice = dice_roll_func
         self._hooks = cast(Hooks, defaultdict(lambda: _do_nothing, **hooks))
         # Only after all other fields have been initialized.
-        self._rules = _Rules(self)
+        self._rules = Rules(self)
         # Only after `self` has been fully initialized.
         self._hooks["on_turn_start"](self)
 

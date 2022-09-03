@@ -11,7 +11,7 @@ and this project adheres to
 
 ## Added
 
-- Separate `smawg.default_rules._Rules`.
+- Separate `smawg.default_rules.Rules`.
 
 ## [0.11.1] - 2022-09-03
 

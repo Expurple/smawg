@@ -11,7 +11,7 @@ from typing import Any
 
 
 __all__ = [
-    "Region", "Ability", "Race", "Combo", "Player", "_TurnStage", "_GameState"
+    "Region", "Ability", "Race", "Combo", "Player", "_TurnStage", "GameState"
 ]
 
 
@@ -131,7 +131,7 @@ class _TurnStage(Enum):
     """Pseudo-turn for redeploying tokens after attack from other player."""
 
 
-class _GameState:
+class GameState:
     """An interface for accessing the `Game` state."""
 
     def __init__(self, assets: dict[str, Any]) -> None:
