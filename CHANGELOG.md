@@ -16,6 +16,7 @@ and this project adheres to
 ## Removed
 
 - `InvalidAssets` from `smawg.exceptions` (import it from `smawg` instead).
+- Misleading `RulesViolation.MESSAGE` attribute.
 
 ## [0.11.1] - 2022-09-03
 

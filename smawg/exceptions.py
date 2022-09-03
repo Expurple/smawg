@@ -18,15 +18,15 @@ See https://github.com/expurple/smawg for more info about the project.
 class RulesViolation(Exception):
     """Base class for all `smawg.exceptions` raised from `Game` methods."""
 
-    MESSAGE: str = "A friendly message for the user. " \
-                   "Override this in clild classes."
-
 
 class _RaisesConstMessage(RulesViolation):
     """Base class for all `smawg.exceptions` that raise a constant message.
 
     Allows to reuse its constructor and inherit without boilerplate code.
     """
+
+    MESSAGE: str = "A friendly message for the user. " \
+                   "Override this in clild classes."
 
     def __init__(self) -> None:
         """Constuct an exception with `self.MESSAGE` as `args[0]`."""
@@ -140,9 +140,6 @@ class RollingWithoutTokens(_RaisesConstMessage):
 class NotEnoughTokensToConquer(RulesViolation):
     """Player doesn't have enough tokens to conquer the region."""
 
-    MESSAGE = "Not enough tokens on hand (you have {tokens_on_hand}, " \
-              "but need {tokens_required})"
-
     def __init__(self, tokens_on_hand: int, tokens_required: int) -> None:
         """Constuct an exception with a friendly message as `args[0]`.
 
@@ -150,15 +147,14 @@ class NotEnoughTokensToConquer(RulesViolation):
         """
         self.tokens_on_hand = tokens_on_hand
         self.tokens_required = tokens_required
-        formatted_message = self.MESSAGE.format(**locals())
-        super().__init__(formatted_message)
+        super().__init__(
+            f"Not enough tokens on hand (you have {tokens_on_hand}, "
+            f"but need {tokens_required})"
+        )
 
 
 class NotEnoughTokensToRoll(RulesViolation):
     """Player needs more than 3 additional tokens to conquer the region."""
-
-    MESSAGE = "Not enough tokens on hand (you have {tokens_on_hand}, " \
-              "but need at least {minimum_required} to have a chance)"
 
     def __init__(self, tokens_on_hand: int, minimum_required: int) -> None:
         """Constuct an exception with a friendly message as `args[0]`.
@@ -169,14 +165,14 @@ class NotEnoughTokensToRoll(RulesViolation):
         """
         self.tokens_on_hand = tokens_on_hand
         self.minimum_required = minimum_required
-        formatted_message = self.MESSAGE.format(**locals())
-        super().__init__(formatted_message)
+        super().__init__(
+            f"Not enough tokens on hand (you have {tokens_on_hand}, "
+            f"but need at least {minimum_required} to have a chance)"
+        )
 
 
 class NotEnoughTokensToDeploy(RulesViolation):
     """Player attempts to deploy more tokens than he has on hand."""
-
-    MESSAGE = "Not enough tokens on hand (you have {tokens_on_hand})"
 
     def __init__(self, tokens_on_hand: int) -> None:
         """Constuct an exception with a friendly message as `args[0]`.
@@ -184,15 +180,13 @@ class NotEnoughTokensToDeploy(RulesViolation):
         Save `tokens_on_hand` as an attribute.
         """
         self.tokens_on_hand = tokens_on_hand
-        formatted_message = self.MESSAGE.format(**locals())
-        super().__init__(formatted_message)
+        super().__init__(
+            f"Not enough tokens on hand (you have {tokens_on_hand})"
+        )
 
 
 class UndeployedTokens(RulesViolation):
     """Player attempts to end turn while having undeploed tokens on hand."""
-
-    MESSAGE = "You need to use remaining {tokens_on_hand} tokens on hand" \
-              "{or_maybe_decline}"
 
     def __init__(self, tokens_on_hand: int, *, can_decline: bool) -> None:
         """Constuct an exception with a friendly message as `args[0]`.
@@ -202,5 +196,7 @@ class UndeployedTokens(RulesViolation):
         self.tokens_on_hand = tokens_on_hand
         self.can_decline = can_decline
         or_maybe_decline = " or decline" if can_decline else ""
-        formatted_message = self.MESSAGE.format(**locals())
-        super().__init__(formatted_message)
+        super().__init__(
+            f"You need to use remaining {tokens_on_hand} tokens on hand"
+            f"{or_maybe_decline}"
+        )
