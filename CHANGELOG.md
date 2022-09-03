@@ -9,7 +9,9 @@ and this project adheres to
 
 ## [Unreleased]
 
-\-
+### Fixed
+
+- `Combo.base_n_tokens` ignoring `Race.max_n_tokens`.
 
 ## [0.11.0] - 2022-09-03
 

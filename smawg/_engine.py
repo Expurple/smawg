@@ -137,7 +137,8 @@ class Combo:
         """Construct a freshly revealed `Race`+`Ability` combo."""
         self.race = race
         self.ability = ability
-        self.base_n_tokens = race.n_tokens + ability.n_tokens
+        self.base_n_tokens = min(race.n_tokens + ability.n_tokens,
+                                 race.max_n_tokens)
         self.coins: int = 0
 
 
