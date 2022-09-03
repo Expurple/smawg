@@ -14,7 +14,6 @@ from jsonschema.exceptions import ValidationError
 import smawg.exceptions as exc
 from smawg._engine import Game, validate
 from smawg._metadata import ASSETS_DIR
-from smawg._plugin_interface import Ability, Combo, Race
 
 TINY_ASSETS: dict[str, Any] = {}
 
@@ -53,17 +52,6 @@ class TestValidate(unittest.TestCase):
             invalid_assets = {**TINY_ASSETS, key: value}
             with self.assertRaises(exc_type):
                 validate(invalid_assets)
-
-
-class TestCombo(unittest.TestCase):
-    """Tests for `smawg._engine.Combo` class."""
-
-    def test_base_n_tokens(self) -> None:
-        """Check if `base_n_tokens` respects `Race.max_n_tokens`."""
-        race = Race("Some race", n_tokens=4, max_n_tokens=8)
-        ability = Ability("Many", n_tokens=10)
-        combo = Combo(race, ability)
-        self.assertEqual(combo.base_n_tokens, 8)
 
 
 class TestGame(unittest.TestCase):
