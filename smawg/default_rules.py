@@ -207,6 +207,9 @@ class UndeployedTokens(RulesViolation):
 #                                   Rules
 # -----------------------------------------------------------------------------
 
+_REDEPLOYMENT_STAGES = (_TurnStage.REDEPLOYMENT, _TurnStage.REDEPLOYMENT_TURN)
+
+
 class Rules:
     """Rules that are used by `smawg.Game` by default."""
 
@@ -227,9 +230,12 @@ class Rules:
         * `GameEnded`
             if this method is called after the game has ended.
         """
-        self._assert_game_has_not_ended()
-        self._assert_has_active_race()
-        self._assert_not_in_redeployment()
+        if self.game.has_ended:
+            raise GameEnded()
+        if self.game.player.active_race is None:
+            raise NoActiveRace()
+        if self.game._turn_stage in _REDEPLOYMENT_STAGES:
+            raise ForbiddenDuringRedeployment()
         if self.game._turn_stage in (
                 _TurnStage.ACTIVE, _TurnStage.CONQUESTS, _TurnStage.USED_DICE):
             raise DecliningWhenActive()
@@ -251,8 +257,10 @@ class Rules:
         * `GameEnded`
             if this method is called after the game has ended.
         """
-        self._assert_game_has_not_ended()
-        self._assert_not_in_redeployment()
+        if self.game.has_ended:
+            raise GameEnded()
+        if self.game._turn_stage in _REDEPLOYMENT_STAGES:
+            raise ForbiddenDuringRedeployment()
         if self.game._turn_stage == _TurnStage.DECLINED:
             raise SelectingOnDeclineTurn()
         if self.game._turn_stage != _TurnStage.SELECT_COMBO:
@@ -278,9 +286,12 @@ class Rules:
         * `GameEnded`
             if this method is called after the game has ended.
         """
-        self._assert_game_has_not_ended()
-        self._assert_has_active_race()
-        self._assert_not_in_redeployment()
+        if self.game.has_ended:
+            raise GameEnded()
+        if self.game.player.active_race is None:
+            raise NoActiveRace()
+        if self.game._turn_stage in _REDEPLOYMENT_STAGES:
+            raise ForbiddenDuringRedeployment()
         if region not in self.game.player.active_regions:
             raise NonControlledRegion()
         if self.game._turn_stage in (_TurnStage.CONQUESTS,
@@ -331,9 +342,12 @@ class Rules:
         * `GameEnded`
             if this method is called after the game has ended.
         """
-        self._assert_game_has_not_ended()
-        self._assert_has_active_race()
-        self._assert_not_in_redeployment()
+        if self.game.has_ended:
+            raise GameEnded()
+        if self.game.player.active_race is None:
+            raise NoActiveRace()
+        if self.game._turn_stage in _REDEPLOYMENT_STAGES:
+            raise ForbiddenDuringRedeployment()
         if not self.game.player.active_regions:
             raise NoActiveRegions()
 
@@ -352,8 +366,10 @@ class Rules:
         * `GameEnded`
             if this method is called after the game has ended.
         """
-        self._assert_game_has_not_ended()
-        self._assert_has_active_race()
+        if self.game.has_ended:
+            raise GameEnded()
+        if self.game.player.active_race is None:
+            raise NoActiveRace()
         if region not in self.game.player.active_regions:
             raise NonControlledRegion()
         tokens_on_hand = self.game.player.tokens_on_hand
@@ -371,7 +387,8 @@ class Rules:
         * `GameEnded`
             if this method is called after the game has ended.
         """
-        self._assert_game_has_not_ended()
+        if self.game.has_ended:
+            raise GameEnded()
         if self.game._turn_stage == _TurnStage.SELECT_COMBO:
             raise EndBeforeSelect()
         tokens_on_hand = self.game.player.tokens_on_hand
@@ -423,9 +440,12 @@ class Rules:
 
     def _check_conquer_common(self, region: int) -> None:
         """Common checks for all conquests (with or without dice)."""
-        self._assert_game_has_not_ended()
-        self._assert_has_active_race()
-        self._assert_not_in_redeployment()
+        if self.game.has_ended:
+            raise GameEnded()
+        if self.game.player.active_race is None:
+            raise NoActiveRace()
+        if self.game._turn_stage in _REDEPLOYMENT_STAGES:
+            raise ForbiddenDuringRedeployment()
         if self.game._turn_stage == _TurnStage.USED_DICE:
             raise AlreadyUsedDice()
         if len(self.game.player.active_regions) == 0 \
@@ -437,16 +457,3 @@ class Rules:
                            for own in self.game.player.active_regions)
         if len(self.game.player.active_regions) > 0 and not has_adjacent:
             raise NonAdjacentRegion()
-
-    def _assert_game_has_not_ended(self) -> None:
-        if self.game.has_ended:
-            raise GameEnded()
-
-    def _assert_has_active_race(self) -> None:
-        if self.game.player.active_race is None:
-            raise NoActiveRace()
-
-    def _assert_not_in_redeployment(self) -> None:
-        if self.game._turn_stage in \
-                (_TurnStage.REDEPLOYMENT, _TurnStage.REDEPLOYMENT_TURN):
-            raise ForbiddenDuringRedeployment()
