@@ -11,8 +11,7 @@ and this project adheres to
 
 ### Added
 
-- Appropriate `smawg.engine.__all__`.
-- Re-exported symbols from `smawg.engine` in `smawg`.
+- Public symbols in `smawg`.
 
 ### Changed
 
@@ -20,6 +19,7 @@ and this project adheres to
 
 ### Removed
 
+- `smawg.engine` (import `smawg` instead).
 - `shuffle()` and `roll_dice()` that shouldn't have been public.
 
 ## [0.10.0] - 2022-09-03

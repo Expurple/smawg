@@ -1,6 +1,6 @@
-"""Tests for `smawg.engine` module.
+"""Tests for `smawg._engine` module.
 
-This module can also be seen as a collection of usage examples.
+This module can also be seen as a collection of `smawg` usage examples.
 """
 
 import json
@@ -12,7 +12,7 @@ from typing import Any, Callable
 from jsonschema.exceptions import ValidationError
 
 import smawg.exceptions as exc
-from smawg.engine import Game, validate
+from smawg._engine import Game, validate
 from smawg._metadata import ASSETS_DIR
 
 
@@ -27,7 +27,7 @@ def setUpModule() -> None:
 
 
 class TestValidate(unittest.TestCase):
-    """Tests for `smawg.engine.validate()` function."""
+    """Tests for `smawg._engine.validate()` function."""
 
     def test_invalid_assets(self) -> None:
         """Check if `validate()` raises an error on invalid assets."""
@@ -56,7 +56,7 @@ class TestValidate(unittest.TestCase):
 
 
 class TestGame(unittest.TestCase):
-    """General tests for `smawg.engine.Game` class.
+    """General tests for `smawg._engine.Game` class.
 
     Tests for hooks and particular methods
     are extracted into separate test fixtures.
@@ -330,7 +330,7 @@ class TestGameHooks(unittest.TestCase):
 
 
 class TestGameDecline(unittest.TestCase):
-    """Tests for `smawg.engine.Game.decline()` method."""
+    """Tests for `smawg._engine.Game.decline()` method."""
 
     def test_discarded_abilities(self) -> None:
         """Check if discarded abilities are re-introduced in correct order."""
@@ -397,7 +397,7 @@ class TestGameDecline(unittest.TestCase):
 
 
 class TestGameSelectCombo(unittest.TestCase):
-    """Tests for `smawg.engine.Game.select_combo()` method."""
+    """Tests for `smawg._engine.Game.select_combo()` method."""
 
     def test_exceptions(self) -> None:
         """Check if the method raises expected exceptions.
@@ -427,7 +427,7 @@ class TestGameSelectCombo(unittest.TestCase):
 
 
 class TestGameAbandon(unittest.TestCase):
-    """Tests for `smawg.engine.Game.abandon()` method."""
+    """Tests for `smawg._engine.Game.abandon()` method."""
 
     def test_functionality(self) -> None:
         """Check if the method behaves as expected when used correctly."""
@@ -476,7 +476,7 @@ class TestGameAbandon(unittest.TestCase):
 
 
 class TestGameConquer(unittest.TestCase):
-    """Tests for `smawg.engine.Game.conquer()` method."""
+    """Tests for `smawg._engine.Game.conquer()` method."""
 
     def test_diceless_functionality(self) -> None:
         """Check if the method behaves as expected with `use_dice=False`."""
@@ -675,7 +675,7 @@ class TestGameConquer(unittest.TestCase):
 
 
 class TestGameStartRedeployment(unittest.TestCase):
-    """Tests for `smawg.engine.Game.start_redeployment()` method."""
+    """Tests for `smawg._engine.Game.start_redeployment()` method."""
 
     def test_functionality(self) -> None:
         """Check if the method behaves as expected when used correctly."""
@@ -718,7 +718,7 @@ class TestGameStartRedeployment(unittest.TestCase):
 
 
 class TestGameDeploy(unittest.TestCase):
-    """Tests for `smawg.engine.Game.deploy()` method."""
+    """Tests for `smawg._engine.Game.deploy()` method."""
 
     def test_functionality(self) -> None:
         """Check if the method behaves as expected when used correctly."""
@@ -758,7 +758,7 @@ class TestGameDeploy(unittest.TestCase):
 
 
 class TestGameEndTurn(unittest.TestCase):
-    """Tests for `smawg.engine.Game.end_turn()` method."""
+    """Tests for `smawg._engine.Game.end_turn()` method."""
 
     def test_after_failed_dice_and_no_regions(self) -> None:
         """Check if issue #1 is fixed.

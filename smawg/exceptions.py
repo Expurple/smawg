@@ -1,4 +1,4 @@
-"""Domain exceptions raised by `smawg.engine` module.
+"""Domain exceptions raised by `smawg`.
 
 Import from here if you need concrete subclasses of `RulesViolation`.
 
