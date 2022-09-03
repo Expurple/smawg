@@ -12,9 +12,9 @@ from typing import Any, Callable
 from jsonschema.exceptions import ValidationError
 
 import smawg.exceptions as exc
-from smawg._engine import Ability, Combo, Game, Race, validate
+from smawg._engine import Game, validate
 from smawg._metadata import ASSETS_DIR
-
+from smawg._plugin_interface import Ability, Combo, Race
 
 TINY_ASSETS: dict[str, Any] = {}
 

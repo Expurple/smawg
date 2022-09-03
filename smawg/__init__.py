@@ -3,15 +3,13 @@
 See https://github.com/expurple/smawg for more info about the project.
 """
 
-from smawg._engine import (
-    Ability, Combo, Game, Hooks, Player, Race, Region, validate
-)
+from smawg._engine import Game, Hooks, validate
+from smawg._plugin_interface import Ability, Combo, Player, Race, Region
 from smawg.exceptions import InvalidAssets, RulesViolation
 
 
 __all__ = [
-    # from smawg.exceptions
-    "InvalidAssets", "RulesViolation",
-    # from smawg._engine
-    "Ability", "Combo", "Game", "Hooks", "Player", "Race", "Region", "validate"
+    "Game", "Hooks", "validate",
+    "Ability", "Combo", "Player", "Race", "Region",
+    "InvalidAssets", "RulesViolation"
 ]
