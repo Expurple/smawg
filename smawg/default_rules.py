@@ -215,7 +215,18 @@ class Rules:
         self.game = game
 
     def check_decline(self) -> None:
-        """Raise `RulesViolation` if `decline()` violates the rules."""
+        """Check if `decline()` violates the rules.
+
+        Raise
+        * `NoActiveRace`
+            if the player is already in decline.
+        * `DecliningWhenActive`
+            if the player has already used his active race during this turn.
+        * `ForbiddenDuringRedeployment`
+            if this method is called during the redeployment phase.
+        * `GameEnded`
+            if this method is called after the game has ended.
+        """
         self._assert_game_has_not_ended()
         self._assert_has_active_race()
         self._assert_not_in_redeployment()
@@ -224,9 +235,21 @@ class Rules:
             raise DecliningWhenActive()
 
     def check_combo(self, combo_index: int) -> None:
-        """Raise `RulesViolation` if `select_combo()` violates the rules.
+        """Check if `select_combo()` violates the rules.
 
         Assume that `combo_index` is in valid range.
+
+        Raise
+        * `SelectingWhenActive`
+            if the player already has an active race.
+        * `SelectingOnDeclineTurn`
+            if the player has just declined during this turn.
+        * `NotEnoughCoins`
+            if the player doesn't have enough coins.
+        * `ForbiddenDuringRedeployment`
+            if this method is called during the redeployment phase.
+        * `GameEnded`
+            if this method is called after the game has ended.
         """
         self._assert_game_has_not_ended()
         self._assert_not_in_redeployment()
@@ -239,9 +262,21 @@ class Rules:
             raise NotEnoughCoins()
 
     def check_abandon(self, region: int) -> None:
-        """Raise `RulesViolation` if `abandon()` violates the rules.
+        """Check if `abandon()` violates the rules.
 
         Assume that `region` is in valid range.
+
+        Raise
+        * `NoActiveRace`
+            if the player doesn't have an active race.
+        * `NonControlledRegion`
+            if player doesn't control the `region` with his active race.
+        * `AbandoningAfterConquests`
+            if the player has made conquests during this turn.
+        * `ForbiddenDuringRedeployment`
+            if this method is called during the redeployment phase.
+        * `GameEnded`
+            if this method is called after the game has ended.
         """
         self._assert_game_has_not_ended()
         self._assert_has_active_race()
@@ -253,9 +288,30 @@ class Rules:
             raise AbandoningAfterConquests()
 
     def check_conquer(self, region: int, *, use_dice: bool) -> None:
-        """Raise `RulesViolation` if `conquer()` violates the rules.
+        """Check if `conquer()` violates the rules.
 
         Assume that `region` is in valid range.
+
+        * `NoActiveRace`
+            if the player doesn't have an active race.
+        * `NotAtBorder`
+            if the first conquest of a new race is not at the map border.
+        * `NonAdjacentRegion`
+            if `region` isn't adjacent to any owned regions.
+        * `ConqueringOwnRegion`
+            if `region` is occupied by player's own active race.
+        * `NotEnoughTokensToConquer`
+            if conquering without dice and without enough tokens on hand.
+        * `RollingWithoutTokens`
+            if conquering with dice while having 0 tokens on hand.
+        * `NotEnoughTokensToRoll`
+            if conquering with dice, while needing >3 additional tokens.
+        * `NotEnoughTokensToRoll`
+            if conquering again after rolling the reinforcements dice.
+        * `ForbiddenDuringRedeployment`
+            if this method is called during the redeployment phase.
+        * `GameEnded`
+            if this method is called after the game has ended.
         """
         if use_dice:
             self._check_conquer_with_dice(region)
@@ -263,7 +319,18 @@ class Rules:
             self._check_conquer_without_dice(region)
 
     def check_start_redeployment(self) -> None:
-        """Raise `RulesViolation` if `start_redeployment()` violates rules."""
+        """Check if `start_redeployment()` violates the rules.
+
+        Raise
+        * `NoActiveRace`
+            if the player doesn't have an active race.
+        * `NoActiveRegions`
+            if the player doesn't control any regions with his active race.
+        * `ForbiddenDuringRedeployment`
+            if this method is called during the redeployment phase.
+        * `GameEnded`
+            if this method is called after the game has ended.
+        """
         self._assert_game_has_not_ended()
         self._assert_has_active_race()
         self._assert_not_in_redeployment()
@@ -271,9 +338,19 @@ class Rules:
             raise NoActiveRegions()
 
     def check_deploy(self, n_tokens: int, region: int) -> None:
-        """Raise `RulesViolation` if `deploy()` violates the rules.
+        """Check if `deploy()` violates the rules.
 
         Assume that `n_tokens` is positive and `region` is in valid range.
+
+        Raise
+        * `NoActiveRace`
+            if the player doesn't have an active race.
+        * `NonControlledRegion`
+            if the player doesn't control the `region` with his active race.
+        * `NotEnoughTokensToDeploy`
+            if the player doesn't have `n_tokens` on hand.
+        * `GameEnded`
+            if this method is called after the game has ended.
         """
         self._assert_game_has_not_ended()
         self._assert_has_active_race()
@@ -284,7 +361,16 @@ class Rules:
             raise NotEnoughTokensToDeploy(tokens_on_hand)
 
     def check_end_turn(self) -> None:
-        """Raise `RulesViolation` if `end_turn()` violates the rules."""
+        """Check if `end_turn()` violates the rules.
+
+        Raise
+        * `EndBeforeSelect`
+            if the player must select a new combo and haven't done that yet.
+        * `UndeployedTokens`
+            if player must deploy tokens from hand and haven't done that yet.
+        * `GameEnded`
+            if this method is called after the game has ended.
+        """
         self._assert_game_has_not_ended()
         if self.game._turn_stage == _TurnStage.SELECT_COMBO:
             raise EndBeforeSelect()

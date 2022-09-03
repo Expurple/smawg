@@ -182,7 +182,7 @@ class Client:
             if an unkown `command` or wrong number of `args` is given.
         * `ValueError`
             if some argument has invalid type or value.
-        * `smawg.exceptions.RulesViolation` subtypes
+        * `smawg.RulesViolation` subtypes
             if given command violates the game rules.
         """
         if command in COMMANDS_WITHOUT_ARGS and len(args) > 0:
