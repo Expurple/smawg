@@ -1,6 +1,6 @@
 """Backend engine for Small World board game.
 
-See https://github.com/Expurple/smawg for more info.
+See https://github.com/expurple/smawg for more info about the project.
 """
 
 from smawg._engine import (

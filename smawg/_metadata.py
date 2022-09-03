@@ -1,6 +1,6 @@
 """Various metadata that `smawg` package needs to know about itself at runtime.
 
-See https://github.com/Expurple/smawg for more info about the package.
+See https://github.com/expurple/smawg for more info about the project.
 """
 
 import importlib.metadata
