@@ -1,5 +1,9 @@
 """Domain exceptions raised by `smawg.engine` module.
 
+Import from here if you need concrete subclasses of `RulesViolation`.
+
+`InvalidAssets` and `RulesViolation` itself can be imported from `smawg`.
+
 See https://github.com/expurple/smawg for more info about the project.
 """
 

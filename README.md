@@ -106,9 +106,9 @@ It should guide you through the usage.
 ```python
 import json
 
-from smawg.engine import Game
+from smawg import Game
 # If you're dealing with (possibly invalid) user input:
-from smawg.exceptions import RulesViolation
+from smawg import RulesViolation
 
 
 # If you want, you can directly construct `assets` dict

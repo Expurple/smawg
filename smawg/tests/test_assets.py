@@ -3,7 +3,7 @@
 import json
 import unittest
 
-from smawg.engine import validate
+from smawg import validate
 from smawg._metadata import ASSETS_DIR
 
 

@@ -5,7 +5,7 @@
 The internals aren't stable
 and aren't supposed to be imported by anything but `smawg.tests`.
 
-Although, this module can serve as an example of how to use `smawg.engine`.
+Although, this module can serve as an example of how to use `smawg` library.
 
 See https://github.com/expurple/smawg for more info about the project.
 """
@@ -18,8 +18,7 @@ from typing import Optional
 
 from tabulate import tabulate
 
-from smawg.engine import Game, Hooks
-from smawg.exceptions import RulesViolation
+from smawg import Game, Hooks, RulesViolation
 from smawg._metadata import PACKAGE_DIR, VERSION
 
 

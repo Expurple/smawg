@@ -12,6 +12,11 @@ and this project adheres to
 ### Added
 
 - Appropriate `smawg.engine.__all__`.
+- Re-exported symbols from `smawg.engine` in `smawg`.
+
+### Changed
+
+- Examples in documentation to use imports from `smawg` directly.
 
 ### Removed
 
