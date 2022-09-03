@@ -234,7 +234,7 @@ class Rules:
                 _TurnStage.ACTIVE, _TurnStage.CONQUESTS, _TurnStage.USED_DICE):
             raise DecliningWhenActive()
 
-    def check_combo(self, combo_index: int) -> None:
+    def check_select_combo(self, combo_index: int) -> None:
         """Check if `select_combo()` violates the rules.
 
         Assume that `combo_index` is in valid range.

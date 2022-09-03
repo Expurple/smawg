@@ -218,12 +218,12 @@ class Game(GameState):
 
         Raise `ValueError` if `combo_index not in range(len(self.combos))`.
 
-        Propagate any `RulesViolation` raised from `Rules.check_combo()`.
+        Propagate any `RulesViolation` raised from `Rules.check_select_combo()`
         """
         if combo_index not in range(len(self.combos)):
             msg = f"combo_index must be between 0 and {len(self.combos)}"
             raise ValueError(msg)
-        self._rules.check_combo(combo_index)
+        self._rules.check_select_combo(combo_index)
         self._pay_for_combo(combo_index)
         chosen_combo = self.combos.pop(combo_index)
         self.player._set_active(chosen_combo)
