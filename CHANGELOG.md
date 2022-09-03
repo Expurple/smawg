@@ -9,6 +9,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+\-
+
+## [0.11.0] - 2022-09-03
+
 ### Added
 
 - Public symbols in `smawg`.
