@@ -184,7 +184,7 @@ class Player:
 
 # ------------------------ randomization utilities ----------------------------
 
-def shuffle(assets: dict[str, Any]) -> dict[str, Any]:
+def _shuffle(assets: dict[str, Any]) -> dict[str, Any]:
     """Shuffle the order of `Race` and `Ability` banners in `assets`.
 
     Just like you would do in a physical Small World game.
@@ -210,7 +210,7 @@ def shuffle(assets: dict[str, Any]) -> dict[str, Any]:
     return assets
 
 
-def roll_dice() -> int:
+def _roll_dice() -> int:
     """Return a random dice roll result."""
     return random.choice((0, 0, 0, 1, 2, 3))
 
@@ -531,7 +531,7 @@ class Game(_GameState):
 
     def __init__(self, assets: dict[str, Any], *,
                  shuffle_data: bool = True,
-                 dice_roll_func: Callable[[], int] = roll_dice,
+                 dice_roll_func: Callable[[], int] = _roll_dice,
                  hooks: Hooks = {}) -> None:
         """Initialize a game based on given `assets`.
 
@@ -551,7 +551,7 @@ class Game(_GameState):
         """
         validate(assets)
         if shuffle_data:
-            assets = shuffle(assets)
+            assets = _shuffle(assets)
         super().__init__(assets)
         self._next_player_id = self._increment(self.player_id)
         """Helper to preserve `_current_player_id` during redeployment."""

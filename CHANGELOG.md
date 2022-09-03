@@ -9,7 +9,9 @@ and this project adheres to
 
 ## [Unreleased]
 
-\-
+### Removed
+
+- `shuffle()` and `roll_dice()` that shouldn't have been public.
 
 ## [0.10.0] - 2022-09-03
 
