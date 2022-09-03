@@ -14,7 +14,6 @@ See https://github.com/expurple/smawg for more info about the project.
 import json
 import readline
 from argparse import ArgumentParser, Namespace
-from typing import Optional
 
 from tabulate import tabulate
 
@@ -50,9 +49,9 @@ COMMANDS_WITHOUT_ARGS = [c for c, d in zip(COMMANDS, COMMAND_DESCRIPTIONS)
                          if "<" not in d]
 
 
-def autocomplete(text: str, state: int) -> Optional[str]:
+def autocomplete(text: str, state: int) -> str | None:
     """Command completer for `readline`."""
-    results: list[Optional[str]] = [c for c in COMMANDS if c.startswith(text)]
+    results: list[str | None] = [c for c in COMMANDS if c.startswith(text)]
     results.append(None)
     return results[state]
 

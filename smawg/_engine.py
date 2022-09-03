@@ -9,7 +9,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass
 from enum import auto, Enum
 from itertools import islice
-from typing import Any, Callable, cast, Optional, TypedDict
+from typing import Any, Callable, cast, TypedDict
 
 import jsonschema
 
@@ -150,9 +150,9 @@ class Player:
 
     def __init__(self, coins: int) -> None:
         """Initialize `Player` with an initial supply of `coins`."""
-        self.active_ability: Optional[Ability] = None
-        self.active_race: Optional[Race] = None
-        self.decline_race: Optional[Race] = None
+        self.active_ability: Ability | None = None
+        self.active_race: Race | None = None
+        self.decline_race: Race | None = None
         self.active_regions = dict[int, int]()
         """Dict of controlled regions, in form of `{region: n_tokens}`."""
         self.decline_regions = set[int]()
@@ -346,7 +346,7 @@ class _GameState:
         """The current active `Player`."""
         return self.players[self.player_id]
 
-    def _owner(self, region: int) -> Optional[int]:
+    def _owner(self, region: int) -> int | None:
         """Return the owner of the given `region` or `None` if there's none."""
         for i, p in enumerate(self.players):
             if p._is_owning(region):
