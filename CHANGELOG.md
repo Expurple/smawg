@@ -9,6 +9,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Appropriate `smawg.engine.__all__`.
+
 ### Removed
 
 - `shuffle()` and `roll_dice()` that shouldn't have been public.

@@ -17,6 +17,11 @@ import smawg.exceptions as exc
 from smawg._metadata import SCHEMA_DIR
 
 
+__all__ = [
+    "Ability", "Combo", "Game", "Hooks", "Player", "Race", "Region", "validate"
+]
+
+
 # --------------------------- assets validation -------------------------------
 
 with open(f"{SCHEMA_DIR}/assets.json") as file:
