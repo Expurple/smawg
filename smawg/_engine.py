@@ -10,7 +10,7 @@ from typing import Any, Callable, Type, TypedDict, cast
 
 import jsonschema
 
-from smawg import default_rules
+from smawg.default_rules import Rules as DefaultRules
 from smawg._metadata import SCHEMA_DIR
 from smawg._common import AbstractRules, Combo, GameState, _TurnStage
 
@@ -159,7 +159,7 @@ class Game(GameState):
     # This class only implements game actions and hooks.
 
     def __init__(self, assets: dict[str, Any],
-                 RulesT: Type[AbstractRules] = default_rules.Rules, *,
+                 RulesT: Type[AbstractRules] = DefaultRules, *,
                  shuffle_data: bool = True,
                  dice_roll_func: Callable[[], int] = _roll_dice,
                  hooks: Hooks = {}) -> None:
