@@ -9,6 +9,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+\-
+
+## [0.12.0] - 2022-09-04
+
 ## Added
 
 - Support for custom rules:
