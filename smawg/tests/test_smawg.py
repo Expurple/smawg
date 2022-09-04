@@ -12,7 +12,9 @@ from typing import Any, Callable
 from jsonschema.exceptions import ValidationError
 
 import smawg.default_rules as exc
-from smawg import Game, InvalidAssets, RulesViolation, validate
+from smawg import (
+    Ability, Combo, Game, InvalidAssets, Race, RulesViolation, validate
+)
 from smawg.default_rules import Rules as DefaultRules
 from smawg._metadata import ASSETS_DIR
 
@@ -24,6 +26,17 @@ def setUpModule() -> None:
     global TINY_ASSETS
     with open(f"{ASSETS_DIR}/tiny.json") as file:
         TINY_ASSETS = json.load(file)
+
+
+class TestCombo(unittest.TestCase):
+    """Tests for `smawg._common.Combo` class."""
+
+    def test_base_n_tokens(self) -> None:
+        """Check if `base_n_tokens` respects `Race.max_n_tokens`."""
+        race = Race("Some race", n_tokens=4, max_n_tokens=8)
+        ability = Ability("Many", n_tokens=10)
+        combo = Combo(race, ability)
+        self.assertEqual(combo.base_n_tokens, 8)
 
 
 class TestValidate(unittest.TestCase):
