@@ -11,12 +11,14 @@ and this project adheres to
 
 ## Added
 
+- `smawg.common` module with definitions of `GameState` and `AbstractRules`.
 - `smawg.default_rules` module with a reusable rule checker.
 
 ## Removed
 
 - `smawg.exceptions` module. Instead,
-    - import `InvalidAssets` and `RulesViolation` from `smawg`.
+    - import `InvalidAssets` from `smawg`.
+    - import `RulesViolation` from `smawg` or `smawg.common`.
     - import detailed `RulesViolation` subclasses from `smawg.default_rules`.
 - Misleading `RulesViolation.MESSAGE` attribute.
 

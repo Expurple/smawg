@@ -3,9 +3,7 @@
 See https://github.com/expurple/smawg for more info about the project.
 """
 
-from smawg._plugin_interface import (
-    AbstractRules, GameState, RulesViolation, _TurnStage
-)
+from smawg.common import AbstractRules, GameState, RulesViolation, _TurnStage
 
 __all__ = [
     "Rules", "GameEnded", "NoActiveRace", "ForbiddenDuringRedeployment",

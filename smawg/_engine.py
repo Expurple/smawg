@@ -12,7 +12,7 @@ import jsonschema
 
 from smawg.default_rules import Rules
 from smawg._metadata import SCHEMA_DIR
-from smawg._plugin_interface import Combo, GameState, _TurnStage
+from smawg.common import Combo, GameState, _TurnStage
 
 __all__ = ["Game", "Hooks", "validate"]
 
