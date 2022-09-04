@@ -3,6 +3,7 @@
 See https://github.com/expurple/smawg for more info about the project.
 """
 
+from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass
 from enum import auto, Enum
@@ -12,12 +13,8 @@ from typing import Any
 
 __all__ = [
     "Region", "Ability", "Race", "Combo", "Player", "_TurnStage", "GameState",
-    "RulesViolation"
+    "RulesViolation", "AbstractRules"
 ]
-
-
-class RulesViolation(Exception):
-    """Base class for all exceptions raised from rule plugins."""
 
 
 @dataclass
@@ -238,3 +235,93 @@ def _borders(tile_borders: list[list[int]], n_tiles: int) -> list[set[int]]:
         borders[region1].add(region2)
         borders[region2].add(region1)
     return borders
+
+
+class RulesViolation(Exception):
+    """Base class for all exceptions raised from rule plugins."""
+
+
+class AbstractRules(ABC):
+    """Interface that all `Rules` plugins must implement."""
+
+    @abstractmethod
+    def __init__(self, game: GameState) -> None:
+        """Create an instance that will work on provided `game` instance."""
+        ...
+
+    @abstractmethod
+    def check_decline(self) -> None:
+        """Check if `decline()` violates the rules.
+
+        Raise `RulesViolation` if it does.
+        """
+        ...
+
+    @abstractmethod
+    def check_select_combo(self, combo_index: int) -> None:
+        """Check if `select_combo()` violates the rules.
+
+        Raise `RulesViolation` if it does.
+
+        Assume that `combo_index` is in valid range.
+        """
+        ...
+
+    @abstractmethod
+    def check_abandon(self, region: int) -> None:
+        """Check if `abandon()` violates the rules.
+
+        Raise `RulesViolation` if it does.
+
+        Assume that `region` is in valid range.
+        """
+        ...
+
+    @abstractmethod
+    def check_conquer(self, region: int, *, use_dice: bool) -> None:
+        """Check if `conquer()` violates the rules.
+
+        Raise `RulesViolation` if it does.
+
+        Assume that `region` is in valid range.
+        """
+        ...
+
+    @abstractmethod
+    def check_start_redeployment(self) -> None:
+        """Check if `start_redeployment()` violates the rules.
+
+        Raise `RulesViolation` if it does.
+        """
+        ...
+
+    @abstractmethod
+    def check_deploy(self, n_tokens: int, region: int) -> None:
+        """Check if `deploy()` violates the rules.
+
+        Raise `RulesViolation` if it does.
+
+        Assume that `n_tokens` is positive and `region` is in valid range.
+        """
+        ...
+
+    @abstractmethod
+    def check_end_turn(self) -> None:
+        """Check if `end_turn()` violates the rules.
+
+        Raise `RulesViolation` if it does.
+        """
+        ...
+
+    @abstractmethod
+    def conquest_cost(self, region: int) -> int:
+        """Return the amount of tokens needed to conquer the given `region`.
+
+        Assume that `region` is a valid conquest target.
+        """
+        ...
+
+    @abstractmethod
+    def calculate_turn_reward(self) -> int:
+        """Calculate the amount of coins to be paid for the passed turn."""
+        ...

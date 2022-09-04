@@ -3,7 +3,9 @@
 See https://github.com/expurple/smawg for more info about the project.
 """
 
-from smawg._plugin_interface import GameState, RulesViolation, _TurnStage
+from smawg._plugin_interface import (
+    AbstractRules, GameState, RulesViolation, _TurnStage
+)
 
 __all__ = [
     "Rules", "GameEnded", "NoActiveRace", "ForbiddenDuringRedeployment",
@@ -210,7 +212,7 @@ class UndeployedTokens(RulesViolation):
 _REDEPLOYMENT_STAGES = (_TurnStage.REDEPLOYMENT, _TurnStage.REDEPLOYMENT_TURN)
 
 
-class Rules:
+class Rules(AbstractRules):
     """Rules that are used by `smawg.Game` by default."""
 
     def __init__(self, game: GameState) -> None:
@@ -405,8 +407,7 @@ class Rules:
     def conquest_cost(self, region: int) -> int:
         """Return the amount of tokens needed to conquer the given `region`.
 
-        Assumes that `region` is a valid conquest target.
-        If it's not, the return value is undefined.
+        Assume that `region` is a valid conquest target.
         """
         cost = 3
         owner_idx = self._game._owner(region)
