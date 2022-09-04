@@ -14,7 +14,7 @@ from smawg.default_rules import Rules as DefaultRules
 from smawg._metadata import SCHEMA_DIR
 from smawg._common import AbstractRules, Combo, GameState, _TurnStage
 
-__all__ = ["Game", "Hooks", "validate"]
+__all__ = ["Game", "Hooks", "InvalidAssets", "validate"]
 
 
 # --------------------------- assets validation -------------------------------
