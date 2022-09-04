@@ -11,11 +11,10 @@ from typing import Any, Callable
 
 from jsonschema.exceptions import ValidationError
 
-import smawg.default_rules as exc
+import smawg.default_rules as dr
 from smawg import (
     Ability, Combo, Game, InvalidAssets, Race, RulesViolation, validate
 )
-from smawg.default_rules import Rules as DefaultRules
 from smawg._metadata import ASSETS_DIR
 
 TINY_ASSETS: dict[str, Any] = {}
@@ -87,7 +86,7 @@ class TestGame(unittest.TestCase):
         self.assertIn(4, game.player.active_regions)
         # In older smawg versions, this call would crash
         # with an unexpected IndexError instead of NonAdjacentRegion.
-        with self.assertRaises(exc.NonAdjacentRegion):
+        with self.assertRaises(dr.NonAdjacentRegion):
             game.conquer(3)
 
     def test_game_end(self) -> None:
@@ -130,15 +129,15 @@ class TestGame(unittest.TestCase):
         with nullcontext("Player 0 redeploys tokens:"):
             self.assertEqual(game.player_id, 0)
             self.assertEqual(game.player.tokens_on_hand, 2)
-            with self.assertRaises(exc.ForbiddenDuringRedeployment):
+            with self.assertRaises(dr.ForbiddenDuringRedeployment):
                 game.select_combo(0)
-            with self.assertRaises(exc.ForbiddenDuringRedeployment):
+            with self.assertRaises(dr.ForbiddenDuringRedeployment):
                 game.abandon(1)
-            with self.assertRaises(exc.ForbiddenDuringRedeployment):
+            with self.assertRaises(dr.ForbiddenDuringRedeployment):
                 game.conquer(4)
-            with self.assertRaises(exc.ForbiddenDuringRedeployment):
+            with self.assertRaises(dr.ForbiddenDuringRedeployment):
                 game.decline()
-            with self.assertRaises(exc.UndeployedTokens):
+            with self.assertRaises(dr.UndeployedTokens):
                 game.end_turn()
             game.deploy(game.player.tokens_on_hand, 1)
             game.end_turn()
@@ -208,7 +207,7 @@ class TestGame(unittest.TestCase):
                 msg = "Stay-At-Home races don't like leaving their regions"
                 super().__init__(msg)
 
-        class CustomRules(DefaultRules):
+        class CustomRules(dr.Rules):
             def check_abandon(self, region: int) -> None:
                 super().check_abandon(region)
                 players_ability = self._game.player.active_ability
@@ -239,19 +238,19 @@ class TestGame(unittest.TestCase):
     def assertEnded(self, game: Game) -> None:
         """Check if `game` is in end state and all methods raise GameEnded."""
         self.assertTrue(game.has_ended)
-        with self.assertRaises(exc.GameEnded):
+        with self.assertRaises(dr.GameEnded):
             game.select_combo(0)
-        with self.assertRaises(exc.GameEnded):
+        with self.assertRaises(dr.GameEnded):
             game.decline()
-        with self.assertRaises(exc.GameEnded):
+        with self.assertRaises(dr.GameEnded):
             game.abandon(0)
-        with self.assertRaises(exc.GameEnded):
+        with self.assertRaises(dr.GameEnded):
             game.conquer(0)
-        with self.assertRaises(exc.GameEnded):
+        with self.assertRaises(dr.GameEnded):
             game.start_redeployment()
-        with self.assertRaises(exc.GameEnded):
+        with self.assertRaises(dr.GameEnded):
             game.deploy(1, 0)
-        with self.assertRaises(exc.GameEnded):
+        with self.assertRaises(dr.GameEnded):
             game.end_turn()
 
 
@@ -421,23 +420,23 @@ class TestGameDecline(unittest.TestCase):
         assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
-            with self.assertRaises(exc.NoActiveRace):
+            with self.assertRaises(dr.NoActiveRace):
                 game.decline()
             game.select_combo(0)
-            with self.assertRaises(exc.DecliningWhenActive):
+            with self.assertRaises(dr.DecliningWhenActive):
                 game.decline()  # Just got a new race during this turn.
             game.conquer(0)
             game.deploy(game.player.tokens_on_hand, 0)
             game.end_turn()
         with nullcontext("Player 0, turn 2:"):
             game.conquer(1)
-            with self.assertRaises(exc.DecliningWhenActive):
+            with self.assertRaises(dr.DecliningWhenActive):
                 game.decline()  # Already used the active race during this turn
             game.deploy(game.player.tokens_on_hand, 1)
             game.end_turn()
         with nullcontext("Player 0, turn 3:"):
             game.decline()
-            with self.assertRaises(exc.NoActiveRace):
+            with self.assertRaises(dr.NoActiveRace):
                 game.decline()  # Already in decline
 
 
@@ -457,17 +456,17 @@ class TestGameSelectCombo(unittest.TestCase):
                 # "combo_index must be between 0 and {len(game.combos)}"
                 with self.assertRaises(ValueError):
                     game.select_combo(combo)
-            with self.assertRaises(exc.NotEnoughCoins):
+            with self.assertRaises(dr.NotEnoughCoins):
                 game.select_combo(1)
             game.select_combo(0)
-            with self.assertRaises(exc.SelectingWhenActive):
+            with self.assertRaises(dr.SelectingWhenActive):
                 game.select_combo(0)
             game.conquer(0)
             game.deploy(game.player.tokens_on_hand, 0)
             game.end_turn()
         with nullcontext("Player 0, turn 2:"):
             game.decline()
-            with self.assertRaises(exc.SelectingOnDeclineTurn):
+            with self.assertRaises(dr.SelectingOnDeclineTurn):
                 game.select_combo(0)
 
 
@@ -500,13 +499,13 @@ class TestGameAbandon(unittest.TestCase):
         assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
-            with self.assertRaises(exc.NoActiveRace):
+            with self.assertRaises(dr.NoActiveRace):
                 game.abandon(0)
             game.select_combo(0)
-            with self.assertRaises(exc.NonControlledRegion):
+            with self.assertRaises(dr.NonControlledRegion):
                 game.abandon(0)
             game.conquer(0)
-            with self.assertRaises(exc.AbandoningAfterConquests):
+            with self.assertRaises(dr.AbandoningAfterConquests):
                 game.abandon(0)
             for region in [-1, len(TINY_ASSETS["map"]["tiles"]), 99]:
                 # "region must be between 0 and {len(assets["map"]["tiles"])}"
@@ -516,7 +515,7 @@ class TestGameAbandon(unittest.TestCase):
             game.end_turn()
         with nullcontext("Player 0, turn 2:"):
             game.start_redeployment()
-            with self.assertRaises(exc.ForbiddenDuringRedeployment):
+            with self.assertRaises(dr.ForbiddenDuringRedeployment):
                 game.abandon(0)
 
 
@@ -617,7 +616,7 @@ class TestGameConquer(unittest.TestCase):
             # If the player didn't abandon region 0, region 2 would be
             # available to be conquered, because it's adjacent.
             # But now he must start from the edge of the map.
-            with self.assertRaises(exc.NotAtBorder):
+            with self.assertRaises(dr.NotAtBorder):
                 game.conquer(2)
             # Region 4 isn't adjacent to region 0,
             # but it's at the edge of the map, which is what we need right now.
@@ -633,28 +632,28 @@ class TestGameConquer(unittest.TestCase):
         assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
-            with self.assertRaises(exc.NoActiveRace):
+            with self.assertRaises(dr.NoActiveRace):
                 game.conquer(0)  # Attempt to conquer without an active race.
             game.select_combo(0)
             for region in [-1, len(TINY_ASSETS["map"]["tiles"]), 99]:
                 # "region must be between 0 and {len(assets["map"]["tiles"])}"
                 with self.assertRaises(ValueError):
                     game.conquer(region)
-            with self.assertRaises(exc.NotAtBorder):
+            with self.assertRaises(dr.NotAtBorder):
                 game.conquer(2)
             game.conquer(0)
-            with self.assertRaises(exc.ConqueringOwnRegion):
+            with self.assertRaises(dr.ConqueringOwnRegion):
                 game.conquer(0)
-            with self.assertRaises(exc.NonAdjacentRegion):
+            with self.assertRaises(dr.NonAdjacentRegion):
                 game.conquer(4)
             game.start_redeployment()
-            with self.assertRaises(exc.ForbiddenDuringRedeployment):
+            with self.assertRaises(dr.ForbiddenDuringRedeployment):
                 game.conquer(3)
             game.deploy(game.player.tokens_on_hand, 0)
             game.end_turn()
         with nullcontext("Player 1, turn 1:"):
             game.conquer(1, use_dice=True)
-            with self.assertRaises(exc.AlreadyUsedDice):
+            with self.assertRaises(dr.AlreadyUsedDice):
                 game.conquer(2)
 
     def test_diceless_exceptions(self) -> None:
@@ -663,7 +662,7 @@ class TestGameConquer(unittest.TestCase):
         game.select_combo(0)
         game.conquer(0)
         game.deploy(game.player.tokens_on_hand - 2, 0)
-        with self.assertRaises(exc.NotEnoughTokensToConquer):  # Need 3, have 2
+        with self.assertRaises(dr.NotEnoughTokensToConquer):  # Need 3, have 2
             game.conquer(1)
 
     def test_dice_only_exceptions(self) -> None:
@@ -674,7 +673,7 @@ class TestGameConquer(unittest.TestCase):
             game.conquer(0)
             game.conquer(1)
             game.conquer(2)
-            with self.assertRaises(exc.RollingWithoutTokens):
+            with self.assertRaises(dr.RollingWithoutTokens):
                 game.conquer(3, use_dice=True)
             game.end_turn()
         with nullcontext("Player 1, turn 1:"):
@@ -686,7 +685,7 @@ class TestGameConquer(unittest.TestCase):
             # Player 0 has 6 tokens on hand.
             # Player 1 has 9 tokens in region 3.
             # 12 tokens are needed to conquer it, which is more than 6+3.
-            with self.assertRaises(exc.NotEnoughTokensToRoll):
+            with self.assertRaises(dr.NotEnoughTokensToRoll):
                 game.conquer(3, use_dice=True)
 
     def assertConquers(self, game: Game, region: int, *,
@@ -745,20 +744,20 @@ class TestGameStartRedeployment(unittest.TestCase):
         assets = {**TINY_ASSETS, "n_players": 1}
         game = Game(assets, shuffle_data=False)
         with nullcontext("Player 0, turn 1:"):
-            with self.assertRaises(exc.NoActiveRace):
+            with self.assertRaises(dr.NoActiveRace):
                 game.start_redeployment()
             game.select_combo(0)
-            with self.assertRaises(exc.NoActiveRegions):
+            with self.assertRaises(dr.NoActiveRegions):
                 game.start_redeployment()
             game.conquer(0)
             game.start_redeployment()
             game.deploy(game.player.tokens_on_hand, 0)
-            with self.assertRaises(exc.ForbiddenDuringRedeployment):
+            with self.assertRaises(dr.ForbiddenDuringRedeployment):
                 game.start_redeployment()
             game.end_turn()
         with nullcontext("Player 0, turn 2:"):
             game.decline()
-            with self.assertRaises(exc.NoActiveRace):
+            with self.assertRaises(dr.NoActiveRace):
                 game.start_redeployment()
 
 
@@ -784,13 +783,13 @@ class TestGameDeploy(unittest.TestCase):
         convenience.
         """
         game = Game(TINY_ASSETS, shuffle_data=False)
-        with self.assertRaises(exc.NoActiveRace):
+        with self.assertRaises(dr.NoActiveRace):
             game.deploy(1, 0)
         game.select_combo(0)
-        with self.assertRaises(exc.NonControlledRegion):
+        with self.assertRaises(dr.NonControlledRegion):
             game.deploy(1, 0)
         game.conquer(0)
-        with self.assertRaises(exc.NotEnoughTokensToDeploy):
+        with self.assertRaises(dr.NotEnoughTokensToDeploy):
             game.deploy(game.player.tokens_on_hand + 1, 0)
         # "n_tokens must be greater then 0"
         for n_tokens in [-99, -1, 0]:
@@ -834,10 +833,10 @@ class TestGameEndTurn(unittest.TestCase):
         convenience.
         """
         game = Game(TINY_ASSETS, shuffle_data=False)
-        with self.assertRaises(exc.EndBeforeSelect):
+        with self.assertRaises(dr.EndBeforeSelect):
             game.end_turn()
         game.select_combo(0)
-        with self.assertRaises(exc.UndeployedTokens):
+        with self.assertRaises(dr.UndeployedTokens):
             game.end_turn()
 
 
