@@ -126,7 +126,7 @@ game = Game(assets)
 ```
 
 You can also find "real world" usage examples in
-[cli.py](./smawg/cli.py) and [test_engine.py](./smawg/tests/test_engine.py)
+[cli.py](./smawg/cli.py) and [test_smawg.py](./smawg/tests/test_smawg.py)
 
 ## Contributing
 
