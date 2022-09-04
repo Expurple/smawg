@@ -3,7 +3,8 @@
 See https://github.com/expurple/smawg for more info about the project.
 """
 
-from smawg.common import AbstractRules, GameState, RulesViolation, _TurnStage
+# Importing directly from `smawg` would cause a circular import.
+from smawg._common import AbstractRules, GameState, RulesViolation, _TurnStage
 
 __all__ = [
     "Rules", "GameEnded", "NoActiveRace", "ForbiddenDuringRedeployment",

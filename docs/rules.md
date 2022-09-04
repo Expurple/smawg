@@ -10,13 +10,13 @@ that prohibits the player from abandoning regions.
 
 ### With `smawg` as a library
 
-You need to subclass `smawg.common.AbstractRules`.
+You need to subclass `smawg.AbstractRules`.
 Usually, this is done by subclassing `smawg.default_rules.Rules`
 and overriding only the methods where you add changes.
 In this case, we need to override `check_abandon()`:
 
 ```python
-from smawg.common import RulesViolation
+from smawg import RulesViolation
 from smawg.default_rules import Rules as DefaultRules
 
 
@@ -58,12 +58,12 @@ That's it!
 ### With `smawg.cli`
 
 The first step is mostly the same.
-You need to define your `smawg.common.AbstractRules` sublass in a Python file.
+You need to define your `smawg.AbstractRules` sublass in a Python file.
 The difference is that the subclass must be named `Rules`.
 This is a convention so that the loader can find it.
 
 ```python
-from smawg.common import RulesViolation
+from smawg import RulesViolation
 from smawg.default_rules import Rules as DefaultRules
 
 

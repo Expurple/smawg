@@ -12,7 +12,7 @@ from typing import Any, Callable
 from jsonschema.exceptions import ValidationError
 
 import smawg.default_rules as exc
-from smawg.common import RulesViolation
+from smawg._common import RulesViolation
 from smawg.default_rules import Rules as DefaultRules
 from smawg._engine import Game, InvalidAssets, validate
 from smawg._metadata import ASSETS_DIR

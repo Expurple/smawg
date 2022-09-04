@@ -12,7 +12,8 @@ and this project adheres to
 ## Added
 
 - Support for custom rules:
-    - `smawg.common` module with definitions of `GameState` and `AbstractRules`.
+    - `GameState` interface.
+    - `AbstractRules` interface.
     - Reusable rule checker in `smawg.default_rules.Rules`.
     - `RulesT` parameter for `Game.__init__`.
     - `--rules` option for `smawg.cli`.
@@ -21,8 +22,7 @@ and this project adheres to
 ## Removed
 
 - `smawg.exceptions` module. Instead,
-    - import `InvalidAssets` from `smawg`.
-    - import `RulesViolation` from `smawg` or `smawg.common`.
+    - import `InvalidAssets` and `RulesViolation` from `smawg`.
     - import detailed `RulesViolation` subclasses from `smawg.default_rules`.
 - Misleading `RulesViolation.MESSAGE` attribute.
 

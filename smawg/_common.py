@@ -1,5 +1,8 @@
 """Common types used both by rules plugins and `Game`.
 
+Having this separate file is necessary
+to avoid circular imports in bundled rule plugins.
+
 See https://github.com/expurple/smawg for more info about the project.
 """
 

@@ -21,9 +21,8 @@ from typing import Type
 
 from tabulate import tabulate
 
-from smawg import Game, Hooks, RulesViolation
+from smawg import AbstractRules, Game, Hooks, RulesViolation
 from smawg._metadata import PACKAGE_DIR, VERSION
-from smawg.common import AbstractRules
 
 
 TITLE = f"smawg CLI v{VERSION}"

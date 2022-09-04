@@ -1,12 +1,12 @@
-"""Tests for `smawg.common` module."""
+"""Tests for `smawg._common` module."""
 
 import unittest
 
-from smawg.common import Ability, Combo, Race
+from smawg._common import Ability, Combo, Race
 
 
 class TestCombo(unittest.TestCase):
-    """Tests for `smawg.common.Combo` class."""
+    """Tests for `smawg._common.Combo` class."""
 
     def test_base_n_tokens(self) -> None:
         """Check if `base_n_tokens` respects `Race.max_n_tokens`."""
