@@ -12,6 +12,8 @@ from typing import Any, Callable
 from jsonschema.exceptions import ValidationError
 
 import smawg.default_rules as exc
+from smawg.common import RulesViolation
+from smawg.default_rules import Rules as DefaultRules
 from smawg._engine import Game, InvalidAssets, validate
 from smawg._metadata import ASSETS_DIR
 
@@ -183,6 +185,38 @@ class TestGame(unittest.TestCase):
             game.decline()
             game.end_turn()
         self.assertBalances(game, [5, 4])  # Reward for decline regions 1 and 2
+
+    def test_custom_rules(self) -> None:
+        """Check if `Game` respects `RulesT` parameter.
+
+        This is the same example as in `docs/rules.md`.
+        """
+        class NotStayingAtHome(RulesViolation):
+            def __init__(self) -> None:
+                msg = "Stay-At-Home races don't like leaving their regions"
+                super().__init__(msg)
+
+        class CustomRules(DefaultRules):
+            def check_abandon(self, region: int) -> None:
+                super().check_abandon(region)
+                players_ability = self._game.player.active_ability
+                assert players_ability is not None, "type narrowing"
+                if players_ability.name == "Stay-At-Home":
+                    raise NotStayingAtHome()
+
+        assets = deepcopy(TINY_ASSETS)
+        assets["abilities"][0]["name"] = "Stay-At-Home"
+        assets["n_players"] = 1
+        game = Game(assets, CustomRules, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            game.select_combo(0)
+            game.conquer(0)
+            game.conquer(1)
+            game.deploy(game.player.tokens_on_hand, 1)
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            with self.assertRaises(NotStayingAtHome):
+                game.abandon(0)
 
     def assertBalances(self, game: Game, expected: list[int]) -> None:
         """Check if all player balances match the `expected`."""

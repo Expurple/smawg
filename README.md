@@ -15,6 +15,7 @@ and easy interoperability with other programming languages.
 * Automatic maintainance of game state (manages tokens, calculates score, etc).
 * Automatic checks for violation of the rules.
 * Support for custom maps, races and other assets.
+* Support for custom rules (see [docs/rules.md](docs/rules.md)).
 * Deterministic or randomized outcomes.
 
 ### Missing features (in progress)
@@ -26,7 +27,6 @@ and easy interoperability with other programming languages.
 
 * Options for more machine-readable CLI output.
 * In-house AI and GUI examples.
-* Support for plugins with new ability types ???
 
 ## Releases
 

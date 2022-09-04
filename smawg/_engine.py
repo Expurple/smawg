@@ -6,13 +6,13 @@ See https://github.com/expurple/smawg for more info about the project.
 import json
 import random
 from collections import defaultdict
-from typing import Any, Callable, TypedDict, cast
+from typing import Any, Callable, Type, TypedDict, cast
 
 import jsonschema
 
-from smawg.default_rules import Rules
+from smawg import default_rules
 from smawg._metadata import SCHEMA_DIR
-from smawg.common import Combo, GameState, _TurnStage
+from smawg.common import AbstractRules, Combo, GameState, _TurnStage
 
 __all__ = ["Game", "Hooks", "validate"]
 
@@ -154,11 +154,12 @@ class Game(GameState):
     or raise exceptions if the call violates the rules.
     """
 
-    # Under the hood, rules are implemented in `Rules`
+    # Under the hood, rules are implemented in `RulesT`
     # and properties are implemented in the base class.
     # This class only implements game actions and hooks.
 
-    def __init__(self, assets: dict[str, Any], *,
+    def __init__(self, assets: dict[str, Any],
+                 RulesT: Type[AbstractRules] = default_rules.Rules, *,
                  shuffle_data: bool = True,
                  dice_roll_func: Callable[[], int] = _roll_dice,
                  hooks: Hooks = {}) -> None:
@@ -168,6 +169,8 @@ class Game(GameState):
 
         When initialization is finished, the object is ready to be used by
         player 0. `"on_turn_start"` hook is fired immediately, if provided.
+
+        Provide `RulesT` to play with custom rules (see `docs/rules.md`).
 
         Provide `shuffle_data=False` to preserve
         the known order of races and ablities in `assets`.
@@ -187,7 +190,7 @@ class Game(GameState):
         self._roll_dice = dice_roll_func
         self._hooks = cast(Hooks, defaultdict(lambda: _do_nothing, **hooks))
         # Only after all other fields have been initialized.
-        self._rules = Rules(self)
+        self._rules: AbstractRules = RulesT(self)
         # Only after `self` has been fully initialized.
         self._hooks["on_turn_start"](self)
 

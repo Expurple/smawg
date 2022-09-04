@@ -12,7 +12,9 @@ and this project adheres to
 ## Added
 
 - `smawg.common` module with definitions of `GameState` and `AbstractRules`.
-- `smawg.default_rules` module with a reusable rule checker.
+- `smawg.default_rules` module with a reusable rule checker (`Rules`).
+- `RulesT` parameter for `Game.__init__`.
+- `docs/rules.md`
 
 ## Removed
 
