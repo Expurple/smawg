@@ -15,6 +15,7 @@ and this project adheres to
     - `smawg.common` module with definitions of `GameState` and `AbstractRules`.
     - Reusable rule checker in `smawg.default_rules.Rules`.
     - `RulesT` parameter for `Game.__init__`.
+    - `--rules` option for `smawg.cli`.
     - `docs/rules.md`
 
 ## Removed

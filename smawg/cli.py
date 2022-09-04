@@ -13,12 +13,17 @@ See https://github.com/expurple/smawg for more info about the project.
 
 import json
 import readline
+import sys
 from argparse import ArgumentParser, Namespace
+from importlib import import_module
+from pathlib import Path
+from typing import Type
 
 from tabulate import tabulate
 
 from smawg import Game, Hooks, RulesViolation
 from smawg._metadata import PACKAGE_DIR, VERSION
+from smawg.common import AbstractRules
 
 
 TITLE = f"smawg CLI v{VERSION}"
@@ -68,6 +73,12 @@ def parse_args() -> Namespace:
         help="path to JSON file with assets"
     )
     parser.add_argument(
+        "--rules",
+        metavar="RULES_PLUGIN",
+        default=f"{PACKAGE_DIR}/default_rules.py",
+        help="import RULES_PLUGIN instead of smawg/default_rules.py"
+    )
+    parser.add_argument(
         "-s", "--no-shuffle",
         action="store_true",
         help="don't shuffle data from ASSETS_FILE"
@@ -95,6 +106,17 @@ def read_dice() -> int:
             prompt = "The result must be an integer, try again: "
 
 
+def import_rules(filename: str) -> Type[AbstractRules]:
+    """Dynamically load `Rules` from a Python file."""
+    rules_file_path = Path(args.rules).resolve()
+    rules_file_name = rules_file_path.name
+    rules_dir_name = str(rules_file_path.parent)
+    sys.path.append(rules_dir_name)
+    rules_module = import_module(rules_file_name[:-3])
+    rules: Type[AbstractRules] = rules_module.Rules
+    return rules
+
+
 def init_game(args: Namespace, hooks: Hooks) -> Game:
     """Construct `Game` with respect to command line `args`."""
     assets_file = args.assets_file
@@ -102,11 +124,13 @@ def init_game(args: Namespace, hooks: Hooks) -> Game:
         assets_file = f"{PACKAGE_DIR}/{assets_file}"
     with open(assets_file) as file:
         assets = json.load(file)
+    rules = import_rules(args.rules)
     if args.read_dice:
-        return Game(assets, shuffle_data=not args.no_shuffle,
+        return Game(assets, rules, shuffle_data=not args.no_shuffle,
                     dice_roll_func=read_dice, hooks=hooks)
     else:
-        return Game(assets, shuffle_data=not args.no_shuffle, hooks=hooks)
+        return Game(assets, rules, shuffle_data=not args.no_shuffle,
+                    hooks=hooks)
 
 
 class InvalidCommand(ValueError):
