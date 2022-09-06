@@ -9,10 +9,16 @@ and this project adheres to
 
 ## [Unreleased]
 
+## Added
+
+- Effects from different terrain types:
+    - Conquering a Mountain now costs 1 additional token.
+- `smawg.basic_rules` module where you can still find basic rules from v0.12.0.
+
 ## Changed
 
-- Detailed `RulesViolation` subclasses are moved
-    from `smawg.default_rules` to `smawg.basic_rules`.
+- Existing `RulesViolation` subclasses should now be imported
+    from `smawg.basic_rules` instead of `smawg.default_rules`.
 
 ## [0.12.0] - 2022-09-04
 

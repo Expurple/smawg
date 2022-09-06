@@ -20,7 +20,7 @@ and easy interoperability with other programming languages.
 
 ### Missing features (in progress)
 
-* Effects from different region types (Seas, Mountains, etc).
+* Effects from Lakes and Seas.
 * Unique Race and Special Power abilities.
 
 ### Future plans
