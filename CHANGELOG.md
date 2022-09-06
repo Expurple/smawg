@@ -9,7 +9,10 @@ and this project adheres to
 
 ## [Unreleased]
 
-\-
+## Changed
+
+- Detailed `RulesViolation` subclasses are moved
+    from `smawg.default_rules` to `smawg.basic_rules`.
 
 ## [0.12.0] - 2022-09-04
 
