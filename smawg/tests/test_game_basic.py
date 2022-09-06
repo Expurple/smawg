@@ -1,70 +1,16 @@
-"""Tests for the root `smawg` module.
+"""Tests for `smawg.basic_rules` and the core functionality of `smawg.Game`.
 
 This module can also be seen as a collection of `smawg` usage examples.
 """
 
-import json
 import unittest
 from copy import deepcopy
 from contextlib import AbstractContextManager, nullcontext
 from typing import Any, Callable
 
-from jsonschema.exceptions import ValidationError
-
 import smawg.basic_rules as br
-from smawg import (
-    Ability, Combo, Game, InvalidAssets, Race, RulesViolation, validate
-)
-from smawg._metadata import ASSETS_DIR
-
-TINY_ASSETS: dict[str, Any] = {}
-
-
-def setUpModule() -> None:
-    """Preload game assets only once and only when running the tests."""
-    global TINY_ASSETS
-    with open(f"{ASSETS_DIR}/tiny.json") as file:
-        TINY_ASSETS = json.load(file)
-
-
-class TestCombo(unittest.TestCase):
-    """Tests for `smawg._common.Combo` class."""
-
-    def test_base_n_tokens(self) -> None:
-        """Check if `base_n_tokens` respects `Race.max_n_tokens`."""
-        race = Race("Some race", n_tokens=4, max_n_tokens=8)
-        ability = Ability("Many", n_tokens=10)
-        combo = Combo(race, ability)
-        self.assertEqual(combo.base_n_tokens, 8)
-
-
-class TestValidate(unittest.TestCase):
-    """Tests for `smawg.validate()` function."""
-
-    def test_invalid_assets(self) -> None:
-        """Check if `validate()` raises an error on invalid assets."""
-        invalid_fields = [
-            # Bad structure of nested objects:
-            (ValidationError, "races", [{"not a": "race"}]),
-            (ValidationError, "abilities", [{"not a": "ability"}]),
-            (ValidationError, "map", {"not a": "map"}),
-            # Borders between non-existring tiles:
-            (ValidationError, "map", {
-                "tiles": [],
-                "tile_borders": [[-2, -1]]
-            }),
-            (InvalidAssets, "map", {
-                "tiles": [],
-                "tile_borders": [[2, 1]]
-            }),
-            # Impossible to achieve n_visible_combos=2:
-            (InvalidAssets, "races", []),
-            (InvalidAssets, "abilities", []),
-        ]
-        for exc_type, key, value in invalid_fields:
-            invalid_assets = {**TINY_ASSETS, key: value}
-            with self.assertRaises(exc_type):
-                validate(invalid_assets)
+from smawg import Game, RulesViolation
+from smawg.tests.common import TINY_ASSETS
 
 
 class TestGame(unittest.TestCase):
