@@ -10,10 +10,10 @@ from typing import Any, Callable
 
 import smawg.basic_rules as br
 from smawg import Game, RulesViolation
-from smawg.tests.common import TINY_ASSETS
+from smawg.tests.common import BaseGameTest, TINY_ASSETS
 
 
-class TestGame(unittest.TestCase):
+class TestGame(BaseGameTest):
     """General tests for `smawg.Game` class.
 
     Tests for hooks and particular methods
@@ -175,32 +175,8 @@ class TestGame(unittest.TestCase):
             with self.assertRaises(NotStayingAtHome):
                 game.abandon(0)
 
-    def assertBalances(self, game: Game, expected: list[int]) -> None:
-        """Check if all player balances match the `expected`."""
-        actual = [p.coins for p in game.players]
-        msg = "Player has incorrect amount of coins"
-        self.assertListEqual(actual, expected, msg=msg)
 
-    def assertEnded(self, game: Game) -> None:
-        """Check if `game` is in end state and all methods raise GameEnded."""
-        self.assertTrue(game.has_ended)
-        with self.assertRaises(br.GameEnded):
-            game.select_combo(0)
-        with self.assertRaises(br.GameEnded):
-            game.decline()
-        with self.assertRaises(br.GameEnded):
-            game.abandon(0)
-        with self.assertRaises(br.GameEnded):
-            game.conquer(0)
-        with self.assertRaises(br.GameEnded):
-            game.start_redeployment()
-        with self.assertRaises(br.GameEnded):
-            game.deploy(1, 0)
-        with self.assertRaises(br.GameEnded):
-            game.end_turn()
-
-
-class TestGameHooks(unittest.TestCase):
+class TestGameHooks(BaseGameTest):
     """Tests for `Game` hooks."""
 
     def setUp(self) -> None:
@@ -319,7 +295,7 @@ class TestGameHooks(unittest.TestCase):
         return AssertFiresHook()
 
 
-class TestGameDecline(unittest.TestCase):
+class TestGameDecline(BaseGameTest):
     """Tests for `smawg.Game.decline()` method."""
 
     def test_discarded_abilities(self) -> None:
@@ -386,7 +362,7 @@ class TestGameDecline(unittest.TestCase):
                 game.decline()  # Already in decline
 
 
-class TestGameSelectCombo(unittest.TestCase):
+class TestGameSelectCombo(BaseGameTest):
     """Tests for `smawg.Game.select_combo()` method."""
 
     def test_exceptions(self) -> None:
@@ -416,7 +392,7 @@ class TestGameSelectCombo(unittest.TestCase):
                 game.select_combo(0)
 
 
-class TestGameAbandon(unittest.TestCase):
+class TestGameAbandon(BaseGameTest):
     """Tests for `smawg.Game.abandon()` method."""
 
     def test_functionality(self) -> None:
@@ -465,7 +441,7 @@ class TestGameAbandon(unittest.TestCase):
                 game.abandon(0)
 
 
-class TestGameConquer(unittest.TestCase):
+class TestGameConquer(BaseGameTest):
     """Tests for `smawg.Game.conquer()` method."""
 
     def test_diceless_functionality(self) -> None:
@@ -634,37 +610,8 @@ class TestGameConquer(unittest.TestCase):
             with self.assertRaises(br.NotEnoughTokensToRoll):
                 game.conquer(3, use_dice=True)
 
-    def assertConquers(self, game: Game, region: int, *,
-                       cost: int | None = None) -> AbstractContextManager[Any]:
-        """Assert that the `region` is conquered inside of the context.
 
-        When `cost` is specified,
-        also assert that `cost` amount of tokens is used.
-        """
-        test = self
-
-        class AssertConquers:
-            def __enter__(self) -> "AssertConquers":
-                self._tokens_before = game.player.tokens_on_hand
-                return self
-
-            def __exit__(self, exc_type: Any, exc_value: Any, tb: Any) -> None:
-                if exc_value is not None:
-                    return  # Propagate the exception.
-                msg = "Expected a successfull conquest"
-                test.assertIn(region, game.player.active_regions, msg=msg)
-                if cost is not None:
-                    msg = "Conquest is using an unexpected amount of tokens"
-                    tokens_in_region = game.player.active_regions[region]
-                    test.assertEqual(tokens_in_region, cost, msg=msg)
-                    delta_tokens_in_hand = \
-                        self._tokens_before - game.player.tokens_on_hand
-                    test.assertEqual(delta_tokens_in_hand, cost, msg=msg)
-
-        return AssertConquers()
-
-
-class TestGameStartRedeployment(unittest.TestCase):
+class TestGameStartRedeployment(BaseGameTest):
     """Tests for `smawg.Game.start_redeployment()` method."""
 
     def test_functionality(self) -> None:
@@ -707,7 +654,7 @@ class TestGameStartRedeployment(unittest.TestCase):
                 game.start_redeployment()
 
 
-class TestGameDeploy(unittest.TestCase):
+class TestGameDeploy(BaseGameTest):
     """Tests for `smawg.Game.deploy()` method."""
 
     def test_functionality(self) -> None:
@@ -747,7 +694,7 @@ class TestGameDeploy(unittest.TestCase):
                 game.deploy(1, region)
 
 
-class TestGameEndTurn(unittest.TestCase):
+class TestGameEndTurn(BaseGameTest):
     """Tests for `smawg.Game.end_turn()` method."""
 
     def test_after_failed_dice_and_no_regions(self) -> None:
