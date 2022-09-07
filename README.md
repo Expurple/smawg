@@ -20,7 +20,8 @@ and easy interoperability with other programming languages.
 
 ### Missing features (in progress)
 
-* Effects from Lakes and Seas.
+* Ability to start the conquests from a region
+    whose shore is on a Sea adjacent to the edge of the board.
 * Unique Race and Special Power abilities.
 
 ### Future plans

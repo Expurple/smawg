@@ -13,12 +13,13 @@ and this project adheres to
 
 - Effects from different terrain types:
     - Conquering a Mountain now costs 1 additional token.
+    - Conquering Seas and Lakes is now forbidden.
 - `smawg.basic_rules` module where you can still find basic rules from v0.12.0.
 
 ## Changed
 
-- Existing `RulesViolation` subclasses should now be imported
-    from `smawg.basic_rules` instead of `smawg.default_rules`.
+- Pre-existing `RulesViolation` subclasses for basic rules should now be
+    imported from `smawg.basic_rules` instead of `smawg.default_rules`.
 
 ## [0.12.0] - 2022-09-04
 

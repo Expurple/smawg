@@ -7,6 +7,7 @@ import unittest
 from copy import deepcopy
 
 import smawg.basic_rules as br
+import smawg.default_rules as dr
 from smawg import Game
 from smawg.tests.common import BaseGameTest, TINY_ASSETS
 
@@ -41,6 +42,18 @@ class TestTerrain(BaseGameTest):
         self.assertEqual(game.player.tokens_on_hand, 3)
         with self.assertRaises(br.NotEnoughTokensToConquer):
             game.conquer(3)
+
+    def test_sea_and_lake(self) -> None:
+        """Check if conquering a Sea or a Lake raises an error."""
+        assets = deepcopy(TINY_ASSETS)
+        assets["map"]["tiles"][0]["terrain"] = "Sea"
+        assets["map"]["tiles"][1]["terrain"] = "Lake"
+        game = Game(assets, shuffle_data=False)
+        game.select_combo(0)
+        with self.assertRaises(dr.ConqueringSeaOrLake):
+            game.conquer(0)
+        with self.assertRaises(dr.ConqueringSeaOrLake):
+            game.conquer(1)
 
 
 if __name__ == "__main__":

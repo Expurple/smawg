@@ -309,6 +309,7 @@ class Rules(AbstractRules):
 
         Assume that `region` is in valid range.
 
+        Raise
         * `NoActiveRace`
             if the player doesn't have an active race.
         * `NotAtBorder`
