@@ -18,6 +18,7 @@ and this project adheres to
 
 ## Changed
 
+- `AbstractRules` now yield erros instead of raising.
 - Pre-existing `RulesViolation` subclasses for basic rules should now be
     imported from `smawg.basic_rules` instead of `smawg.default_rules`.
 

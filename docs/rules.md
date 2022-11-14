@@ -10,12 +10,14 @@ that prohibits the player from abandoning regions.
 
 ### With `smawg` as a library
 
-You need to subclass `smawg.AbstractRules`.
+You need to implement `smawg.AbstractRules`.
 Usually, this is done by subclassing `smawg.default_rules.Rules`
 and overriding only the methods where you add changes.
 In this case, we need to override `check_abandon()`:
 
 ```python
+from typing import Iterator
+
 from smawg import RulesViolation
 from smawg.default_rules import Rules as DefaultRules
 
@@ -29,11 +31,11 @@ class NotStayingAtHome(RulesViolation):
 
 
 class CustomRules(DefaultRules):
-    def check_abandon(self, region: int) -> None:
+    def check_abandon(self, region: int) -> Iterator[RulesViolation]:
         # Check the default rules first.
-        super().check_abandon(region)
+        yield from super().check_abandon(region)
         if self._game.player.active_ability.name == "Stay-At-Home":
-            raise NotStayingAtHome()
+            yield NotStayingAtHome()
 ```
 
 Then, you need to get `assets` that contain your Stay-At-Home ability
@@ -63,6 +65,8 @@ The difference is that the subclass must be named `Rules`.
 This is a convention so that the loader can find it.
 
 ```python
+from typing import Iterator
+
 from smawg import RulesViolation
 from smawg.default_rules import Rules as DefaultRules
 
@@ -76,11 +80,11 @@ class NotStayingAtHome(RulesViolation):
 
 
 class Rules(DefaultRules):
-    def check_abandon(self, region: int) -> None:
+    def check_abandon(self, region: int) -> Iterator[RulesViolation]:
         # Check the default rules first.
-        super().check_abandon(region)
+        yield from super().check_abandon(region)
         if self._game.player.active_ability.name == "Stay-At-Home":
-            raise NotStayingAtHome()
+            yield NotStayingAtHome()
 ```
 
 Then, again, you need to create an assets file that contains this ability.
@@ -88,5 +92,5 @@ Then, again, you need to create an assets file that contains this ability.
 Then, pass the rules plugin and the assets file to `smawg.cli`:
 
 ```bash
-python3 -m smawg.cli --rules custom_rules.py custom_assets.py
+python3 -m smawg.cli --rules=custom_rules.py custom_assets.py
 ```

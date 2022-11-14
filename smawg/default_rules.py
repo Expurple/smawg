@@ -3,7 +3,11 @@
 See https://github.com/expurple/smawg for more info about the project.
 """
 
+from typing import Iterator
+
 import smawg.basic_rules as br
+# Importing directly from `smawg` would cause a circular import.
+from smawg._common import RulesViolation
 
 __all__ = ["ConqueringSeaOrLake", "Rules"]
 
@@ -29,7 +33,8 @@ class Rules(br.Rules):
     # This class implements specific rules
     # for each race, ability and terrain type.
 
-    def check_conquer(self, region: int, *, use_dice: bool) -> None:
+    def check_conquer(self, region: int, *, use_dice: bool
+                      ) -> Iterator[RulesViolation]:
         """Check if `conquer()` violates the rules.
 
         Assume that `region` is in valid range.
@@ -37,12 +42,14 @@ class Rules(br.Rules):
         Propagate any `RulesViolation` from
         `smawg.basic_rules.Rules.check_conquer()`.
 
-        Raise `ConqueringSeaOrLake`
+        Yield `ConqueringSeaOrLake`
         if the player attempts to conquer a Sea or a Lake.
         """
-        super().check_conquer(region, use_dice=use_dice)
+        for e in super().check_conquer(region, use_dice=use_dice):
+            yield e
+        # Forbid conquering Seas and Lakes.
         if self._game.regions[region].terrain in ("Sea", "Lake"):
-            raise ConqueringSeaOrLake()
+            yield ConqueringSeaOrLake()
 
     def conquest_cost(self, region: int) -> int:
         """Return the amount of tokens needed to conquer the given `region`.

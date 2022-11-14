@@ -5,6 +5,8 @@ Without special effects from different terrain types, races or abilities.
 See https://github.com/expurple/smawg for more info about the project.
 """
 
+from typing import Iterator
+
 # Importing directly from `smawg` would cause a circular import.
 from smawg._common import AbstractRules, GameState, RulesViolation, _TurnStage
 
@@ -223,10 +225,10 @@ class Rules(AbstractRules):
         """Create an instance that will work on provided `game` instance."""
         self._game = game
 
-    def check_decline(self) -> None:
+    def check_decline(self) -> Iterator[RulesViolation]:
         """Check if `decline()` violates the rules.
 
-        Raise
+        Yield
         * `NoActiveRace`
             if the player is already in decline.
         * `DecliningWhenActive`
@@ -237,21 +239,21 @@ class Rules(AbstractRules):
             if this method is called after the game has ended.
         """
         if self._game.has_ended:
-            raise GameEnded()
+            yield GameEnded()
         if self._game.player.active_race is None:
-            raise NoActiveRace()
+            yield NoActiveRace()
         if self._game._turn_stage in _REDEPLOYMENT_STAGES:
-            raise ForbiddenDuringRedeployment()
+            yield ForbiddenDuringRedeployment()
         if self._game._turn_stage in (
                 _TurnStage.ACTIVE, _TurnStage.CONQUESTS, _TurnStage.USED_DICE):
-            raise DecliningWhenActive()
+            yield DecliningWhenActive()
 
-    def check_select_combo(self, combo_index: int) -> None:
+    def check_select_combo(self, combo_index: int) -> Iterator[RulesViolation]:
         """Check if `select_combo()` violates the rules.
 
         Assume that `combo_index` is in valid range.
 
-        Raise
+        Yield
         * `SelectingWhenActive`
             if the player already has an active race.
         * `SelectingOnDeclineTurn`
@@ -264,23 +266,23 @@ class Rules(AbstractRules):
             if this method is called after the game has ended.
         """
         if self._game.has_ended:
-            raise GameEnded()
+            yield GameEnded()
         if self._game._turn_stage in _REDEPLOYMENT_STAGES:
-            raise ForbiddenDuringRedeployment()
+            yield ForbiddenDuringRedeployment()
         if self._game._turn_stage == _TurnStage.DECLINED:
-            raise SelectingOnDeclineTurn()
+            yield SelectingOnDeclineTurn()
         if self._game._turn_stage != _TurnStage.SELECT_COMBO:
-            raise SelectingWhenActive()
+            yield SelectingWhenActive()
         coins_getting = self._game.combos[combo_index].coins
         if combo_index > self._game.player.coins + coins_getting:
-            raise NotEnoughCoins()
+            yield NotEnoughCoins()
 
-    def check_abandon(self, region: int) -> None:
+    def check_abandon(self, region: int) -> Iterator[RulesViolation]:
         """Check if `abandon()` violates the rules.
 
         Assume that `region` is in valid range.
 
-        Raise
+        Yield
         * `NoActiveRace`
             if the player doesn't have an active race.
         * `NonControlledRegion`
@@ -293,23 +295,24 @@ class Rules(AbstractRules):
             if this method is called after the game has ended.
         """
         if self._game.has_ended:
-            raise GameEnded()
+            yield GameEnded()
         if self._game.player.active_race is None:
-            raise NoActiveRace()
+            yield NoActiveRace()
         if self._game._turn_stage in _REDEPLOYMENT_STAGES:
-            raise ForbiddenDuringRedeployment()
+            yield ForbiddenDuringRedeployment()
         if region not in self._game.player.active_regions:
-            raise NonControlledRegion()
+            yield NonControlledRegion()
         if self._game._turn_stage in (_TurnStage.CONQUESTS,
                                       _TurnStage.USED_DICE):
-            raise AbandoningAfterConquests()
+            yield AbandoningAfterConquests()
 
-    def check_conquer(self, region: int, *, use_dice: bool) -> None:
+    def check_conquer(self, region: int, *, use_dice: bool
+                      ) -> Iterator[RulesViolation]:
         """Check if `conquer()` violates the rules.
 
         Assume that `region` is in valid range.
 
-        Raise
+        Yield
         * `NoActiveRace`
             if the player doesn't have an active race.
         * `NotAtBorder`
@@ -332,14 +335,14 @@ class Rules(AbstractRules):
             if this method is called after the game has ended.
         """
         if use_dice:
-            self._check_conquer_with_dice(region)
+            yield from self._check_conquer_with_dice(region)
         else:
-            self._check_conquer_without_dice(region)
+            yield from self._check_conquer_without_dice(region)
 
-    def check_start_redeployment(self) -> None:
+    def check_start_redeployment(self) -> Iterator[RulesViolation]:
         """Check if `start_redeployment()` violates the rules.
 
-        Raise
+        Yield
         * `NoActiveRace`
             if the player doesn't have an active race.
         * `NoActiveRegions`
@@ -350,20 +353,21 @@ class Rules(AbstractRules):
             if this method is called after the game has ended.
         """
         if self._game.has_ended:
-            raise GameEnded()
+            yield GameEnded()
         if self._game.player.active_race is None:
-            raise NoActiveRace()
+            yield NoActiveRace()
         if self._game._turn_stage in _REDEPLOYMENT_STAGES:
-            raise ForbiddenDuringRedeployment()
+            yield ForbiddenDuringRedeployment()
         if not self._game.player.active_regions:
-            raise NoActiveRegions()
+            yield NoActiveRegions()
 
-    def check_deploy(self, n_tokens: int, region: int) -> None:
+    def check_deploy(self, n_tokens: int, region: int
+                     ) -> Iterator[RulesViolation]:
         """Check if `deploy()` violates the rules.
 
         Assume that `n_tokens` is positive and `region` is in valid range.
 
-        Raise
+        Yield
         * `NoActiveRace`
             if the player doesn't have an active race.
         * `NonControlledRegion`
@@ -374,19 +378,19 @@ class Rules(AbstractRules):
             if this method is called after the game has ended.
         """
         if self._game.has_ended:
-            raise GameEnded()
+            yield GameEnded()
         if self._game.player.active_race is None:
-            raise NoActiveRace()
+            yield NoActiveRace()
         if region not in self._game.player.active_regions:
-            raise NonControlledRegion()
+            yield NonControlledRegion()
         tokens_on_hand = self._game.player.tokens_on_hand
         if n_tokens > tokens_on_hand:
-            raise NotEnoughTokensToDeploy(tokens_on_hand)
+            yield NotEnoughTokensToDeploy(tokens_on_hand)
 
-    def check_end_turn(self) -> None:
+    def check_end_turn(self) -> Iterator[RulesViolation]:
         """Check if `end_turn()` violates the rules.
 
-        Raise
+        Yield
         * `EndBeforeSelect`
             if the player must select a new combo and haven't done that yet.
         * `UndeployedTokens`
@@ -395,19 +399,19 @@ class Rules(AbstractRules):
             if this method is called after the game has ended.
         """
         if self._game.has_ended:
-            raise GameEnded()
+            yield GameEnded()
         if self._game._turn_stage == _TurnStage.SELECT_COMBO:
-            raise EndBeforeSelect()
+            yield EndBeforeSelect()
         tokens_on_hand = self._game.player.tokens_on_hand
         if tokens_on_hand > 0:
             if self._game._turn_stage == _TurnStage.USED_DICE \
                     and len(self._game.player.active_regions) == 0:
                 # The player has no regions and no ability to conquer, so
-                # he can't possibly deploy his tokens. Don't raise the error.
+                # he can't possibly deploy his tokens. Don't yield the error.
                 pass
             else:
                 cd = self._game._turn_stage == _TurnStage.CAN_DECLINE
-                raise UndeployedTokens(tokens_on_hand, can_decline=cd)
+                yield UndeployedTokens(tokens_on_hand, can_decline=cd)
 
     def conquest_cost(self, region: int) -> int:
         """Return the amount of tokens needed to conquer the given `region`.
@@ -428,38 +432,40 @@ class Rules(AbstractRules):
         player = self._game.player
         return len(player.active_regions) + len(player.decline_regions)
 
-    def _check_conquer_with_dice(self, region: int) -> None:
-        self._check_conquer_common(region)
+    def _check_conquer_with_dice(self, region: int
+                                 ) -> Iterator[RulesViolation]:
+        yield from self._check_conquer_common(region)
         tokens_on_hand = self._game.player.tokens_on_hand
         if tokens_on_hand < 1:
-            raise RollingWithoutTokens()
+            yield RollingWithoutTokens()
         minimum_required = self.conquest_cost(region) - 3
         if tokens_on_hand < minimum_required:
-            raise NotEnoughTokensToRoll(tokens_on_hand, minimum_required)
+            yield NotEnoughTokensToRoll(tokens_on_hand, minimum_required)
 
-    def _check_conquer_without_dice(self, region: int) -> None:
-        self._check_conquer_common(region)
+    def _check_conquer_without_dice(self, region: int
+                                    ) -> Iterator[RulesViolation]:
+        yield from self._check_conquer_common(region)
         tokens_on_hand = self._game.player.tokens_on_hand
         tokens_required = self.conquest_cost(region)
         if tokens_on_hand < tokens_required:
-            raise NotEnoughTokensToConquer(tokens_on_hand, tokens_required)
+            yield NotEnoughTokensToConquer(tokens_on_hand, tokens_required)
 
-    def _check_conquer_common(self, region: int) -> None:
+    def _check_conquer_common(self, region: int) -> Iterator[RulesViolation]:
         """Common checks for all conquests (with or without dice)."""
         if self._game.has_ended:
-            raise GameEnded()
+            yield GameEnded()
         if self._game.player.active_race is None:
-            raise NoActiveRace()
+            yield NoActiveRace()
         if self._game._turn_stage in _REDEPLOYMENT_STAGES:
-            raise ForbiddenDuringRedeployment()
+            yield ForbiddenDuringRedeployment()
         if self._game._turn_stage == _TurnStage.USED_DICE:
-            raise AlreadyUsedDice()
+            yield AlreadyUsedDice()
         if len(self._game.player.active_regions) == 0 \
                 and not self._game.regions[region].is_at_map_border:
-            raise NotAtBorder()
+            yield NotAtBorder()
         if region in self._game.player.active_regions:
-            raise ConqueringOwnRegion()
+            yield ConqueringOwnRegion()
         has_adjacent = any(region in self._game._borders[own]
                            for own in self._game.player.active_regions)
         if len(self._game.player.active_regions) > 0 and not has_adjacent:
-            raise NonAdjacentRegion()
+            yield NonAdjacentRegion()

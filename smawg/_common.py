@@ -11,7 +11,7 @@ from collections import deque
 from dataclasses import dataclass
 from enum import auto, Enum
 from itertools import islice
-from typing import Any
+from typing import Any, Iterator
 
 
 __all__ = [
@@ -253,67 +253,52 @@ class AbstractRules(ABC):
         ...
 
     @abstractmethod
-    def check_decline(self) -> None:
-        """Check if `decline()` violates the rules.
-
-        Raise `RulesViolation` if it does.
-        """
+    def check_decline(self) -> Iterator[RulesViolation]:
+        """Yield `RulesViolation`s for `decline()`, if any."""
         ...
 
     @abstractmethod
-    def check_select_combo(self, combo_index: int) -> None:
-        """Check if `select_combo()` violates the rules.
-
-        Raise `RulesViolation` if it does.
+    def check_select_combo(self, combo_index: int) -> Iterator[RulesViolation]:
+        """Yield `RulesViolation`s for `select_combo()`, if any.
 
         Assume that `combo_index` is in valid range.
         """
         ...
 
     @abstractmethod
-    def check_abandon(self, region: int) -> None:
-        """Check if `abandon()` violates the rules.
-
-        Raise `RulesViolation` if it does.
+    def check_abandon(self, region: int) -> Iterator[RulesViolation]:
+        """Yield `RulesViolation`s for `abandon()`, if any.
 
         Assume that `region` is in valid range.
         """
         ...
 
     @abstractmethod
-    def check_conquer(self, region: int, *, use_dice: bool) -> None:
-        """Check if `conquer()` violates the rules.
-
-        Raise `RulesViolation` if it does.
+    def check_conquer(self, region: int, *, use_dice: bool
+                      ) -> Iterator[RulesViolation]:
+        """Yield `RulesViolation`s for `conquer()`, if any.
 
         Assume that `region` is in valid range.
         """
         ...
 
     @abstractmethod
-    def check_start_redeployment(self) -> None:
-        """Check if `start_redeployment()` violates the rules.
-
-        Raise `RulesViolation` if it does.
-        """
+    def check_start_redeployment(self) -> Iterator[RulesViolation]:
+        """Yield `RulesViolation`s for `start_redeployment()`, if any."""
         ...
 
     @abstractmethod
-    def check_deploy(self, n_tokens: int, region: int) -> None:
-        """Check if `deploy()` violates the rules.
-
-        Raise `RulesViolation` if it does.
+    def check_deploy(self, n_tokens: int, region: int
+                     ) -> Iterator[RulesViolation]:
+        """Yield `RulesViolation`s for `deploy()`, if any..
 
         Assume that `n_tokens` is positive and `region` is in valid range.
         """
         ...
 
     @abstractmethod
-    def check_end_turn(self) -> None:
-        """Check if `end_turn()` violates the rules.
-
-        Raise `RulesViolation` if it does.
-        """
+    def check_end_turn(self) -> Iterator[RulesViolation]:
+        """Yield `RulesViolation`s for `end_turn()`, if any."""
         ...
 
     @abstractmethod

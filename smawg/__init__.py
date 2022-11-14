@@ -206,10 +206,10 @@ class Game(GameState):
     def decline(self) -> None:
         """Put player's active race in decline state.
 
-        Propagate any `RulesViolation` raised from `Rules.check_decline()`.
+        Or raise the first `RulesViolation` from `Rules.check_decline()`.
         """
-        self._rules.check_decline()
-
+        for e in self._rules.check_decline():
+            raise e
         # Mark the current ability and decline race as available for reuse.
         ability = self.player.active_ability
         assert ability is not None, "Always true, this is just type narrowing."
@@ -230,12 +230,13 @@ class Game(GameState):
 
         Raise `ValueError` if `combo_index not in range(len(self.combos))`.
 
-        Propagate any `RulesViolation` raised from `Rules.check_select_combo()`
+        Raise the first `RulesViolation` from `Rules.check_select_combo()`
         """
         if combo_index not in range(len(self.combos)):
             msg = f"combo_index must be between 0 and {len(self.combos)}"
             raise ValueError(msg)
-        self._rules.check_select_combo(combo_index)
+        for e in self._rules.check_select_combo(combo_index):
+            raise e
         self._pay_for_combo(combo_index)
         chosen_combo = self.combos.pop(combo_index)
         self.player._set_active(chosen_combo)
@@ -250,12 +251,13 @@ class Game(GameState):
 
         Raise `ValueError` if `region not in range(len(self.regions))`.
 
-        Propagate any `RulesViolation` raised from `Rules.check_abandon()`.
+        Raise the first `RulesViolation` from `Rules.check_abandon()`.
         """
         if region not in range(len(self.regions)):
             msg = f"region must be between 0 and {len(self.regions)}"
             raise ValueError(msg)
-        self._rules.check_abandon(region)
+        for e in self._rules.check_abandon(region):
+            raise e
         self.player.tokens_on_hand += self.player.active_regions.pop(region)
         self._turn_stage = _TurnStage.ACTIVE
 
@@ -266,12 +268,13 @@ class Game(GameState):
 
         Raise `ValueError` if `region not in range(len(self.regions))`.
 
-        Propagate any `RulesViolation` raised from `Rules.check_conquer()`.
+        Raise the first `RulesViolation` from `Rules.check_conquer()`.
         """
         if region not in range(len(self.regions)):
             msg = f"region must be between 0 and {len(self.regions)}"
             raise ValueError(msg)
-        self._rules.check_conquer(region, use_dice=use_dice)
+        for e in self._rules.check_conquer(region, use_dice=use_dice):
+            raise e
         if use_dice:
             self._conquer_with_dice(region)
         else:
@@ -280,13 +283,14 @@ class Game(GameState):
     def start_redeployment(self) -> None:
         """Pick up tokens to redeploy, leaving 1 token in each owned region.
 
-        Propagate any `RulesViolation` raised from
+        Raise the first `RulesViolation` from
         `Rules.check_start_redeployment()`.
 
         This action ends conquests. After this method is called,
         the player should deploy tokens from hand and then end the turn.
         """
-        self._rules.check_start_redeployment()
+        for e in self._rules.check_start_redeployment():
+            raise e
         self.player._pick_up_tokens()
         self._turn_stage = _TurnStage.REDEPLOYMENT
 
@@ -296,14 +300,15 @@ class Game(GameState):
         Raise `ValueError`
         if `n_tokens < 1` or `region not in range(len(self.regions))`.
 
-        Propagate any `RulesViolation` raised from `Rules.check_deploy()`.
+        Raise the first `RulesViolation` from `Rules.check_deploy()`.
         """
         if n_tokens < 1:
             raise ValueError("n_tokens must be greater then 0")
         if region not in range(len(self.regions)):
             msg = f"region must be between 0 and {len(self.regions)}"
             raise ValueError(msg)
-        self._rules.check_deploy(n_tokens, region)
+        for e in self._rules.check_deploy(n_tokens, region):
+            raise e
         self.player.tokens_on_hand -= n_tokens
         self.player.active_regions[region] += n_tokens
         if self._turn_stage == _TurnStage.CAN_DECLINE:
@@ -314,9 +319,10 @@ class Game(GameState):
 
         Automatically calculate+pay coin rewards and fire appropriate hooks.
 
-        Propagate any `RulesViolation` raised from `Rules.check_end_turn()`.
+        Raise the first `RulesViolation` from `Rules.check_end_turn()`.
         """
-        self._rules.check_end_turn()
+        for e in self._rules.check_end_turn():
+            raise e
         if self._turn_stage != _TurnStage.REDEPLOYMENT_TURN:
             self.player.coins += self._rules.calculate_turn_reward()
             self._hooks["on_turn_end"](self)
