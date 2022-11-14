@@ -2,6 +2,8 @@
 
 Without special effects from different terrain types, races or abilities.
 
+Intented to be reused between different "editions" of the game.
+
 See https://github.com/expurple/smawg for more info about the project.
 """
 
@@ -219,6 +221,8 @@ class Rules(AbstractRules):
     """Basic Small World rules.
 
     Without special effects from different terrain types, races or abilities.
+
+    Intented to be reused between different "editions" of the game.
     """
 
     def __init__(self, game: GameState) -> None:
