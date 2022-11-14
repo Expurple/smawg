@@ -10,7 +10,9 @@ See https://github.com/expurple/smawg for more info about the project.
 from typing import Iterator
 
 # Importing directly from `smawg` would cause a circular import.
-from smawg._common import AbstractRules, GameState, RulesViolation, _TurnStage
+from smawg._common import (
+    AbstractRules, GameState, RulesViolation, _TurnStage as _TS
+)
 
 __all__ = [
     "Rules", "GameEnded", "NoActiveRace", "ForbiddenDuringRedeployment",
@@ -214,9 +216,6 @@ class UndeployedTokens(RulesViolation):
 #                                   Rules
 # -----------------------------------------------------------------------------
 
-_REDEPLOYMENT_STAGES = (_TurnStage.REDEPLOYMENT, _TurnStage.REDEPLOYMENT_TURN)
-
-
 class Rules(AbstractRules):
     """Basic Small World rules.
 
@@ -246,11 +245,11 @@ class Rules(AbstractRules):
             yield GameEnded()
         if self._game.player.active_race is None:
             yield NoActiveRace()
-        if self._game._turn_stage in _REDEPLOYMENT_STAGES:
-            yield ForbiddenDuringRedeployment()
-        if self._game._turn_stage in (
-                _TurnStage.ACTIVE, _TurnStage.CONQUESTS, _TurnStage.USED_DICE):
-            yield DecliningWhenActive()
+        match self._game._turn_stage:
+            case _TS.REDEPLOYMENT | _TS.REDEPLOYMENT_TURN:
+                yield ForbiddenDuringRedeployment()
+            case _TS.ACTIVE | _TS.CONQUESTS | _TS.USED_DICE:
+                yield DecliningWhenActive()
 
     def check_select_combo(self, combo_index: int) -> Iterator[RulesViolation]:
         """Check if `select_combo()` violates the rules.
@@ -271,12 +270,15 @@ class Rules(AbstractRules):
         """
         if self._game.has_ended:
             yield GameEnded()
-        if self._game._turn_stage in _REDEPLOYMENT_STAGES:
-            yield ForbiddenDuringRedeployment()
-        if self._game._turn_stage == _TurnStage.DECLINED:
-            yield SelectingOnDeclineTurn()
-        if self._game._turn_stage != _TurnStage.SELECT_COMBO:
-            yield SelectingWhenActive()
+        match self._game._turn_stage:
+            case _TS.REDEPLOYMENT | _TS.REDEPLOYMENT_TURN:
+                yield ForbiddenDuringRedeployment()
+            case _TS.DECLINED:
+                yield SelectingOnDeclineTurn()
+            case _TS.SELECT_COMBO:
+                pass  # Filter out the correct case from the next pattern.
+            case _:
+                yield SelectingWhenActive()
         coins_getting = self._game.combos[combo_index].coins
         if combo_index > self._game.player.coins + coins_getting:
             yield NotEnoughCoins()
@@ -302,13 +304,13 @@ class Rules(AbstractRules):
             yield GameEnded()
         if self._game.player.active_race is None:
             yield NoActiveRace()
-        if self._game._turn_stage in _REDEPLOYMENT_STAGES:
-            yield ForbiddenDuringRedeployment()
+        match self._game._turn_stage:
+            case _TS.REDEPLOYMENT | _TS.REDEPLOYMENT_TURN:
+                yield ForbiddenDuringRedeployment()
+            case _TS.CONQUESTS | _TS.USED_DICE:
+                yield AbandoningAfterConquests()
         if region not in self._game.player.active_regions:
             yield NonControlledRegion()
-        if self._game._turn_stage in (_TurnStage.CONQUESTS,
-                                      _TurnStage.USED_DICE):
-            yield AbandoningAfterConquests()
 
     def check_conquer(self, region: int, *, use_dice: bool
                       ) -> Iterator[RulesViolation]:
@@ -360,7 +362,7 @@ class Rules(AbstractRules):
             yield GameEnded()
         if self._game.player.active_race is None:
             yield NoActiveRace()
-        if self._game._turn_stage in _REDEPLOYMENT_STAGES:
+        if self._game._turn_stage in (_TS.REDEPLOYMENT, _TS.REDEPLOYMENT_TURN):
             yield ForbiddenDuringRedeployment()
         if not self._game.player.active_regions:
             yield NoActiveRegions()
@@ -404,18 +406,18 @@ class Rules(AbstractRules):
         """
         if self._game.has_ended:
             yield GameEnded()
-        if self._game._turn_stage == _TurnStage.SELECT_COMBO:
+        if self._game._turn_stage == _TS.SELECT_COMBO:
             yield EndBeforeSelect()
         tokens_on_hand = self._game.player.tokens_on_hand
         if tokens_on_hand > 0:
-            if self._game._turn_stage == _TurnStage.USED_DICE \
+            if self._game._turn_stage == _TS.USED_DICE \
                     and len(self._game.player.active_regions) == 0:
                 # The player has no regions and no ability to conquer, so
                 # he can't possibly deploy his tokens. Don't yield the error.
                 pass
             else:
-                cd = self._game._turn_stage == _TurnStage.CAN_DECLINE
-                yield UndeployedTokens(tokens_on_hand, can_decline=cd)
+                can_decline = (self._game._turn_stage == _TS.CAN_DECLINE)
+                yield UndeployedTokens(tokens_on_hand, can_decline=can_decline)
 
     def conquest_cost(self, region: int) -> int:
         """Return the amount of tokens needed to conquer the given `region`.
@@ -460,10 +462,11 @@ class Rules(AbstractRules):
             yield GameEnded()
         if self._game.player.active_race is None:
             yield NoActiveRace()
-        if self._game._turn_stage in _REDEPLOYMENT_STAGES:
-            yield ForbiddenDuringRedeployment()
-        if self._game._turn_stage == _TurnStage.USED_DICE:
-            yield AlreadyUsedDice()
+        match self._game._turn_stage:
+            case _TS.REDEPLOYMENT | _TS.REDEPLOYMENT_TURN:
+                yield ForbiddenDuringRedeployment()
+            case _TS.USED_DICE:
+                yield AlreadyUsedDice()
         if len(self._game.player.active_regions) == 0 \
                 and not self._game.regions[region].is_at_map_border:
             yield NotAtBorder()
