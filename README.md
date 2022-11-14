@@ -156,11 +156,11 @@ Tests can be run using
 ## Contacts
 
 * **Home page** - [smawg](https://github.com/expurple/smawg)
-* **Author** - Dmitry Alexandrov <adk230@yandex.ru\>
+* **Author** - Dmitrii Aleksandrov <adk230@yandex.ru\>
 
 ## License
 
-Copyright (c) 2022 Dmitry Alexandrov.
+Copyright (c) 2022 Dmitrii Aleksandrov.
 
 Licensed under [GPL v.3 or later](./LICENSE)
 
