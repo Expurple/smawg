@@ -12,6 +12,8 @@ and this project adheres to
 ## Added
 
 - Effects from different terrain types:
+    - Allow to start the conquests from a non-edge region
+        whose shore is on a Sea adjacent to the edge of the board.
     - Conquering a Mountain now costs 1 additional token.
     - Conquering Seas and Lakes is now forbidden.
 - `smawg.basic_rules` module where you can still find basic rules from v0.12.0.

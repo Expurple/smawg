@@ -39,13 +39,19 @@ class Rules(br.Rules):
 
         Assume that `region` is in valid range.
 
-        Propagate any `RulesViolation` from
-        `smawg.basic_rules.Rules.check_conquer()`.
+        Propagate most `RulesViolation`s from
+        `smawg.basic_rules.Rules.check_conquer()`,
+        but allow to start conquests from non-border shores of border Seas.
 
         Yield `ConqueringSeaOrLake`
         if the player attempts to conquer a Sea or a Lake.
         """
         for e in super().check_conquer(region, use_dice=use_dice):
+            # Consider shores of border Seas as being on the map border.
+            is_not_border = isinstance(e, br.NotAtBorder)
+            if is_not_border and self._is_adjacent_to_border_sea(region):
+                continue
+            # Propagate all other errors from `basic_rules`.
             yield e
         # Forbid conquering Seas and Lakes.
         if self._game.regions[region].terrain in ("Sea", "Lake"):
@@ -60,3 +66,10 @@ class Rules(br.Rules):
         if self._game.regions[region].terrain == "Mountain":
             cost += 1
         return cost
+
+    def _is_adjacent_to_border_sea(self, region: int) -> bool:
+        for i in self._game._borders[region]:
+            r = self._game.regions[i]
+            if r.is_at_map_border and r.terrain == "Sea":
+                return True
+        return False

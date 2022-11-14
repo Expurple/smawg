@@ -55,6 +55,33 @@ class TestTerrain(BaseGameTest):
         with self.assertRaises(dr.ConqueringSeaOrLake):
             game.conquer(1)
 
+    def test_shore_of_border_sea(self) -> None:
+        """Check if conquering a shore of border Sea doesn't raise an error."""
+        # A donut shaped map: a Forest tile surrounded by a single Sea tile.
+        assets = deepcopy(TINY_ASSETS)
+        assets["map"] = {
+            "tiles": [
+                {
+                    "has_a_lost_tribe": False,
+                    "is_at_map_border": True,
+                    "terrain": "Sea"
+                },
+                {
+                    "has_a_lost_tribe": False,
+                    "is_at_map_border": False,
+                    "terrain": "Forest"
+                }
+            ],
+            "tile_borders": [
+                [0, 1]
+            ]
+        }
+        game = Game(assets, shuffle_data=False)
+        game.select_combo(0)
+        # With `basic_rules`, this would raise an error.
+        # But here with `default_rules`, it shouldn't.
+        game.conquer(1)
+
 
 if __name__ == "__main__":
     unittest.main()

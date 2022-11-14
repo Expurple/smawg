@@ -20,9 +20,7 @@ and easy interoperability with other programming languages.
 
 ### Missing features (in progress)
 
-* Ability to start the conquests from a region
-    whose shore is on a Sea adjacent to the edge of the board.
-* Unique Race and Special Power abilities.
+* Unique effects for each Race and Special Power.
 
 ### Future plans
 
