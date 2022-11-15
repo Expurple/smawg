@@ -210,34 +210,35 @@ class Client:
         """
         if command in COMMANDS_WITHOUT_ARGS and len(args) > 0:
             raise InvalidCommand(f"'{command}' does not accept any arguments")
-        if command == "help":
-            print(HELP)
-        elif command == "show-combos":
-            self._command_show_combos()
-        elif command == "show-players":
-            self._command_show_players()
-        elif command == "show-regions":
-            self._command_show_regions(args)
-        elif command == "combo":
-            self._command_combo(args)
-        elif command == "abandon":
-            self._command_abandon(args)
-        elif command == "conquer":
-            self._command_conquer(args)
-        elif command == "conquer-dice":
-            self._command_conquer_dice(args)
-        elif command == "deploy":
-            self._command_deploy(args)
-        elif command == "decline":
-            self.game.decline()
-        elif command == "redeploy":
-            self.game.start_redeployment()
-        elif command == "end-turn":
-            self.game.end_turn()
-        elif command == "quit":
-            exit(0)
-        else:
-            raise InvalidCommand(f"'{command}'")
+        match command:
+            case "help":
+                print(HELP)
+            case "show-combos":
+                self._command_show_combos()
+            case "show-players":
+                self._command_show_players()
+            case "show-regions":
+                self._command_show_regions(args)
+            case "combo":
+                self._command_combo(args)
+            case "abandon":
+                self._command_abandon(args)
+            case "conquer":
+                self._command_conquer(args)
+            case "conquer-dice":
+                self._command_conquer_dice(args)
+            case "deploy":
+                self._command_deploy(args)
+            case "decline":
+                self.game.decline()
+            case "redeploy":
+                self.game.start_redeployment()
+            case "end-turn":
+                self.game.end_turn()
+            case "quit":
+                exit(0)
+            case _:
+                raise InvalidCommand(f"'{command}'")
 
     def _command_show_players(self) -> None:
         headers = ["Player", "Active ability", "Active race", "Declined race",
