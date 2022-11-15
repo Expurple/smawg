@@ -9,7 +9,7 @@ and this project adheres to
 
 ## [Unreleased]
 
-## Added
+### Added
 
 - Effects from different terrain types:
     - Allow to start the conquests from a non-edge region
@@ -18,7 +18,7 @@ and this project adheres to
     - Conquering Seas and Lakes is now forbidden.
 - `smawg.basic_rules` module where you can still find basic rules from v0.12.0.
 
-## Changed
+### Changed
 
 - `AbstractRules` now yield erros instead of raising.
 - Pre-existing `RulesViolation` subclasses for basic rules should now be
@@ -26,7 +26,7 @@ and this project adheres to
 
 ## [0.12.0] - 2022-09-04
 
-## Added
+### Added
 
 - Support for custom rules:
     - `GameState` interface.
@@ -36,7 +36,7 @@ and this project adheres to
     - `--rules` option for `smawg.cli`.
     - `docs/rules.md`
 
-## Removed
+### Removed
 
 - `smawg.exceptions` module. Instead,
     - import `InvalidAssets` and `RulesViolation` from `smawg`.
