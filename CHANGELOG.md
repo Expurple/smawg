@@ -9,6 +9,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+\-
+
+## [0.13.0] - 2022-11-15
+
 ### Added
 
 - Effects from different terrain types:
