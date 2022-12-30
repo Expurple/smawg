@@ -9,6 +9,10 @@ and this project adheres to
 
 ## \[Unreleased]
 
+\-
+
+## \[0.13.1] - 2022-12-30
+
 ### Fixed
 
 - Typing in tests.
