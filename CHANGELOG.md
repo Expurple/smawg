@@ -12,6 +12,7 @@ and this project adheres to
 ### Fixed
 
 - Typing in tests.
+- Rules documentation not matching the test case.
 
 ## [0.13.0] - 2022-11-15
 

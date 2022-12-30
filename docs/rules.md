@@ -34,7 +34,10 @@ class CustomRules(DefaultRules):
     def check_abandon(self, region: int) -> Iterator[RulesViolation]:
         # Check the default rules first.
         yield from super().check_abandon(region)
-        if self._game.player.active_ability.name == "Stay-At-Home":
+        players_ability = self._game.player.active_ability
+        # Type narrowing for mypy.
+        assert players_ability is not None, "should be already checked"
+        if players_ability.name == "Stay-At-Home":
             yield NotStayingAtHome()
 ```
 
@@ -83,7 +86,10 @@ class Rules(DefaultRules):
     def check_abandon(self, region: int) -> Iterator[RulesViolation]:
         # Check the default rules first.
         yield from super().check_abandon(region)
-        if self._game.player.active_ability.name == "Stay-At-Home":
+        players_ability = self._game.player.active_ability
+        # Type narrowing for mypy.
+        assert players_ability is not None, "should be already checked"
+        if players_ability.name == "Stay-At-Home":
             yield NotStayingAtHome()
 ```
 
