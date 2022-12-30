@@ -107,7 +107,7 @@ def read_dice() -> int:
 
 def import_rules(filename: str) -> Type[AbstractRules]:
     """Dynamically load `Rules` from a Python file."""
-    rules_file_path = Path(args.rules).resolve()
+    rules_file_path = Path(filename).resolve()
     rules_file_name = rules_file_path.name
     rules_dir_name = str(rules_file_path.parent)
     sys.path.append(rules_dir_name)
@@ -310,10 +310,15 @@ class Client:
             raise ValueError(f"'{s}' is not an integer")
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """The entry point of `smawg.cli`."""
     readline.set_completer_delims(" ")
     readline.set_completer(autocomplete)
     readline.parse_and_bind("tab: complete")
     args = parse_args()
     client = Client(args)
     client.run()
+
+
+if __name__ == "__main__":
+    main()
