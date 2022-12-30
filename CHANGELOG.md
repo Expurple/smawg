@@ -7,15 +7,16 @@ The format is based on
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## \[Unreleased]
 
 ### Fixed
 
 - Typing in tests.
 - Rules documentation not matching the test case.
 - Broken file link in README.md.
+- Unescaped square brackets in markdown.
 
-## [0.13.0] - 2022-11-15
+## \[0.13.0] - 2022-11-15
 
 ### Added
 
@@ -32,7 +33,7 @@ and this project adheres to
 - Pre-existing `RulesViolation` subclasses for basic rules should now be
     imported from `smawg.basic_rules` instead of `smawg.default_rules`.
 
-## [0.12.0] - 2022-09-04
+## \[0.12.0] - 2022-09-04
 
 ### Added
 
@@ -51,13 +52,13 @@ and this project adheres to
     - import detailed `RulesViolation` subclasses from `smawg.default_rules`.
 - Misleading `RulesViolation.MESSAGE` attribute.
 
-## [0.11.1] - 2022-09-03
+## \[0.11.1] - 2022-09-03
 
 ### Fixed
 
 - `Combo.base_n_tokens` ignoring `Race.max_n_tokens`.
 
-## [0.11.0] - 2022-09-03
+## \[0.11.0] - 2022-09-03
 
 ### Added
 
@@ -73,7 +74,7 @@ and this project adheres to
 - `shuffle()` and `roll_dice()` that shouldn't have been public.
 - Unused `Player.decline_ability`.
 
-## [0.10.0] - 2022-09-03
+## \[0.10.0] - 2022-09-03
 
 ### Changed
 
@@ -98,13 +99,13 @@ and this project adheres to
 - Crashes or silent incorrect behaviour when map contains
     borders between non-existing tiles.
 
-## [0.9.1] - 2022-09-01
+## \[0.9.1] - 2022-09-01
 
 ### Fixed
 
 - Incorrect order of re-introducing races and abilities.
 
-## [0.9.0] - 2022-08-31
+## \[0.9.0] - 2022-08-31
 
 ### Added
 
@@ -128,7 +129,7 @@ and this project adheres to
 - Impossible requirement to deploy tokens from hand
     when the player has no regions and has already used the dice.
 
-## [0.8.0] - 2022-05-11
+## \[0.8.0] - 2022-05-11
 
 ### Added
 
@@ -140,13 +141,13 @@ and this project adheres to
 - `smawg.engine` now throws more precise subtypes of `RulesViolation` instead
     of using it directly (but it still catches all cases as a base class).
 
-## [0.7.0] - 2022-05-01
+## \[0.7.0] - 2022-05-01
 
 ### Added
 
 - Lost Tribe tokens.
 
-## [0.6.0] - 2022-04-26
+## \[0.6.0] - 2022-04-26
 
 ### Added
 
@@ -154,7 +155,7 @@ and this project adheres to
 - Related `Game` method: `abandon()`.
 - Related `cli` command: `abandon`.
 
-## [0.5.0] - 2022-04-18
+## \[0.5.0] - 2022-04-18
 
 ### Added
 
@@ -167,7 +168,7 @@ and this project adheres to
 
 - `cli` error messages when given wrong number of arguments.
 
-## [0.4.0] - 2022-04-12
+## \[0.4.0] - 2022-04-12
 
 ### Added
 
@@ -179,7 +180,7 @@ and this project adheres to
 
 - Default `Game()` arguments are now keyword-only.
 
-## [0.3.1] - 2022-02-11
+## \[0.3.1] - 2022-02-11
 
 ### Added
 
@@ -189,7 +190,7 @@ and this project adheres to
 
 - Dates of releases in `CHANGELOG.md`.
 
-## [0.3.0] - 2022-02-01
+## \[0.3.0] - 2022-02-01
 
 ### Added
 
@@ -208,7 +209,7 @@ and this project adheres to
 - `n_players` parameter from `Game.__init__()`.
 - `--players` option from `cli`.
 
-## [0.2.1] - 2022-02-01
+## \[0.2.1] - 2022-02-01
 
 ### Fixed
 
@@ -216,7 +217,7 @@ and this project adheres to
 - `cli` crashing when `show-regions` argument is out of bounds.
 - "not enough values to unpack" when entering an empty line in `cli`.
 
-## [0.2.0] - 2022-02-01
+## \[0.2.0] - 2022-02-01
 
 ### Added
 
@@ -247,13 +248,13 @@ and this project adheres to
     - Methods `is_in_decline()` and `needs_to_pick_combo()`.
     - Attributes `acted_on_this_turn` and `declined_on_this_turn`.
 
-## [0.1.1] - 2022-01-25
+## \[0.1.1] - 2022-01-25
 
 ### Fixed
 
 - Validation of `"races"` and `"abilities"` objects in asset files.
 
-## [0.1.0] - 2022-01-24
+## \[0.1.0] - 2022-01-24
 
 ### Added
 
