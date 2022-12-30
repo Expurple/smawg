@@ -6,7 +6,7 @@ This module can also be seen as a collection of `smawg` usage examples.
 import unittest
 from copy import deepcopy
 from contextlib import AbstractContextManager, nullcontext
-from typing import Any, Callable
+from typing import Any, Callable, Iterator
 
 import smawg.basic_rules as br
 from smawg import Game, RulesViolation
@@ -154,12 +154,14 @@ class TestGame(BaseGameTest):
                 super().__init__(msg)
 
         class CustomRules(br.Rules):
-            def check_abandon(self, region: int) -> None:
-                super().check_abandon(region)
+            def check_abandon(self, region: int) -> Iterator[RulesViolation]:
+                # Check the default rules first.
+                yield from super().check_abandon(region)
                 players_ability = self._game.player.active_ability
-                assert players_ability is not None, "type narrowing"
+                # Type narrowing for mypy.
+                assert players_ability is not None, "should be already checked"
                 if players_ability.name == "Stay-At-Home":
-                    raise NotStayingAtHome()
+                    yield NotStayingAtHome()
 
         assets = deepcopy(TINY_ASSETS)
         assets["abilities"][0]["name"] = "Stay-At-Home"

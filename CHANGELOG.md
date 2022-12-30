@@ -9,7 +9,9 @@ and this project adheres to
 
 ## [Unreleased]
 
-\-
+### Fixed
+
+- Typing in tests.
 
 ## [0.13.0] - 2022-11-15
 
