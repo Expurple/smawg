@@ -13,6 +13,7 @@ and this project adheres to
 
 - Typing in tests.
 - Rules documentation not matching the test case.
+- Broken file link in README.md.
 
 ## [0.13.0] - 2022-11-15
 
