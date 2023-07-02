@@ -9,6 +9,10 @@ and this project adheres to
 
 ## \[Unreleased]
 
+\-
+
+## \[0.14.0] - 2023-07-02
+
 ### Added
 
 - `is_in_redeployment_turn` property of `Game` and `GameState`.
