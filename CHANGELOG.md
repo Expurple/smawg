@@ -16,6 +16,8 @@ and this project adheres to
 ### Changed
 
 - `Game.conquer(..., use_dice=True)` now returns the value rolled on the dice.
+- Documentation on game hooks now discourages their use.
+    They may be deprecated in future versions.
 
 ### Fixed
 

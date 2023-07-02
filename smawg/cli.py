@@ -21,7 +21,7 @@ from typing import Type
 
 from tabulate import tabulate
 
-from smawg import AbstractRules, Game, Hooks, RulesViolation
+from smawg import AbstractRules, Game, RulesViolation
 from smawg._metadata import PACKAGE_DIR, VERSION
 
 
@@ -116,22 +116,6 @@ def import_rules(filename: str) -> Type[AbstractRules]:
     return rules
 
 
-def init_game(args: Namespace, hooks: Hooks) -> Game:
-    """Construct `Game` with respect to command line `args`."""
-    assets_file = args.assets_file
-    if args.relative_path:
-        assets_file = f"{PACKAGE_DIR}/{assets_file}"
-    with open(assets_file) as file:
-        assets = json.load(file)
-    rules = import_rules(args.rules)
-    if args.read_dice:
-        return Game(assets, rules, shuffle_data=not args.no_shuffle,
-                    dice_roll_func=read_dice, hooks=hooks)
-    else:
-        return Game(assets, rules, shuffle_data=not args.no_shuffle,
-                    hooks=hooks)
-
-
 class InvalidCommand(ValueError):
     """Exception raised in `Client` when an invalid command is entered."""
 
@@ -143,39 +127,24 @@ class Client:
 
     def __init__(self, args: Namespace) -> None:
         """Construct `Client` with respect to command line `args`."""
-        # This print originally was in `run()`, but now `init_game()` prints
-        # because of `Game` hooks, and this print needs to be above that...
-        print(START_SCREEN)
-
-        def on_turn_start(game: Game) -> None:
-            print(f"Player {game.player_id} starts turn "
-                  f"{game.current_turn}/{game.n_turns}.")
-
-        def on_dice_rolled(game: Game, value: int,
-                           conquest_success: bool) -> None:
-            description = "successful" if conquest_success else "unsuccessful"
-            print(f"Rolled {value} on the dice, conquest was {description}.")
-
-        def on_redeploy(game: Game) -> None:
-            print(f"Player {game.player_id} redeploys "
-                  f"{game.player.tokens_on_hand} tokens.")
-
-        def on_game_end(game: Game) -> None:
-            self._command_show_players()
-            print("")
-            print(f"{game.n_turns} turns have passed, the game is over.")
-            print("You can take a final look around and type 'quit' to quit.")
-
-        hooks: Hooks = {
-            "on_turn_start": on_turn_start,
-            "on_dice_rolled": on_dice_rolled,
-            "on_redeploy": on_redeploy,
-            "on_game_end": on_game_end
-        }
-        self.game = init_game(args, hooks)
+        assets_file = args.assets_file
+        if args.relative_path:
+            assets_file = f"{PACKAGE_DIR}/{assets_file}"
+        with open(assets_file) as file:
+            assets = json.load(file)
+        rules = import_rules(args.rules)
+        if args.read_dice:
+            game = Game(assets, rules, shuffle_data=not args.no_shuffle,
+                        dice_roll_func=read_dice)
+        else:
+            game = Game(assets, rules, shuffle_data=not args.no_shuffle)
+        self.game = game
+        self.player_of_last_command = -1  # Not equal to any actual player.
+        self.reported_game_end = False
 
     def run(self) -> None:
         """Interpret user commands until stopped by `'quit'`, ^C or ^D."""
+        print(START_SCREEN)
         try:
             self._run_main_loop()
         except (EOFError, KeyboardInterrupt):
@@ -183,6 +152,7 @@ class Client:
 
     def _run_main_loop(self) -> None:
         while True:
+            self.print_change_player_message()
             command = input("> ").strip()
             if command == "":
                 continue
@@ -196,6 +166,24 @@ class Client:
                 print(f"Invalid argument: {e.args[0]}")
             except RulesViolation as e:
                 print(f"Rules violated: {e.args[0]}")
+
+    def print_change_player_message(self) -> None:
+        """If active player changed or game ended, print a message."""
+        if self.game.has_ended and not self.reported_game_end:
+            self._command_show_players()
+            print("")
+            print(f"{self.game.n_turns} turns have passed, the game is over.")
+            print("You can take a final look around and type 'quit' to quit.")
+            self.reported_game_end = True
+            self.player_of_last_command = self.game.player_id
+        elif self.game.player_id != self.player_of_last_command:
+            if self.game.is_in_redeployment_turn:
+                print(f"Player {self.game.player_id} redeploys "
+                      f"{self.game.player.tokens_on_hand} tokens.")
+            else:
+                print(f"Player {self.game.player_id} starts turn "
+                      f"{self.game.current_turn}/{self.game.n_turns}.")
+            self.player_of_last_command = self.game.player_id
 
     def _interpret(self, command: str, args: list[str]) -> None:
         """Interpret and execute the given `command`.
@@ -289,7 +277,10 @@ class Client:
 
     def _command_conquer_dice(self, args: list[str]) -> None:
         i = self._parse_ints(args, n=1)[0]
-        self.game.conquer(i, use_dice=True)
+        dice_value = self.game.conquer(i, use_dice=True)
+        is_success = i in self.game.player.active_regions
+        description = "successful" if is_success else "unsuccessful"
+        print(f"Rolled {dice_value} on the dice, conquest was {description}.")
 
     def _command_deploy(self, args: list[str]) -> None:
         n, region = self._parse_ints(args, n=2)
