@@ -9,7 +9,9 @@ and this project adheres to
 
 ## \[Unreleased]
 
-\-
+### Fixed
+
+- Required `flake8` plugins are now specified in `setup.cfg`.
 
 ## \[0.13.1] - 2022-12-30
 
