@@ -501,6 +501,16 @@ class TestGameConquer(BaseGameTest):
         self.assertNotIn(1, game.player.active_regions)
         self.assertEqual(game.player.tokens_on_hand, 1)
 
+    def test_returned_dice_value(self) -> None:
+        """A simple sanity check for return value with `use_dice=True`."""
+        DICE_VALUE = 1
+        game = Game(
+            TINY_ASSETS, shuffle_data=False, dice_roll_func=lambda: DICE_VALUE
+        )
+        game.select_combo(0)
+        return_value = game.conquer(0, use_dice=True)
+        self.assertEqual(return_value, DICE_VALUE)
+
     def test_lost_tribe(self) -> None:
         """Test on regions with Lost Tribes."""
         assets = deepcopy(TINY_ASSETS)

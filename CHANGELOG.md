@@ -9,6 +9,10 @@ and this project adheres to
 
 ## \[Unreleased]
 
+### Changed
+
+- `Game.conquer(..., use_dice=True)` now returns the value rolled on the dice.
+
 ### Fixed
 
 - Required `flake8` plugins are now specified in `setup.cfg`.

@@ -6,7 +6,7 @@ See https://github.com/expurple/smawg for more info about the project.
 import json
 import random
 from collections import defaultdict
-from typing import Any, Callable, Type, TypedDict, cast
+from typing import Any, Callable, Literal, Type, TypedDict, cast, overload
 
 import jsonschema
 
@@ -261,10 +261,24 @@ class Game(GameState):
         self.player.tokens_on_hand += self.player.active_regions.pop(region)
         self._turn_stage = _TurnStage.ACTIVE
 
-    def conquer(self, region: int, *, use_dice: bool = False) -> None:
+    @overload
+    def conquer(self, region: int, *, use_dice: Literal[True]) -> int:
+        ...
+
+    @overload
+    def conquer(self, region: int, *, use_dice: Literal[False]) -> None:
+        ...
+
+    @overload
+    def conquer(self, region: int, *, use_dice: bool = False) -> int | None:
+        ...
+
+    def conquer(self, region: int, *, use_dice: bool = False) -> int | None:
         """Conquer the given map `region`.
 
-        When `use_dice=True` is given, attempt to use reinforcements.
+        When `use_dice=True` is given,
+        attempt to use reinforcements and return the value rolled on the dice.
+        Otherwise, don't use the dice and return `None`.
 
         Raise `ValueError` if `region not in range(len(self.regions))`.
 
@@ -276,9 +290,10 @@ class Game(GameState):
         for e in self._rules.check_conquer(region, use_dice=use_dice):
             raise e
         if use_dice:
-            self._conquer_with_dice(region)
+            return self._conquer_with_dice(region)
         else:
             self._conquer_without_dice(region)
+            return None
 
     def start_redeployment(self) -> None:
         """Pick up tokens to redeploy, leaving 1 token in each owned region.
@@ -354,7 +369,7 @@ class Game(GameState):
         self.player.active_regions[region] = tokens_required
         self._turn_stage = _TurnStage.CONQUESTS
 
-    def _conquer_with_dice(self, region: int) -> None:
+    def _conquer_with_dice(self, region: int) -> int:
         """Implementation of `conquer()` with `use_dice=True`.
 
         The rules are expected to be already checked in `conquer()`.
@@ -370,6 +385,7 @@ class Game(GameState):
             self.player.active_regions[region] = own_tokens_used
         self._turn_stage = _TurnStage.USED_DICE
         self._hooks["on_dice_rolled"](self, dice_value, is_success)
+        return dice_value
 
     def _kick_out_owner(self, region: int) -> None:
         """Move tokens from `region` to the storage tray and owner's hand.
