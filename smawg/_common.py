@@ -176,6 +176,11 @@ class GameState:
         return self._current_turn
 
     @property
+    def is_in_redeployment_turn(self) -> bool:
+        """Whether the redeployment preudo turn is happening right now."""
+        return self._turn_stage == _TurnStage.REDEPLOYMENT_TURN
+
+    @property
     def has_ended(self) -> bool:
         """Indicates whether the game has already ended.
 

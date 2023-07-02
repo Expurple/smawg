@@ -73,6 +73,7 @@ class TestGame(BaseGameTest):
             game.conquer(0)  # Region owned by player 0.
             game.end_turn()
         with nullcontext("Player 0 redeploys tokens:"):
+            self.assertTrue(game.is_in_redeployment_turn)
             self.assertEqual(game.player_id, 0)
             self.assertEqual(game.player.tokens_on_hand, 2)
             with self.assertRaises(br.ForbiddenDuringRedeployment):
@@ -88,6 +89,7 @@ class TestGame(BaseGameTest):
             game.deploy(game.player.tokens_on_hand, 1)
             game.end_turn()
         with nullcontext("Player 2, turn 1:"):
+            self.assertFalse(game.is_in_redeployment_turn)
             self.assertEqual(game.current_turn, 1)
             self.assertEqual(game.player_id, 2)
 
@@ -117,6 +119,7 @@ class TestGame(BaseGameTest):
         # Player 2 should do his "first conquest" on his own turn.
         # Now, there's no redeployment turn. Player 1 should start his turn.
         with nullcontext("Player 1, turn 2:"):
+            self.assertFalse(game.is_in_redeployment_turn)
             self.assertEqual(game.player_id, 1)
 
     def test_coin_rewards(self) -> None:

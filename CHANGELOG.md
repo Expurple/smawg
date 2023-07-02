@@ -9,6 +9,10 @@ and this project adheres to
 
 ## \[Unreleased]
 
+### Added
+
+- `is_in_redeployment_turn` property of `Game` and `GameState`.
+
 ### Changed
 
 - `Game.conquer(..., use_dice=True)` now returns the value rolled on the dice.
