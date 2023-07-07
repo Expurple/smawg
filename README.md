@@ -42,9 +42,23 @@ See [CHANGELOG.md](./CHANGELOG.md)
 
 ## Installation
 
-* `git clone https://github.com/Expurple/smawg.git`
-* `cd smawg/`
-* `pip install --user .`
+User wide install if your OS allows it:
+
+```sh
+git clone https://github.com/Expurple/smawg.git
+cd smawg/
+pip install --user .
+```
+
+Or install into `venv`:
+
+```sh
+git clone https://github.com/Expurple/smawg.git
+cd smawg/
+python3 -m venv venv
+source venv/bin/activate
+pip install .
+```
 
 ## Assets
 
@@ -137,11 +151,15 @@ or contact me personally.
 
 If you wish to participate in development, this should get you started:
 
-* Fork this repo on Github.
-* `git clone git@github.com:YOUR-USERNAME/smawg.git`
-* `cd smawg/`
-* `pip install --user .[dev]`
-* `bin/add-pre-commit-hook.sh`
+```sh
+# <Fork this repo on Github>
+git clone git@github.com:YOUR-USERNAME/smawg.git
+cd smawg/
+python3 -m venv venv
+source venv/bin/activate
+pip install .[dev] && pip uninstall smawg # Install only dependencies
+bin/add-pre-commit-hook.sh
+```
 
 Any contributions are welcome, but [missing featues](#features) and
 [open issues](https://github.com/Expurple/smawg/issues) should be prioritized.
