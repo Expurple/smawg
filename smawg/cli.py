@@ -17,7 +17,7 @@ import sys
 from argparse import ArgumentParser, Namespace
 from importlib import import_module
 from pathlib import Path
-from typing import Iterable, Type
+from typing import Iterable, Literal, Type, assert_never
 
 from tabulate import tabulate
 
@@ -55,13 +55,79 @@ but won't actually attempt to conquer it:
 
 Press Tab to use command autocompletion."""
 
-COMMAND_DESCRIPTIONS = \
-    [line.strip() for line in HELP.splitlines()[1:16] if line != ""]
-COMMANDS = [d.removeprefix("[?] ").split()[0] for d in COMMAND_DESCRIPTIONS]
-COMMANDS_WITHOUT_ARGS = \
-    [c for c, d in zip(COMMANDS, COMMAND_DESCRIPTIONS) if "<" not in d]
-COMMANDS_WITHOUT_DRY_RUN = \
-    [c for c, d in zip(COMMANDS, COMMAND_DESCRIPTIONS) if "[?]" not in d]
+COMMANDS = [
+    "help", "quit", "show-combos", "show-players", "show-regions", "combo",
+    "abandon", "conquer", "conquer-dice", "deploy", "redeploy", "decline",
+    "end-turn"
+]
+
+
+Command = (
+    Literal["help", "quit", "show-combos", "show-players"]
+    | tuple[Literal["show-regions"], int]
+    | tuple[bool, Literal["combo", "abandon", "conquer", "conquer-dice"], int]
+    | tuple[bool, Literal["deploy"], int, int]
+    | tuple[bool, Literal["redeploy", "decline", "end-turn"]]
+)
+
+
+def parse_command(line: str) -> Command | None:
+    """Parse a CLI `Command` from string.
+
+    Return `None` if the line is empty.
+
+    Raise:
+    * `smawg.cli.InvalidCommand`
+        if command is unknown, given wrong number or arguments,
+        or a dry run is requested for command that doesn't support it.
+    * `ValueError`
+        if some argument has invalid type or value.
+    """
+    line = line.strip()
+    dry_run = line.startswith("?")
+    if dry_run:
+        line = line.removeprefix("?").strip()
+    if line == "":
+        return None
+    command, *args = line.split()
+    dry_run_err = InvalidCommand(f"'{command}' does not support dry run mode")
+    match command:
+        case "help" | "quit" | "show-combos" | "show-players":
+            if dry_run:
+                raise dry_run_err
+            _parse_ints(args, n=0)
+            return command
+        case "show-regions":
+            if dry_run:
+                raise dry_run_err
+            [player] = _parse_ints(args, n=1)
+            return ("show-regions", player)
+        case "combo" | "abandon" | "conquer" | "conquer-dice":
+            [arg] = _parse_ints(args, n=1)
+            return (dry_run, command, arg)
+        case "deploy":
+            [n, region] = _parse_ints(args, n=2)
+            return (dry_run, "deploy", n, region)
+        case "redeploy" | "decline" | "end-turn":
+            _parse_ints(args, n=0)
+            return (dry_run, command)
+        case _:
+            raise InvalidCommand(f"unknown command '{command}'")
+
+
+def _parse_ints(args: list[str], *, n: int) -> list[int]:
+    """Parse `args` as a list of `n` integers."""
+    if len(args) != n:
+        raise InvalidCommand(f"expected {n} argument(s), but got {len(args)}")
+    return [_parse_int(a) for a in args]
+
+
+def _parse_int(s: str) -> int:
+    """Parse an integer or raise `ValueError` with a frendly message."""
+    try:
+        return int(s)
+    except ValueError:
+        raise ValueError(f"'{s}' is not an integer")
 
 
 def autocomplete(text: str, state: int) -> str | None:
@@ -163,16 +229,12 @@ class Client:
 
     def _run_main_loop(self) -> None:
         while True:
-            self.print_change_player_message()
-            command = input("> ").strip()
-            dry_run = command.startswith("?")
-            if dry_run:
-                command = command.removeprefix("?").strip()
-            if command == "":
-                continue
-            command, *args = command.split()
+            self._print_change_player_message()
+            line = input("> ")
             try:
-                self._interpret(command, args, dry_run=dry_run)
+                command = parse_command(line)
+                if command is not None:
+                    self._execute(command)
             except InvalidCommand as e:
                 print(f"Invalid command: {e.args[0]}")
                 print(HELP_SUGGESTION)
@@ -181,7 +243,7 @@ class Client:
             except RulesViolation as e:
                 print(f"Rules violated: {e.args[0]}")
 
-    def print_change_player_message(self) -> None:
+    def _print_change_player_message(self) -> None:
         """If active player changed or game ended, print a message."""
         if self.game.has_ended and not self.reported_game_end:
             self._command_show_players()
@@ -199,22 +261,15 @@ class Client:
                       f"{self.game.current_turn}/{self.game.n_turns}.")
             self.player_of_last_command = self.game.player_id
 
-    def _interpret(self, command: str, args: list[str], *, dry_run: bool
-                   ) -> None:
-        """Interpret and execute the given `command`.
+    def _execute(self, command: Command) -> None:
+        """Execute the given `command`.
 
         Raise:
-        * `smawg.cli.InvalidCommand`
-            if an unkown `command` or wrong number of `args` is given.
         * `ValueError`
-            if some argument has invalid type or value.
+            if some argument has invalid value.
         * `smawg.RulesViolation` subtypes
             if given command violates the game rules.
         """
-        if command in COMMANDS_WITHOUT_ARGS and len(args) > 0:
-            raise InvalidCommand(f"'{command}' does not accept any arguments")
-        if command in COMMANDS_WITHOUT_DRY_RUN and dry_run:
-            raise InvalidCommand(f"'{command}' does not support dry run mode")
         match command:
             case "help":
                 print(HELP)
@@ -224,26 +279,28 @@ class Client:
                 self._command_show_combos()
             case "show-players":
                 self._command_show_players()
-            case "show-regions":
-                self._command_show_regions(args)
-            case "combo":
-                self._command_combo(args, dry_run=dry_run)
-            case "abandon":
-                self._command_abandon(args, dry_run=dry_run)
-            case "conquer":
-                self._command_conquer(args, dry_run=dry_run)
-            case "conquer-dice":
-                self._command_conquer_dice(args, dry_run=dry_run)
-            case "deploy":
-                self._command_deploy(args, dry_run=dry_run)
-            case "redeploy":
+            case ("show-regions", int(player_id)):
+                self._command_show_regions(player_id)
+            case (bool(dry_run), "combo", int(index)):
+                self._command_combo(index, dry_run=dry_run)
+            case (bool(dry_run), "abandon", int(region)):
+                self._command_abandon(region, dry_run=dry_run)
+            case (bool(dry_run), "conquer", int(region)):
+                self._command_conquer(region, dry_run=dry_run)
+            case (bool(dry_run), "conquer-dice", int(region)):
+                self._command_conquer_dice(region, dry_run=dry_run)
+            case (bool(dry_run), "deploy", int(n), int(region)):
+                self._command_deploy(n, region, dry_run=dry_run)
+            case (bool(dry_run), "redeploy"):
                 self._command_redeploy(dry_run=dry_run)
-            case "decline":
+            case (bool(dry_run), "decline"):
                 self._command_decline(dry_run=dry_run)
-            case "end-turn":
+            case (bool(dry_run), "end-turn"):
                 self._command_end_turn(dry_run=dry_run)
-            case _:
-                raise InvalidCommand(f"'{command}'")
+            case not_covered:
+                # As of 1.4.1, mypy can't deduce `not_covered: Never` here.
+                # Remove 'type:ignore' when this is fixed in mypy.
+                assert_never(not_covered)  # type:ignore
 
     def _command_show_players(self) -> None:
         headers = ["Player", "Active ability", "Active race", "Declined race",
@@ -267,57 +324,52 @@ class Client:
                 for i, c in enumerate(self.game.combos)]
         print(tabulate(rows, headers, stralign="center", numalign="center"))
 
-    def _command_show_regions(self, args: list[str]) -> None:
-        i = self._parse_ints(args, n=1)[0]
-        if not 0 <= i < len(self.game.players):
+    def _command_show_regions(self, player_id: int) -> None:
+        if not 0 <= player_id < len(self.game.players):
             msg = f"<player> must be between 0 and {len(self.game.players)}"
             raise ValueError(msg)
+        player = self.game.players[player_id]
         headers = ["Region", "Tokens", "Type"]
         rows = []
-        for r, t in self.game.players[i].active_regions.items():
+        for r, t in player.active_regions.items():
             rows.append([r, t, "Active"])
-        for r in self.game.players[i].decline_regions:
+        for r in player.decline_regions:
             rows.append([r, 1, "Declined"])
         print(tabulate(rows, headers, stralign="center", numalign="center"))
 
-    def _command_combo(self, args: list[str], *, dry_run: bool) -> None:
-        i = self._parse_ints(args, n=1)[0]
+    def _command_combo(self, i: int, *, dry_run: bool) -> None:
         if dry_run:
             errors = self.game.rules.check_select_combo(i)
             self._raise_first_or_print_ok(errors)
         else:
             self.game.select_combo(i)
 
-    def _command_abandon(self, args: list[str], *, dry_run: bool) -> None:
-        i = self._parse_ints(args, n=1)[0]
+    def _command_abandon(self, region: int, *, dry_run: bool) -> None:
         if dry_run:
-            errors = self.game.rules.check_abandon(i)
+            errors = self.game.rules.check_abandon(region)
             self._raise_first_or_print_ok(errors)
         else:
-            self.game.abandon(i)
+            self.game.abandon(region)
 
-    def _command_conquer(self, args: list[str], *, dry_run: bool) -> None:
-        i = self._parse_ints(args, n=1)[0]
+    def _command_conquer(self, region: int, *, dry_run: bool) -> None:
         if dry_run:
-            errors = self.game.rules.check_conquer(i, use_dice=False)
+            errors = self.game.rules.check_conquer(region, use_dice=False)
             self._raise_first_or_print_ok(errors)
         else:
-            self.game.conquer(i)
+            self.game.conquer(region)
 
-    def _command_conquer_dice(self, args: list[str], *, dry_run: bool) -> None:
-        i = self._parse_ints(args, n=1)[0]
+    def _command_conquer_dice(self, region: int, *, dry_run: bool) -> None:
         if dry_run:
-            errors = self.game.rules.check_conquer(i, use_dice=True)
+            errors = self.game.rules.check_conquer(region, use_dice=True)
             self._raise_first_or_print_ok(errors)
         else:
-            dice_value = self.game.conquer(i, use_dice=True)
-            is_success = i in self.game.player.active_regions
+            dice_value = self.game.conquer(region, use_dice=True)
+            is_success = region in self.game.player.active_regions
             description = "successful" if is_success else "unsuccessful"
             print(f"Rolled {dice_value} on the dice, "
                   f"conquest was {description}.")
 
-    def _command_deploy(self, args: list[str], *, dry_run: bool) -> None:
-        n, region = self._parse_ints(args, n=2)
+    def _command_deploy(self, n: int, region: int, *, dry_run: bool) -> None:
         if dry_run:
             errors = self.game.rules.check_deploy(n, region)
             self._raise_first_or_print_ok(errors)
@@ -350,20 +402,6 @@ class Client:
             raise e
         print("Check passed: this action is legal, "
               "you can remove '?' and perform it")
-
-    def _parse_ints(self, args: list[str], *, n: int) -> list[int]:
-        """Parse `args` as a list of `n` integers."""
-        if len(args) != n:
-            msg = f"expected {n} argument(s), but got {len(args)}"
-            raise InvalidCommand(msg)
-        return [self._parse_int(a) for a in args]
-
-    def _parse_int(self, s: str) -> int:
-        """Parse an integer or raise `ValueError` with a frendly message."""
-        try:
-            return int(s)
-        except ValueError:
-            raise ValueError(f"'{s}' is not an integer")
 
 
 def main() -> None:
