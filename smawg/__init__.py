@@ -393,7 +393,7 @@ class Game(GameState):
         If the `region` has no owner, do nothing.
         """
         self.regions[region].has_a_lost_tribe = False
-        owner_idx = self._owner(region)
+        owner_idx = self.owner_of(region)
         if owner_idx is None:
             return
         owner = self.players[owner_idx]

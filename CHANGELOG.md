@@ -9,7 +9,9 @@ and this project adheres to
 
 ## \[Unreleased]
 
-\-
+### Added
+
+- `Game.owner_of()` and `GameState.owner_of()`.
 
 ## \[0.14.0] - 2023-07-02
 

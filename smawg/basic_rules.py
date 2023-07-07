@@ -425,7 +425,7 @@ class Rules(AbstractRules):
         Assume that `region` is a valid conquest target.
         """
         cost = 3
-        owner_idx = self._game._owner(region)
+        owner_idx = self._game.owner_of(region)
         if owner_idx is not None:
             owner = self._game.players[owner_idx]
             cost += owner.active_regions.get(region, 1)  # 1 if declined

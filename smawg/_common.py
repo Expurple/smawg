@@ -213,7 +213,7 @@ class GameState:
         """The current active `Player`."""
         return self.players[self.player_id]
 
-    def _owner(self, region: int) -> int | None:
+    def owner_of(self, region: int) -> int | None:
         """Return the owner of the given `region` or `None` if there's none."""
         for i, p in enumerate(self.players):
             if p._is_owning(region):
