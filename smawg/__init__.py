@@ -228,13 +228,8 @@ class Game(GameState):
         * Puts 1 coin on each combo above that (`combo_index` coins in total).
         * Then, the next combo is revealed.
 
-        Raise `ValueError` if `combo_index not in range(len(self.combos))`.
-
-        Raise the first `RulesViolation` from `Rules.check_select_combo()`
+        Raise the first error from `Rules.check_select_combo()`.
         """
-        if combo_index not in range(len(self.combos)):
-            msg = f"combo_index must be between 0 and {len(self.combos)}"
-            raise ValueError(msg)
         for e in self._rules.check_select_combo(combo_index):
             raise e
         self._pay_for_combo(combo_index)
@@ -249,13 +244,8 @@ class Game(GameState):
     def abandon(self, region: int) -> None:
         """Abandon the given map `region`.
 
-        Raise `ValueError` if `region not in range(len(self.regions))`.
-
-        Raise the first `RulesViolation` from `Rules.check_abandon()`.
+        Raise the first error from `Rules.check_abandon()`.
         """
-        if region not in range(len(self.regions)):
-            msg = f"region must be between 0 and {len(self.regions)}"
-            raise ValueError(msg)
         for e in self._rules.check_abandon(region):
             raise e
         self.player.tokens_on_hand += self.player.active_regions.pop(region)
@@ -280,13 +270,8 @@ class Game(GameState):
         attempt to use reinforcements and return the value rolled on the dice.
         Otherwise, don't use the dice and return `None`.
 
-        Raise `ValueError` if `region not in range(len(self.regions))`.
-
-        Raise the first `RulesViolation` from `Rules.check_conquer()`.
+        Raise the first error from `Rules.check_conquer()`.
         """
-        if region not in range(len(self.regions)):
-            msg = f"region must be between 0 and {len(self.regions)}"
-            raise ValueError(msg)
         for e in self._rules.check_conquer(region, use_dice=use_dice):
             raise e
         if use_dice:
@@ -312,16 +297,8 @@ class Game(GameState):
     def deploy(self, n_tokens: int, region: int) -> None:
         """Deploy `n_tokens` from hand to the specified own `region`.
 
-        Raise `ValueError`
-        if `n_tokens < 1` or `region not in range(len(self.regions))`.
-
-        Raise the first `RulesViolation` from `Rules.check_deploy()`.
+        Raise the first error from `Rules.check_deploy()`.
         """
-        if n_tokens < 1:
-            raise ValueError("n_tokens must be greater then 0")
-        if region not in range(len(self.regions)):
-            msg = f"region must be between 0 and {len(self.regions)}"
-            raise ValueError(msg)
         for e in self._rules.check_deploy(n_tokens, region):
             raise e
         self.player.tokens_on_hand -= n_tokens

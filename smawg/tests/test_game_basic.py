@@ -157,7 +157,8 @@ class TestGame(BaseGameTest):
                 super().__init__(msg)
 
         class CustomRules(br.Rules):
-            def check_abandon(self, region: int) -> Iterator[RulesViolation]:
+            def check_abandon(self, region: int
+                              ) -> Iterator[ValueError | RulesViolation]:
                 # Check the default rules first.
                 yield from super().check_abandon(region)
                 players_ability = self._game.player.active_ability

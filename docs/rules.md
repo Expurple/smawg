@@ -31,7 +31,8 @@ class NotStayingAtHome(RulesViolation):
 
 
 class CustomRules(DefaultRules):
-    def check_abandon(self, region: int) -> Iterator[RulesViolation]:
+    def check_abandon(self, region: int
+                      ) -> Iterator[ValueError | RulesViolation]:
         # Check the default rules first.
         yield from super().check_abandon(region)
         players_ability = self._game.player.active_ability
@@ -64,34 +65,9 @@ That's it!
 
 The first step is mostly the same.
 You need to define your `smawg.AbstractRules` sublass in a Python file.
-The difference is that the subclass must be named `Rules`.
+The difference is that the subclass must be named `Rules`
+(not `CustomRules` or anyting else).
 This is a convention so that the loader can find it.
-
-```python
-from typing import Iterator
-
-from smawg import RulesViolation
-from smawg.default_rules import Rules as DefaultRules
-
-
-# This is optional, you can raise `RulesViolation` directly.
-# But a separate subclass is easier to catch and test.
-class NotStayingAtHome(RulesViolation):
-    def __init__(self) -> None:
-        msg = "Stay-At-Home races don't like leaving their regions"
-        super().__init__(msg)
-
-
-class Rules(DefaultRules):
-    def check_abandon(self, region: int) -> Iterator[RulesViolation]:
-        # Check the default rules first.
-        yield from super().check_abandon(region)
-        players_ability = self._game.player.active_ability
-        # Type narrowing for mypy.
-        assert players_ability is not None, "should be already checked"
-        if players_ability.name == "Stay-At-Home":
-            yield NotStayingAtHome()
-```
 
 Then, again, you need to create an assets file that contains this ability.
 

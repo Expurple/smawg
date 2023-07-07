@@ -251,12 +251,13 @@ class Rules(AbstractRules):
             case _TS.ACTIVE | _TS.CONQUESTS | _TS.USED_DICE:
                 yield DecliningWhenActive()
 
-    def check_select_combo(self, combo_index: int) -> Iterator[RulesViolation]:
+    def check_select_combo(self, combo_index: int
+                           ) -> Iterator[ValueError | RulesViolation]:
         """Check if `select_combo()` violates the rules.
 
-        Assume that `combo_index` is in valid range.
-
         Yield
+        * `ValueError`
+            if `combo_index not in range(len(game.combos))`.
         * `SelectingWhenActive`
             if the player already has an active race.
         * `SelectingOnDeclineTurn`
@@ -268,6 +269,9 @@ class Rules(AbstractRules):
         * `GameEnded`
             if this method is called after the game has ended.
         """
+        n_combos = len(self._game.combos)
+        if combo_index not in range(n_combos):
+            yield ValueError(f"combo_index must be between 0 and {n_combos}")
         if self._game.has_ended:
             yield GameEnded()
         match self._game._turn_stage:
@@ -283,12 +287,13 @@ class Rules(AbstractRules):
         if combo_index > self._game.player.coins + coins_getting:
             yield NotEnoughCoins()
 
-    def check_abandon(self, region: int) -> Iterator[RulesViolation]:
+    def check_abandon(self, region: int
+                      ) -> Iterator[ValueError | RulesViolation]:
         """Check if `abandon()` violates the rules.
 
-        Assume that `region` is in valid range.
-
         Yield
+        * `ValueError`
+            if `region not in range(len(game.regions))`.
         * `NoActiveRace`
             if the player doesn't have an active race.
         * `NonControlledRegion`
@@ -300,6 +305,9 @@ class Rules(AbstractRules):
         * `GameEnded`
             if this method is called after the game has ended.
         """
+        n_regions = len(self._game.regions)
+        if region not in range(n_regions):
+            yield ValueError(f"region must be between 0 and {n_regions}")
         if self._game.has_ended:
             yield GameEnded()
         if self._game.player.active_race is None:
@@ -313,12 +321,12 @@ class Rules(AbstractRules):
             yield NonControlledRegion()
 
     def check_conquer(self, region: int, *, use_dice: bool
-                      ) -> Iterator[RulesViolation]:
+                      ) -> Iterator[ValueError | RulesViolation]:
         """Check if `conquer()` violates the rules.
 
-        Assume that `region` is in valid range.
-
         Yield
+        * `ValueError`
+            if `region not in range(len(game.regions))`.
         * `NoActiveRace`
             if the player doesn't have an active race.
         * `NotAtBorder`
@@ -368,12 +376,12 @@ class Rules(AbstractRules):
             yield NoActiveRegions()
 
     def check_deploy(self, n_tokens: int, region: int
-                     ) -> Iterator[RulesViolation]:
+                     ) -> Iterator[ValueError | RulesViolation]:
         """Check if `deploy()` violates the rules.
 
-        Assume that `n_tokens` is positive and `region` is in valid range.
-
         Yield
+        * `ValueError`
+            if `n_tokens < 1 or region not in range(len(game.regions))`
         * `NoActiveRace`
             if the player doesn't have an active race.
         * `NonControlledRegion`
@@ -383,6 +391,11 @@ class Rules(AbstractRules):
         * `GameEnded`
             if this method is called after the game has ended.
         """
+        if n_tokens < 1:
+            yield ValueError("n_tokens must be greater then 0")
+        n_regions = len(self._game.regions)
+        if region not in range(n_regions):
+            yield ValueError(f"region must be between 0 and {n_regions}")
         if self._game.has_ended:
             yield GameEnded()
         if self._game.player.active_race is None:
@@ -439,7 +452,7 @@ class Rules(AbstractRules):
         return len(player.active_regions) + len(player.decline_regions)
 
     def _check_conquer_with_dice(self, region: int
-                                 ) -> Iterator[RulesViolation]:
+                                 ) -> Iterator[ValueError | RulesViolation]:
         yield from self._check_conquer_common(region)
         tokens_on_hand = self._game.player.tokens_on_hand
         if tokens_on_hand < 1:
@@ -449,15 +462,19 @@ class Rules(AbstractRules):
             yield NotEnoughTokensToRoll(tokens_on_hand, minimum_required)
 
     def _check_conquer_without_dice(self, region: int
-                                    ) -> Iterator[RulesViolation]:
+                                    ) -> Iterator[ValueError | RulesViolation]:
         yield from self._check_conquer_common(region)
         tokens_on_hand = self._game.player.tokens_on_hand
         tokens_required = self.conquest_cost(region)
         if tokens_on_hand < tokens_required:
             yield NotEnoughTokensToConquer(tokens_on_hand, tokens_required)
 
-    def _check_conquer_common(self, region: int) -> Iterator[RulesViolation]:
+    def _check_conquer_common(self, region: int
+                              ) -> Iterator[ValueError | RulesViolation]:
         """Common checks for all conquests (with or without dice)."""
+        n_regions = len(self._game.regions)
+        if region not in range(n_regions):
+            yield ValueError(f"region must be between 0 and {n_regions}")
         if self._game.has_ended:
             yield GameEnded()
         if self._game.player.active_race is None:

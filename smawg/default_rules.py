@@ -34,13 +34,10 @@ class Rules(br.Rules):
     # for each race, ability and terrain type.
 
     def check_conquer(self, region: int, *, use_dice: bool
-                      ) -> Iterator[RulesViolation]:
+                      ) -> Iterator[ValueError | RulesViolation]:
         """Check if `conquer()` violates the rules.
 
-        Assume that `region` is in valid range.
-
-        Propagate most `RulesViolation`s from
-        `smawg.basic_rules.Rules.check_conquer()`,
+        Propagate most errors from `smawg.basic_rules.Rules.check_conquer()`,
         but allow to start conquests from non-border shores of border Seas.
 
         Yield `ConqueringSeaOrLake`

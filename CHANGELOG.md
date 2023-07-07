@@ -13,6 +13,11 @@ and this project adheres to
 
 - `Game.owner_of()` and `GameState.owner_of()`.
 
+### Changed
+
+- Rule plugins now bound-check their arguments and yield `ValueError` instead
+    of just assuming that they're valid.
+
 ## \[0.14.0] - 2023-07-02
 
 ### Added

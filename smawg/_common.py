@@ -246,7 +246,11 @@ def _borders(tile_borders: list[list[int]], n_tiles: int) -> list[set[int]]:
 
 
 class RulesViolation(Exception):
-    """Base class for all exceptions raised from rule plugins."""
+    """Base class for all domain errors yielded from rule plugins.
+
+    Note that these don't include programming erros such as passing an invalid
+    region index. For those, `ValueError` is usually used.
+    """
 
 
 class AbstractRules(ABC):
@@ -263,27 +267,32 @@ class AbstractRules(ABC):
         ...
 
     @abstractmethod
-    def check_select_combo(self, combo_index: int) -> Iterator[RulesViolation]:
+    def check_select_combo(self, combo_index: int
+                           ) -> Iterator[ValueError | RulesViolation]:
         """Yield `RulesViolation`s for `select_combo()`, if any.
 
-        Assume that `combo_index` is in valid range.
+        Before that, yield `ValueError` if
+        `combo_index not in range(len(game.combos))`.
         """
         ...
 
     @abstractmethod
-    def check_abandon(self, region: int) -> Iterator[RulesViolation]:
+    def check_abandon(self, region: int
+                      ) -> Iterator[ValueError | RulesViolation]:
         """Yield `RulesViolation`s for `abandon()`, if any.
 
-        Assume that `region` is in valid range.
+        Before that, yield `ValueError` if
+        `region not in range(len(game.regions))`.
         """
         ...
 
     @abstractmethod
     def check_conquer(self, region: int, *, use_dice: bool
-                      ) -> Iterator[RulesViolation]:
+                      ) -> Iterator[ValueError | RulesViolation]:
         """Yield `RulesViolation`s for `conquer()`, if any.
 
-        Assume that `region` is in valid range.
+        Before that, yield `ValueError` if
+        `region not in range(len(game.regions))`.
         """
         ...
 
@@ -294,10 +303,11 @@ class AbstractRules(ABC):
 
     @abstractmethod
     def check_deploy(self, n_tokens: int, region: int
-                     ) -> Iterator[RulesViolation]:
-        """Yield `RulesViolation`s for `deploy()`, if any..
+                     ) -> Iterator[ValueError | RulesViolation]:
+        """Yield `RulesViolation`s for `deploy()`, if any.
 
-        Assume that `n_tokens` is positive and `region` is in valid range.
+        Before that, yield `ValueError` if
+        `n_tokens < 1 or region not in range(len(game.regions))`.
         """
         ...
 
