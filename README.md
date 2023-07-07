@@ -35,7 +35,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 
 ## Requirements
 
-* Python 3.10+ (currently, only 3.10 is tested)
+* Python 3.11+ (currently, only 3.11 is tested)
 * [jsonschema](https://github.com/Julian/jsonschema)
 * [tabulate](https://github.com/astanin/python-tabulate) (only for `smawg.cli`)
 * [graphviz](https://github.com/xflr6/graphviz) (only for `smawg.viz`)

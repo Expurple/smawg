@@ -20,6 +20,10 @@ and this project adheres to
 - Rule plugins now bound-check their arguments and yield `ValueError` instead
     of just assuming that they're valid.
 
+### Removed
+
+- Support for Python 3.10.
+
 ### Fixed
 
 - Typo in `docs/rules.md`.
