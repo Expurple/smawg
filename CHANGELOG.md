@@ -18,6 +18,10 @@ and this project adheres to
 - Rule plugins now bound-check their arguments and yield `ValueError` instead
     of just assuming that they're valid.
 
+### Fixed
+
+- Typo in `docs/rules.md`.
+
 ## \[0.14.0] - 2023-07-02
 
 ### Added

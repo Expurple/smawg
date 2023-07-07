@@ -74,5 +74,5 @@ Then, again, you need to create an assets file that contains this ability.
 Then, pass the rules plugin and the assets file to `smawg.cli`:
 
 ```bash
-python3 -m smawg.cli --rules=custom_rules.py custom_assets.py
+python3 -m smawg.cli --rules=custom_rules.py custom_assets.json
 ```
