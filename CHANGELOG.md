@@ -13,6 +13,7 @@ and this project adheres to
 
 - `Game.owner_of()` and `GameState.owner_of()`.
 - Exposed `Game.rules`, allowing to "dry run" an action and check if it's valid.
+- Support for dry runs in `smawg.cli` ('?' operator).
 
 ### Changed
 

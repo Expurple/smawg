@@ -17,7 +17,7 @@ import sys
 from argparse import ArgumentParser, Namespace
 from importlib import import_module
 from pathlib import Path
-from typing import Type
+from typing import Iterable, Type
 
 from tabulate import tabulate
 
@@ -31,26 +31,37 @@ VISIT_HOME_PAGE = "For more info, visit https://github.com/expurple/smawg"
 START_SCREEN = "\n".join([TITLE, HELP_SUGGESTION, VISIT_HOME_PAGE, ""])
 HELP = """\
 Available commands:
-    help                   show this message
-    show-combos            show available combos
-    show-players           show general player stats
-    show-regions <player>  show regions owned by <player>
-    combo <index>          pick race+ability combo by <index>
-    abandon <region>       abandon <region> by index
-    conquer <region>       conquer <region> by index
-    conquer-dice <region>  conquer <region>, using the reinforcements dice
-    deploy <n> <region>    deploy <n> tokens from hand to <region>
-    redeploy               pick up tokens, leaving 1 in each region
-    decline                enter decline
-    end-turn               end turn and give control to the next player
-    quit                   quit game
+    help                       show this message
+    quit                       quit game
 
-Press Tab for autocompletion."""
+    show-combos                show available combos
+    show-players               show general player stats
+    show-regions <player>      show regions owned by <player>
 
-COMMAND_DESCRIPTIONS = [line.strip() for line in HELP.splitlines()[1:-2]]
-COMMANDS = [d.split()[0] for d in COMMAND_DESCRIPTIONS]
-COMMANDS_WITHOUT_ARGS = [c for c, d in zip(COMMANDS, COMMAND_DESCRIPTIONS)
-                         if "<" not in d]
+    [?] combo <index>          pick race+ability combo by <index>
+    [?] abandon <region>       abandon <region> by index
+    [?] conquer <region>       conquer <region> by index
+    [?] conquer-dice <region>  conquer <region>, using the reinforcements dice
+    [?] deploy <n> <region>    deploy <n> tokens from hand to <region>
+    [?] redeploy               pick up tokens, leaving 1 in each region
+    [?] decline                enter decline
+    [?] end-turn               end turn and give control to the next player
+
+Put '?' before any command from the last group to "dry run" it.
+For example, this command will tell if you're allowed to conquer region 3,
+but won't actually attempt to conquer it:
+
+    ? conquer 3
+
+Press Tab to use command autocompletion."""
+
+COMMAND_DESCRIPTIONS = \
+    [line.strip() for line in HELP.splitlines()[1:16] if line != ""]
+COMMANDS = [d.removeprefix("[?] ").split()[0] for d in COMMAND_DESCRIPTIONS]
+COMMANDS_WITHOUT_ARGS = \
+    [c for c, d in zip(COMMANDS, COMMAND_DESCRIPTIONS) if "<" not in d]
+COMMANDS_WITHOUT_DRY_RUN = \
+    [c for c, d in zip(COMMANDS, COMMAND_DESCRIPTIONS) if "[?]" not in d]
 
 
 def autocomplete(text: str, state: int) -> str | None:
@@ -154,11 +165,14 @@ class Client:
         while True:
             self.print_change_player_message()
             command = input("> ").strip()
+            dry_run = command.startswith("?")
+            if dry_run:
+                command = command.removeprefix("?").strip()
             if command == "":
                 continue
             command, *args = command.split()
             try:
-                self._interpret(command, args)
+                self._interpret(command, args, dry_run=dry_run)
             except InvalidCommand as e:
                 print(f"Invalid command: {e.args[0]}")
                 print(HELP_SUGGESTION)
@@ -185,7 +199,8 @@ class Client:
                       f"{self.game.current_turn}/{self.game.n_turns}.")
             self.player_of_last_command = self.game.player_id
 
-    def _interpret(self, command: str, args: list[str]) -> None:
+    def _interpret(self, command: str, args: list[str], *, dry_run: bool
+                   ) -> None:
         """Interpret and execute the given `command`.
 
         Raise:
@@ -198,9 +213,13 @@ class Client:
         """
         if command in COMMANDS_WITHOUT_ARGS and len(args) > 0:
             raise InvalidCommand(f"'{command}' does not accept any arguments")
+        if command in COMMANDS_WITHOUT_DRY_RUN and dry_run:
+            raise InvalidCommand(f"'{command}' does not support dry run mode")
         match command:
             case "help":
                 print(HELP)
+            case "quit":
+                exit(0)
             case "show-combos":
                 self._command_show_combos()
             case "show-players":
@@ -208,23 +227,21 @@ class Client:
             case "show-regions":
                 self._command_show_regions(args)
             case "combo":
-                self._command_combo(args)
+                self._command_combo(args, dry_run=dry_run)
             case "abandon":
-                self._command_abandon(args)
+                self._command_abandon(args, dry_run=dry_run)
             case "conquer":
-                self._command_conquer(args)
+                self._command_conquer(args, dry_run=dry_run)
             case "conquer-dice":
-                self._command_conquer_dice(args)
+                self._command_conquer_dice(args, dry_run=dry_run)
             case "deploy":
-                self._command_deploy(args)
-            case "decline":
-                self.game.decline()
+                self._command_deploy(args, dry_run=dry_run)
             case "redeploy":
-                self.game.start_redeployment()
+                self._command_redeploy(dry_run=dry_run)
+            case "decline":
+                self._command_decline(dry_run=dry_run)
             case "end-turn":
-                self.game.end_turn()
-            case "quit":
-                exit(0)
+                self._command_end_turn(dry_run=dry_run)
             case _:
                 raise InvalidCommand(f"'{command}'")
 
@@ -263,28 +280,76 @@ class Client:
             rows.append([r, 1, "Declined"])
         print(tabulate(rows, headers, stralign="center", numalign="center"))
 
-    def _command_combo(self, args: list[str]) -> None:
+    def _command_combo(self, args: list[str], *, dry_run: bool) -> None:
         i = self._parse_ints(args, n=1)[0]
-        self.game.select_combo(i)
+        if dry_run:
+            errors = self.game.rules.check_select_combo(i)
+            self._raise_first_or_print_ok(errors)
+        else:
+            self.game.select_combo(i)
 
-    def _command_abandon(self, args: list[str]) -> None:
+    def _command_abandon(self, args: list[str], *, dry_run: bool) -> None:
         i = self._parse_ints(args, n=1)[0]
-        self.game.abandon(i)
+        if dry_run:
+            errors = self.game.rules.check_abandon(i)
+            self._raise_first_or_print_ok(errors)
+        else:
+            self.game.abandon(i)
 
-    def _command_conquer(self, args: list[str]) -> None:
+    def _command_conquer(self, args: list[str], *, dry_run: bool) -> None:
         i = self._parse_ints(args, n=1)[0]
-        self.game.conquer(i)
+        if dry_run:
+            errors = self.game.rules.check_conquer(i, use_dice=False)
+            self._raise_first_or_print_ok(errors)
+        else:
+            self.game.conquer(i)
 
-    def _command_conquer_dice(self, args: list[str]) -> None:
+    def _command_conquer_dice(self, args: list[str], *, dry_run: bool) -> None:
         i = self._parse_ints(args, n=1)[0]
-        dice_value = self.game.conquer(i, use_dice=True)
-        is_success = i in self.game.player.active_regions
-        description = "successful" if is_success else "unsuccessful"
-        print(f"Rolled {dice_value} on the dice, conquest was {description}.")
+        if dry_run:
+            errors = self.game.rules.check_conquer(i, use_dice=True)
+            self._raise_first_or_print_ok(errors)
+        else:
+            dice_value = self.game.conquer(i, use_dice=True)
+            is_success = i in self.game.player.active_regions
+            description = "successful" if is_success else "unsuccessful"
+            print(f"Rolled {dice_value} on the dice, "
+                  f"conquest was {description}.")
 
-    def _command_deploy(self, args: list[str]) -> None:
+    def _command_deploy(self, args: list[str], *, dry_run: bool) -> None:
         n, region = self._parse_ints(args, n=2)
-        self.game.deploy(n, region)
+        if dry_run:
+            errors = self.game.rules.check_deploy(n, region)
+            self._raise_first_or_print_ok(errors)
+        else:
+            self.game.deploy(n, region)
+
+    def _command_redeploy(self, *, dry_run: bool) -> None:
+        if dry_run:
+            errors = self.game.rules.check_start_redeployment()
+            self._raise_first_or_print_ok(errors)
+        else:
+            self.game.start_redeployment()
+
+    def _command_decline(self, *, dry_run: bool) -> None:
+        if dry_run:
+            errors = self.game.rules.check_decline()
+            self._raise_first_or_print_ok(errors)
+        else:
+            self.game.decline()
+
+    def _command_end_turn(self, *, dry_run: bool) -> None:
+        if dry_run:
+            errors = self.game.rules.check_end_turn()
+            self._raise_first_or_print_ok(errors)
+        else:
+            self.game.end_turn()
+
+    def _raise_first_or_print_ok(self, errors: Iterable[Exception]) -> None:
+        for e in errors:
+            raise e
+        print("Check passed: this action is legal, "
+              "you can remove '?' and perform it")
 
     def _parse_ints(self, args: list[str], *, n: int) -> list[int]:
         """Parse `args` as a list of `n` integers."""
