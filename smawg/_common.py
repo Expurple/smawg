@@ -149,12 +149,12 @@ class GameState:
         self._regions = [Region(**t) for t in assets["map"]["tiles"]]
         self._borders = _borders(assets["map"]["tile_borders"],
                                  len(self._regions))
-        self._n_combos: int = assets["n_selectable_combos"]
         self._n_turns: int = assets["n_turns"]
         self._current_turn: int = 1
         abilities = (Ability(**a) for a in assets["abilities"])
         races = (Race(**r) for r in assets["races"])
-        visible_ra = islice(zip(races, abilities), self._n_combos)
+        n_combos: int = assets["n_selectable_combos"]
+        visible_ra = islice(zip(races, abilities), n_combos)
         self._combos = [Combo(r, a) for r, a in visible_ra]
         self._invisible_abilities = deque(abilities)
         self._invisible_races = deque(races)
