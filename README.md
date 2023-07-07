@@ -14,6 +14,8 @@ and easy interoperability with other programming languages.
     * Imperatively or by setting hooks on game events.
 * Automatic maintainance of game state (manages tokens, calculates score, etc).
 * Automatic checks for violation of the rules.
+    * The rule checker is exposed, so you can also "dry run" an action to check
+    if it's valid.
 * Support for custom maps, races and other assets.
 * Support for custom rules (see [docs/rules.md](docs/rules.md)).
 * Deterministic or randomized outcomes.

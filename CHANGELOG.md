@@ -12,6 +12,7 @@ and this project adheres to
 ### Added
 
 - `Game.owner_of()` and `GameState.owner_of()`.
+- Exposed `Game.rules`, allowing to "dry run" an action and check if it's valid.
 
 ### Changed
 

@@ -158,6 +158,8 @@ class Game(GameState):
     * Flexible configuration on construction (see `__init__`).
     * API for performing in-game actions (as methods).
     * Access to the game state (as readonly properties).
+    * Access to the rule checker, allowing to "dry run" an action
+        and check if it's valid.
 
     Method calls automatically update `Game` state according to the rules,
     or raise exceptions if the call violates the rules.
@@ -202,6 +204,15 @@ class Game(GameState):
         self._rules: AbstractRules = RulesT(self)
         # Only after `self` has been fully initialized.
         self._hooks["on_turn_start"](self)
+
+    @property
+    def rules(self) -> AbstractRules:
+        """Access the rule checker.
+
+        This is useful if you want to test an action without actually
+        performing it.
+        """
+        return self._rules
 
     def decline(self) -> None:
         """Put player's active race in decline state.
