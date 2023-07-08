@@ -11,8 +11,9 @@ from argparse import ArgumentParser, Namespace
 from typing import Any, Callable
 
 from graphviz import Graph  # type:ignore
+from pydantic import TypeAdapter
 
-from smawg import validate
+from smawg import Assets, Map
 from smawg._metadata import PACKAGE_DIR, VERSION
 
 
@@ -61,26 +62,24 @@ def _parse_args() -> Namespace:
     return parser.parse_args()
 
 
-def build_graph(assets: dict[str, Any]) -> Graph:
+def build_graph(map: Map) -> Graph:
     """Convert the map into a DOT representation, but don't render it yet."""
-    validate(assets)
-    map = assets["map"]
     graph = Graph(
         name="map",
         engine="sfdp",
         graph_attr={"overlap": "false"}
     )
-    for i, tile in enumerate(map["tiles"]):
-        node_attrs = {"label": f'{i}. {tile["terrain"]}'}
-        if tile["has_a_lost_tribe"]:
+    for i, tile in enumerate(map.tiles):
+        node_attrs = {"label": f"{i}. {tile.terrain}"}
+        if tile.has_a_lost_tribe:
             node_attrs["label"] += "\nLost Tribe"
-        if tile["is_at_map_border"]:
+        if tile.is_at_map_border:
             node_attrs["style"] = "bold"
         graph.node(str(i), **node_attrs)
-    for tile1, tile2 in map["tile_borders"]:
+    for tile1, tile2 in map.tile_borders:
         edge_attrs = {}
-        if map["tiles"][tile1]["is_at_map_border"] \
-                and map["tiles"][tile2]["is_at_map_border"]:
+        if map.tiles[tile1].is_at_map_border \
+                and map.tiles[tile2].is_at_map_border:
             edge_attrs["style"] = "bold"
         graph.edge(str(tile1), str(tile2), **edge_attrs)
     return graph
@@ -111,7 +110,8 @@ if __name__ == "__main__":
     if args.relative_path:
         assets_file = f"{PACKAGE_DIR}/{assets_file}"
     with open(assets_file) as file:
-        assets = json.load(file)
-    graph = build_graph(assets)
+        assets_dict = json.load(file)
+    assets: Assets = TypeAdapter(Assets).validate_python(assets_dict)
+    graph = build_graph(assets.map)
     format = None if args.no_render else args.format
     save(graph, format, view=args.view, on_save=_on_save)
