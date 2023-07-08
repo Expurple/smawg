@@ -14,9 +14,6 @@ PACKAGE_DIR = Path(__file__).parent.resolve()
 ASSETS_DIR = Path(f"{PACKAGE_DIR}/assets")
 """Path to `assets/` directory in the currently used `smawg` package."""
 
-SCHEMA_DIR = Path(f"{PACKAGE_DIR}/assets_schema")
-"""Path to `assets_schema/` directory in the currently used `smawg` package."""
-
 VERSION: str
 """The version of `smawg` package as an `"x.y.z"` format string."""
 

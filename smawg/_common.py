@@ -8,17 +8,23 @@ See https://github.com/expurple/smawg for more info about the project.
 
 from abc import ABC, abstractmethod
 from collections import deque
-from dataclasses import dataclass
+from copy import deepcopy
 from enum import auto, Enum
 from itertools import islice
-from typing import Any, Iterator
+from typing import Iterator
+
+from pydantic import NonNegativeInt, PositiveInt, model_validator
+from pydantic.dataclasses import dataclass
 
 
+# When modifying this, don't forget to modify `smawg.__all__`.
 __all__ = [
-    "Region", "Ability", "Race", "Combo", "Player", "_TurnStage", "GameState",
-    "RulesViolation", "AbstractRules"
+    "Region", "Ability", "Race", "Map", "Assets", "Combo", "Player",
+    "_TurnStage", "GameState", "RulesViolation", "AbstractRules"
 ]
 
+
+# ---------------- Game assets, usually loaded from a JSON file ---------------
 
 @dataclass
 class Region:
@@ -33,6 +39,7 @@ class Region:
     has_a_lost_tribe: bool
     is_at_map_border: bool
     terrain: str
+    """The type of terrain (Forest, Mountain, etc)"""
 
 
 @dataclass(frozen=True)
@@ -40,7 +47,8 @@ class Ability:
     """Immutable description of an ability (just like on a physical banner)."""
 
     name: str
-    n_tokens: int
+    n_tokens: NonNegativeInt
+    "The number of additional race tokens the player gets."
 
 
 @dataclass(frozen=True)
@@ -48,9 +56,85 @@ class Race:
     """Immutable description of a race (just like on a physical banner)."""
 
     name: str
-    n_tokens: int
-    max_n_tokens: int
+    n_tokens: PositiveInt
+    """The base number of tokens the player gets, regardless of the ability."""
+    max_n_tokens: PositiveInt
+    """The total number of race tokens in the storage."""
 
+
+@dataclass(frozen=True)
+class Map:
+    """Machine-readable, graph-like representation of the game map.
+
+    If the map is invalid, constructor raises `pydantic.ValidationError`.
+    """
+
+    tiles: list[Region]
+    """A list of map tiles (nodes in the graph)."""
+    tile_borders: list[tuple[NonNegativeInt, NonNegativeInt]]
+    """A list of borders between adjacent tiles (edges in the graph)."""
+
+    @model_validator(mode="after")  # type:ignore  # idk why it complains
+    def _validate_tile_indexes(self) -> "Map":
+        n_tiles = len(self.tiles)
+        for t1, t2 in self.tile_borders:
+            greater_index = max(t1, t2)
+            if greater_index >= n_tiles:
+                raise ValueError(
+                    f"tile border ({t1}, {t2}) references a non-existing tile:"
+                    f" {greater_index} (the map has {n_tiles} tiles)"
+                )
+        return self
+
+
+@dataclass(frozen=True)
+class Assets:
+    """A complete set of game assets and constants.
+
+    If assets are invalid, constructor raises `pydantic.ValidationError`.
+    """
+
+    n_players: PositiveInt
+    """The number of players in this particular game setup."""
+    n_coins_on_start: NonNegativeInt
+    """The number of coins at the start of the game."""
+    n_selectable_combos: PositiveInt
+    """The number of revealed combos at any given time."""
+    n_turns: PositiveInt
+    """The number of turns, after which the game ends."""
+    abilities: list[Ability]
+    """A list of abilities available in the game."""
+    races: list[Race]
+    """A list of races available in the game."""
+    map: Map
+    """The game map."""
+    name: str = "<no name provided>"
+    description: str = "<no description provided>"
+
+    @model_validator(mode="after")  # type:ignore  # idk why it complains
+    def _validate_n_selectable_combos(self) -> "Assets":
+        n_players = self.n_players
+        n_selectable_combos = self.n_selectable_combos
+        n_races = len(self.races)
+        safe_n_races = 2 * n_players + n_selectable_combos
+        if n_races < safe_n_races:
+            raise ValueError(
+                f"{n_races} races are not enough to always guarantee "
+                f"{n_selectable_combos} selectable combos for {n_players} "
+                f"players, need at least {safe_n_races} races"
+            )
+        n_abilities = len(self.abilities)
+        safe_n_abilities = n_players + n_selectable_combos
+        if n_abilities < safe_n_abilities:
+            raise ValueError(
+                f"{n_abilities} abilities are not enough to always guarantee "
+                f"{n_selectable_combos} selectable combos for {n_players} "
+                f"players, need at least {safe_n_abilities} abilities"
+            )
+        return self
+
+
+# ----------------------------- Runtime game data -----------------------------
 
 class Combo:
     """Immutable pair of `Race` and `Ability` banners.
@@ -136,29 +220,30 @@ class _TurnStage(Enum):
     """Pseudo-turn for redeploying tokens after attack from other player."""
 
 
+# ---------------------- Common interfaces / base classes ---------------------
+
 class GameState:
     """An interface for accessing the `Game` state."""
 
-    def __init__(self, assets: dict[str, Any]) -> None:
-        """Initialize the game state from `assets`.
+    # I am lazy, to this class is not abstract,
+    # it's simultaneously an interface and an implementation.
+    # The constructor shouldn't be a part of the interface, but whatever.
 
-        Assume thet `assets` are already validated by the caller.
-        """
-        n_coins: int = assets["n_coins_on_start"]
-        n_players: int = assets["n_players"]
-        self._regions = [Region(**t) for t in assets["map"]["tiles"]]
-        self._borders = _borders(assets["map"]["tile_borders"],
-                                 len(self._regions))
-        self._n_turns: int = assets["n_turns"]
+    def __init__(self, assets: Assets) -> None:
+        """Initialize the game state from `assets`."""
+        # Gotta make a copy because we're going to mutate `Region`s.
+        self._regions = deepcopy(assets.map.tiles)
+        self._borders = _borders(assets.map.tile_borders, len(self._regions))
+        self._n_turns = assets.n_turns
         self._current_turn: int = 1
-        abilities = (Ability(**a) for a in assets["abilities"])
-        races = (Race(**r) for r in assets["races"])
-        n_combos: int = assets["n_selectable_combos"]
-        visible_ra = islice(zip(races, abilities), n_combos)
+        abilities = iter(assets.abilities)
+        races = iter(assets.races)
+        visible_ra = islice(zip(races, abilities), assets.n_selectable_combos)
         self._combos = [Combo(r, a) for r, a in visible_ra]
         self._invisible_abilities = deque(abilities)
         self._invisible_races = deque(races)
-        self._players = [Player(n_coins) for _ in range(n_players)]
+        self._players = \
+            [Player(assets.n_coins_on_start) for _ in range(assets.n_players)]
         self._player_id = 0
         self._turn_stage = _TurnStage.SELECT_COMBO
 
@@ -221,7 +306,8 @@ class GameState:
         return None
 
 
-def _borders(tile_borders: list[list[int]], n_tiles: int) -> list[set[int]]:
+def _borders(tile_borders: list[tuple[int, int]], n_tiles: int
+             ) -> list[set[int]]:
     """Transform a list of region pairs into a list of sets for each region.
 
     Assume that `tile_borders` and `n_tiles`
@@ -229,7 +315,7 @@ def _borders(tile_borders: list[list[int]], n_tiles: int) -> list[set[int]]:
 
     Example:
     ```
-    >>> _borders([[0, 1], [1, 2]], 4)
+    >>> _borders([(0, 1), (1, 2)], 4)
     [
         {1},    # Neighbors of region 0
         {0, 2}, # Neighbors of region 1

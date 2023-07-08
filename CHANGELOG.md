@@ -9,7 +9,28 @@ and this project adheres to
 
 ## \[Unreleased]
 
-\-
+### Added
+
+- Dependency on `pydantic`.
+- Strongly typed `Map` and `Assets` objects.
+- Package-level CLI entry point (`smawg`) with `schema` subcommand to generate
+    JSON schema.
+
+### Changed
+
+- `GameState` constructor now accepts assets as `Assets` instead of `dict`.
+- `validate()` and `Game.__init__()` now raise `pydantic.ValidationError`
+    instead of `jsonschema.exceptions.ValidationError` or `smawg.InvalidAssets`.
+
+### Deprecated
+
+- Parameter `strict` of `validate()`.
+
+### Removed
+
+- `smawg/assets_schema/`
+- Dependency on `jsonschema`.
+- `InvalidAssets` exception class (`pydantic.ValidationError` is used instead).
 
 ## \[0.15.0] - 2023-07-07
 

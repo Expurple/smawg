@@ -3,138 +3,54 @@
 See https://github.com/expurple/smawg for more info about the project.
 """
 
-import json
 import random
 from collections import defaultdict
+from dataclasses import replace
 from typing import Any, Callable, Literal, Type, TypedDict, cast, overload
 
-import jsonschema
-
 from smawg._common import (
-    Ability, AbstractRules, Combo, GameState,
-    Player, Race, Region, RulesViolation, _TurnStage
+    Ability, AbstractRules, Assets, Combo, GameState,
+    Map, Player, Race, Region, RulesViolation, _TurnStage
 )
-from smawg._metadata import SCHEMA_DIR
 from smawg.default_rules import Rules as DefaultRules
 
 __all__ = [
     # Defined in this file:
-    "Game", "Hooks", "InvalidAssets", "validate",
+    "Game", "Hooks", "validate",
     # Re-exported from smawg._common:
-    "Ability", "AbstractRules", "Combo", "GameState",
-    "Player", "Race", "Region", "RulesViolation"
+    "Region", "Ability", "Race", "Map", "Assets", "Combo", "Player",
+    "GameState", "RulesViolation", "AbstractRules"
 ]
 
 
-# --------------------------- assets validation -------------------------------
-
-with open(f"{SCHEMA_DIR}/assets.json") as file:
-    _ASSETS_SCHEMA: dict[str, Any] = json.load(file)
-
-_STRICT_ASSETS_SCHEMA = {**_ASSETS_SCHEMA, "additionalProperties": False}
-
-_LOCAL_REF_RESOLVER = jsonschema.RefResolver(f"file://{SCHEMA_DIR}/", {})
-"""Fixes references to local schemas."""
-
-
-class InvalidAssets(Exception):
-    """Assets match the JSON schema but still violate some invariants."""
-
-
 def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
-    """Validate the game assets.
+    """Raise `pydantic.ValidationError` if given `assets` are invalid.
 
-    Raise `jsonschema.exceptions.ValidationError`
-    if `assets` don't match the schema in `assets_schema/`.
-
-    If `strict=True`, also fail on undocumented keys.
-
-    Raise `smawg.InvalidAssets` if
-    - there are less than `2 * n_players + n_selectable_combos` races; or
-    - there are less than `n_players + n_selectable_combos` abilities; or
-    - tile borders reference non-existing tiles.
+    Parameter `strict` is deprecated and doesn't do anything.
     """
-    schema = _STRICT_ASSETS_SCHEMA if strict else _ASSETS_SCHEMA
-    jsonschema.validate(assets, schema, resolver=_LOCAL_REF_RESOLVER)
-    _validate_n_races(assets)
-    _validate_n_abilities(assets)
-    _validate_tile_indexes(assets)
+    _ = Assets(**assets)
 
 
-def _validate_n_races(assets: dict[str, Any]) -> None:
-    """Assume that `assets` are already validated against the JSON schema."""
-    n_races = len(assets["races"])
-    n_players = assets["n_players"]
-    n_selectable_combos = assets["n_selectable_combos"]
-    safe_n_races = 2 * n_players + n_selectable_combos
-    if n_races < safe_n_races:
-        raise InvalidAssets(
-            f"{n_races} races are not enough to always guarantee "
-            f"{n_selectable_combos} selectable combos "
-            f"for {n_players} players, need at least {safe_n_races} races"
-        )
-
-
-def _validate_n_abilities(assets: dict[str, Any]) -> None:
-    """Assume that `assets` are already validated against the JSON schema."""
-    n_abilities = len(assets["abilities"])
-    n_players = assets["n_players"]
-    n_selectable_combos = assets["n_selectable_combos"]
-    safe_n_abilities = n_players + n_selectable_combos
-    if n_abilities < safe_n_abilities:
-        raise InvalidAssets(
-            f"{n_abilities} abilities are not enough to always guarantee "
-            f"{n_selectable_combos} selectable combos for "
-            f"{n_players} players, need at least {safe_n_abilities} abilities"
-        )
-
-
-def _validate_tile_indexes(assets: dict[str, Any]) -> None:
-    """Assume that `assets` are already validated against the JSON schema."""
-    n_tiles = len(assets["map"]["tiles"])
-    for t1, t2 in assets["map"]["tile_borders"]:
-        greater_index = max(t1, t2)
-        if greater_index >= n_tiles:
-            raise InvalidAssets(
-                f"Tile border [{t1}, {t2}] references a non-existing tile: "
-                f"{greater_index} (the map only has {n_tiles} tiles)"
-            )
-
-
-# ------------------------ randomization utilities ----------------------------
-
-def _shuffle(assets: dict[str, Any]) -> dict[str, Any]:
+def _shuffle(assets: Assets) -> Assets:
     """Shuffle the order of `Race` and `Ability` banners in `assets`.
 
     Just like you would do in a physical Small World game.
 
-    Returns a copy as shallow as possible:
-
-    ```python
-    # New root assets dict
-    {
-        "races":       [...],  # New list with references to the same objects
-        "abilities":   [...],  # New list with references to the same objects
-        "other fields": ...    # References to the same objects
-    }
-    ```
+    Returns a copy as shallow as possible. Resulting `races` and `abilities`
+    are new lists with references to the same objects. Other fields also
+    reference the same objects.
     """
-    assets = {
-        **assets,
-        "races": list(assets["races"]),
-        "abilities": list(assets["abilities"])
-    }
-    random.shuffle(assets["races"])
-    random.shuffle(assets["abilities"])
-    return assets
+    races = list(assets.races)
+    abilities = list(assets.abilities)
+    random.shuffle(races)
+    random.shuffle(abilities)
+    return replace(assets, races=races, abilities=abilities)
 
 
 def _roll_dice() -> int:
     """Return a random dice roll result."""
     return random.choice((0, 0, 0, 1, 2, 3))
 
-
-# --------------------- the Small World engine itself -------------------------
 
 def _do_nothing(*args: Any, **kwargs: Any) -> None:
     """Just accept any arguments and do nothing."""
@@ -176,7 +92,8 @@ class Game(GameState):
                  hooks: Hooks = {}) -> None:
         """Initialize a game based on given `assets`.
 
-        `assets` are validated using `validate()`, all errors are propagated.
+        `assets` are converted to `Assets`, which may raise
+        `pydantic.ValidationError`.
 
         When initialization is finished, the object is ready to be used by
         player 0. `"on_turn_start"` hook is fired immediately, if provided.
@@ -192,10 +109,10 @@ class Game(GameState):
         Provide optional `hooks` to automatically fire on certain events.
         For details, see `docs/hooks.md`.
         """
-        validate(assets)
+        assets_obj = Assets(**assets)
         if shuffle_data:
-            assets = _shuffle(assets)
-        super().__init__(assets)
+            assets_obj = _shuffle(assets_obj)
+        super().__init__(assets_obj)
         self._next_player_id = self._increment(self.player_id)
         """Helper to preserve `_current_player_id` during redeployment."""
         self._roll_dice = dice_roll_func

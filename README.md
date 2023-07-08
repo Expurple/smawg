@@ -36,7 +36,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 ## Requirements
 
 * Python 3.11+ (currently, only 3.11 is tested)
-* [jsonschema](https://github.com/Julian/jsonschema)
+* [pydantic](https://github.com/pydantic/pydantic)
 * [tabulate](https://github.com/astanin/python-tabulate) (only for `smawg.cli`)
 * [graphviz](https://github.com/xflr6/graphviz) (only for `smawg.viz`)
 
@@ -70,8 +70,18 @@ Currently, the only available set of assets is
 You can create and use your own asset files.
 You're not required to contribute them back, but I would appreciate it.
 
-For documentation, see the JSON schema in
-[smawg/assets_schema/assets.json](smawg/assets_schema/assets.json).
+For better editing experience (at least in VSCode),
+you can generate a JSON schema:
+
+```sh
+python3 -m smawg schema > assets_schema.json
+```
+
+And then reference it in your assets file:
+
+```json
+"$schema": "some/path/to/assets_schema.json",
+```
 
 The schema doesn't specify a visual layout for game maps.
 I imagine the map from `tiny.json` as `1)`, but it may be as well represented
