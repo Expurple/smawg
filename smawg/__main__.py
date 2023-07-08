@@ -8,7 +8,7 @@ See https://github.com/expurple/smawg for more info about the project.
 import json
 from argparse import ArgumentParser, Namespace
 
-from pydantic.json_schema import GenerateJsonSchema
+from pydantic import TypeAdapter
 
 from smawg import Assets
 from smawg._metadata import VERSION
@@ -44,17 +44,12 @@ def _parse_args() -> Namespace:
     return parser.parse_args()
 
 
-def _command_schema() -> None:
-    assets_schema = Assets.__pydantic_core_schema__  # type:ignore
-    assets_json_schema = GenerateJsonSchema().generate(assets_schema)
-    print(json.dumps(assets_json_schema, indent=2))
-
-
 def _main() -> None:
     args = _parse_args()
     match args.subcommand:
         case "schema":
-            _command_schema()
+            schema = TypeAdapter(Assets).json_schema()
+            print(json.dumps(schema, indent=2))
         case _:
             assert False, "all commands should be handled"
 

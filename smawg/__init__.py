@@ -8,6 +8,8 @@ from collections import defaultdict
 from dataclasses import replace
 from typing import Any, Callable, Literal, Type, TypedDict, cast, overload
 
+from pydantic import TypeAdapter
+
 from smawg._common import (
     Ability, AbstractRules, Assets, Combo, GameState,
     Map, Player, Race, Region, RulesViolation, _TurnStage
@@ -28,7 +30,7 @@ def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
 
     Parameter `strict` is deprecated and doesn't do anything.
     """
-    _ = Assets(**assets)
+    _ = TypeAdapter(Assets).validate_python(assets)
 
 
 def _shuffle(assets: Assets) -> Assets:
@@ -110,7 +112,7 @@ class Game(GameState):
         For details, see `docs/hooks.md`.
         """
         if not isinstance(assets, Assets):
-            assets = Assets(**assets)
+            assets = TypeAdapter(Assets).validate_python(assets)
         if shuffle_data:
             assets = _shuffle(assets)
         super().__init__(assets)
