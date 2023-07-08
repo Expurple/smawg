@@ -87,7 +87,7 @@ class Map:
         return self
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Assets:
     """A complete set of game assets and constants.
 
