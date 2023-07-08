@@ -136,7 +136,7 @@ from smawg import Game
 from smawg import RulesViolation
 
 
-# If you want, you can directly construct `assets` dict
+# If you want, you can directly construct `assets` as dict or Assets object
 # instead of reading from file.
 with open('some/path/to/assets.json') as assets_file:
     assets = json.load(assets_file)

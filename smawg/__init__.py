@@ -85,15 +85,15 @@ class Game(GameState):
     # and properties are implemented in the base class.
     # This class only implements game actions and hooks.
 
-    def __init__(self, assets: dict[str, Any],
+    def __init__(self, assets: Assets | dict[str, Any],
                  RulesT: Type[AbstractRules] = DefaultRules, *,
                  shuffle_data: bool = True,
                  dice_roll_func: Callable[[], int] = _roll_dice,
                  hooks: Hooks = {}) -> None:
         """Initialize a game based on given `assets`.
 
-        `assets` are converted to `Assets`, which may raise
-        `pydantic.ValidationError`.
+        `assets` are converted to `Assets` if necessary.
+        When `assets` are invalid, this will raise `pydantic.ValidationError`.
 
         When initialization is finished, the object is ready to be used by
         player 0. `"on_turn_start"` hook is fired immediately, if provided.
@@ -109,10 +109,11 @@ class Game(GameState):
         Provide optional `hooks` to automatically fire on certain events.
         For details, see `docs/hooks.md`.
         """
-        assets_obj = Assets(**assets)
+        if not isinstance(assets, Assets):
+            assets = Assets(**assets)
         if shuffle_data:
-            assets_obj = _shuffle(assets_obj)
-        super().__init__(assets_obj)
+            assets = _shuffle(assets)
+        super().__init__(assets)
         self._next_player_id = self._increment(self.player_id)
         """Helper to preserve `_current_player_id` during redeployment."""
         self._roll_dice = dice_roll_func

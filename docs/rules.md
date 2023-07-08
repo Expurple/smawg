@@ -49,9 +49,8 @@ and pass `assets` and `CustomRules` to the `Game` constructor:
 from smawg import Game
 
 
-# Instead of modifying an existing file,
-# you can create a new one
-# or define `assets` as a dict right here.
+# Instead of modifying an existing file, you can create a new one
+# or define `assets` right here as dict or as Assets object.
 with open("smawg/assets/tiny.json") as assets_file:
     assets = json.load(assets_file)
 assets["abilities"][0]["name"] = "Stay-At-Home"

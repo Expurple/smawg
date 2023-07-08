@@ -13,6 +13,7 @@ and this project adheres to
 
 - Dependency on `pydantic`.
 - Strongly typed `Map` and `Assets` objects.
+- `Game.__init__()` overload that accepts `Assets` instead of `dict`.
 - Package-level CLI entry point (`smawg`) with `schema` subcommand to generate
     JSON schema.
 
