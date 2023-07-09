@@ -9,6 +9,10 @@ and this project adheres to
 
 ## \[Unreleased]
 
+### Added
+
+- Assets for the standard 3 player game setup.
+
 ### Changed
 
 - To reduce verbosity of map assets, `"has_a_lost_tribe"` and

@@ -22,13 +22,14 @@ and easy interoperability with other programming languages.
 
 ### Missing features
 
-* Asset files for standard game maps and setups.
+* Asset files for standard 2-, 4- and 5-player setups.
 * Unique effects for each Race and Special Power.
 
 ### Future plans
 
 * Options for more machine-readable CLI output.
 * In-house AI and GUI examples.
+* Better support for expansions.
 
 ## Requirements
 
@@ -104,12 +105,17 @@ You can also find "real world" usage examples in
 
 `smawg` usually gets static assets (like a list of races) from a JSON file.
 
-Currently, the only available set of assets is
-[smawg/assets/tiny.json](smawg/assets/tiny.json).
+The following sets of assets are provided in
+[smawg/assets/](smawg/assets/):
+
+* [standard_3_players.json](smawg/assets/standard_3_players.json) -
+    the standard setup for 3 players.
+* [tiny.json](smawg/assets/tiny.json) -
+    a small setup for testing.
 
 You can create and use your own asset files.
 You're not required to contribute them back, but I would appreciate it.
-For example, the standard game maps are currently missing.
+For example, the standard 2-, 4- and 5-player setups are currently missing.
 
 ### JSON schema
 
