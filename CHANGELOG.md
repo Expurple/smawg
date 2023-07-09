@@ -11,6 +11,8 @@ and this project adheres to
 
 ### Added
 
+- `Region.symbols` field to support symbols like "Cavern", "Magic Source" and
+    "Mine". This field is empty by default.
 - Assets for the standard 3 player game setup.
 
 ### Changed

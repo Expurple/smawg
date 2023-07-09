@@ -13,7 +13,7 @@ from enum import auto, Enum
 from itertools import islice
 from typing import Iterator
 
-from pydantic import NonNegativeInt, PositiveInt, model_validator
+from pydantic import Field, NonNegativeInt, PositiveInt, model_validator
 from pydantic.dataclasses import dataclass
 
 
@@ -30,16 +30,20 @@ __all__ = [
 class Region:
     """Info about a region from the game map.
 
-    `is_at_map_border` and `terrain` are immutable.
+    `terrain`, `is_at_map_border` and `symbols` and are immutable.
 
-    `has_a_lost_tribe` is mutable -
-    it becomes `False` after the region is conquered.
+    `has_a_lost_tribe` is mutable.
+    It becomes `False` after the region is conquered.
     """
 
-    terrain: str
+    terrain: str = Field(examples=[
+        "Farmland", "Forest", "Hill", "Lake", "Sea", "Swamp", "Mountain"
+    ])
     has_a_lost_tribe: bool = False
     is_at_map_border: bool = False
-    """The type of terrain (Forest, Mountain, etc)"""
+    symbols: frozenset[str] = Field(default_factory=frozenset, examples=[
+        [], ["Cavern"], ["Magic Source"], ["Mine"]
+    ])
 
 
 @dataclass(frozen=True)
