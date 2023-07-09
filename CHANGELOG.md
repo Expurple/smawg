@@ -9,6 +9,10 @@ and this project adheres to
 
 ## \[Unreleased]
 
+\-
+
+## \[0.16.0] - 2023-07-09
+
 ### Added
 
 - Dependency on `pydantic`.
