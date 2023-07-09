@@ -73,26 +73,21 @@
     "map": {
         "tiles": [
             {
-                "has_a_lost_tribe": false,
                 "is_at_map_border": true,
                 "terrain": "Forest"
             },
             {
-                "has_a_lost_tribe": false,
                 "is_at_map_border": true,
                 "terrain": "Forest"
             },
             {
-                "has_a_lost_tribe": false,
                 "terrain": "Forest"
             },
             {
-                "has_a_lost_tribe": false,
                 "is_at_map_border": true,
                 "terrain": "Forest"
             },
             {
-                "has_a_lost_tribe": false,
                 "is_at_map_border": true,
                 "terrain": "Forest"
             }

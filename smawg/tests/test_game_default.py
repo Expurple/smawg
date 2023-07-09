@@ -62,12 +62,10 @@ class TestTerrain(BaseGameTest):
         assets["map"] = {
             "tiles": [
                 {
-                    "has_a_lost_tribe": False,
                     "is_at_map_border": True,
                     "terrain": "Sea"
                 },
                 {
-                    "has_a_lost_tribe": False,
                     "terrain": "Forest"
                 }
             ],

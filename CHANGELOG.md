@@ -11,8 +11,8 @@ and this project adheres to
 
 ### Changed
 
-- To reduce verbosity of map assets, `"is_at_map_border"` is now optional and
-    false by default.
+- To reduce verbosity of map assets, `"has_a_lost_tribe"` and
+    `"is_at_map_border"` are now optional and false by default.
 
 ## \[0.16.0] - 2023-07-09
 
