@@ -4,9 +4,9 @@ import json
 import unittest
 from typing import Any
 
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
-from smawg import Ability, Combo, Race, validate
+from smawg import Ability, Assets, Combo, Race, validate
 from smawg._metadata import ASSETS_DIR
 from smawg.tests.common import TINY_ASSETS
 
@@ -15,7 +15,7 @@ class TestAssets(unittest.TestCase):
     """Tests for JSON files in `smawg/assets/`."""
 
     def test_assets(self) -> None:
-        """Check if all files in `smawg/assets/` are valid and documented."""
+        """Check if all files in `smawg/assets/` are valid."""
         for file_name in ASSETS_DIR.glob("*.json"):
             with open(file_name) as assets_file:
                 assets = json.load(assets_file)
@@ -35,11 +35,42 @@ class TestCombo(unittest.TestCase):
 
 
 class TestValidate(unittest.TestCase):
-    """Tests for `smawg.validate()` function."""
+    """Tests for `smawg.validate()` function.
 
-    def test_invalid_assets(self) -> None:
-        """Check if `validate()` raises an error on invalid assets."""
+    These mostly make sure that invalid assets always raise
+    `pydantic.ValidationError` and never other exceptions like `TypeError`.
+    """
+
+    def test_non_dict_assets(self) -> None:
+        """Check if `validate()` raises `ValidationError` on non-dict assets.
+
+        When loading assets from an external JSON file,
+        this can happen and our dict type hint can't prevent this.
+        """
+        invalid_assets: Any
+        for invalid_assets in [None, True, 123, "abc", []]:
+            with self.assertRaises(ValidationError):
+                validate(invalid_assets)
+
+    def test_missing_fields(self) -> None:
+        """Check if `validate()` raises `ValidationError` on missing fields."""
+        schema = TypeAdapter(Assets).json_schema()
+        required_fields: list[str] = schema["required"]
+        for field in required_fields:
+            invalid_assets = {**TINY_ASSETS}
+            del invalid_assets[field]
+            with self.assertRaises(ValidationError):
+                validate(invalid_assets)
+
+    def test_invalid_fields(self) -> None:
+        """Check if `validate()` raises `ValidationError` on invalid fields."""
         invalid_fields: list[tuple[str, Any]] = [
+            # Flat values in place of arrays/objects:
+            ("races", False),
+            ("races", ["not a race"]),
+            ("abilities", 0),
+            ("abilities", [{"not a ability"}]),
+            ("map", "not a map"),
             # Bad structure of nested objects:
             ("races", [{"not a": "race"}]),
             ("abilities", [{"not a": "ability"}]),
