@@ -233,7 +233,10 @@ class GameState:
         """Initialize the game state from `assets`."""
         # Gotta make a copy because we're going to mutate `Region`s.
         self._regions = deepcopy(assets.map.tiles)
-        self._borders = _borders(assets.map.tile_borders, len(self._regions))
+        self._borders = [set[int]() for _ in range(len(self._regions))]
+        for region1, region2 in assets.map.tile_borders:
+            self._borders[region1].add(region2)
+            self._borders[region2].add(region1)
         self._n_turns = assets.n_turns
         self._current_turn: int = 1
         abilities = iter(assets.abilities)
@@ -304,31 +307,6 @@ class GameState:
             if p._is_owning(region):
                 return i
         return None
-
-
-def _borders(tile_borders: list[tuple[int, int]], n_tiles: int
-             ) -> list[set[int]]:
-    """Transform a list of region pairs into a list of sets for each region.
-
-    Assume that `tile_borders` and `n_tiles`
-    are already validated by the caller.
-
-    Example:
-    ```
-    >>> _borders([(0, 1), (1, 2)], 4)
-    [
-        {1},    # Neighbors of region 0
-        {0, 2}, # Neighbors of region 1
-        {1},    # Neighbors of region 2
-        {}      # Neighbors of region 3
-    ]
-    ```
-    """
-    borders = [set[int]() for _ in range(n_tiles)]
-    for region1, region2 in tile_borders:
-        borders[region1].add(region2)
-        borders[region2].add(region1)
-    return borders
 
 
 class RulesViolation(Exception):
