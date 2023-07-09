@@ -40,22 +40,19 @@ and easy interoperability with other programming languages.
 ## Releases
 
 See [CHANGELOG.md](./CHANGELOG.md) for the list of releases.
+To get the latest stable release, clone from the `master` branch.
 
 ## Installation
 
-User wide install if your OS allows it:
-
 ```sh
-git clone https://github.com/Expurple/smawg.git
+git clone -b master https://github.com/Expurple/smawg.git
 cd smawg/
+
+# User wide install if your OS allows it:
+python3 -m ensurepip
 pip install --user .
-```
 
-Or install into `venv`:
-
-```sh
-git clone https://github.com/Expurple/smawg.git
-cd smawg/
+# Or install into `venv`:
 python3 -m venv venv
 source venv/bin/activate
 pip install .
