@@ -20,6 +20,32 @@ and this project adheres to
 - `smawg.viz` now also displays `Region.symbols`.
 - To reduce verbosity of map assets, `"has_a_lost_tribe"` and
     `"is_at_map_border"` are now optional and false by default.
+- The minimum number of `races` and `abilities` in assets is lowered to
+    `2*n_players` and `n_players` respectively. See the next change for
+    reasons.
+- The semantics of `n_selectable_combos` has changed. Previously, it required
+    *exactly* `n_selectable_combos` at any moment:
+
+    ```python
+    assert len(game.combos) == n_selectable_combos
+    ```
+
+    But that rule is too strict. It doesn't even allow the standard 5 player
+    setup, demanding to add a 15th race to the game.
+
+    What we really care about is having at least 1 combo when the current
+    player must pick a combo to proceed. In other situations, it's ok to have 0.
+    And at any moment, there should be *no more than* `n_selectable_combos`:
+
+    ```python
+    if game.player.active_ability is None:
+        assert 1 <= len(game.combos) <= n_selectable_combos
+    else:
+        assert len(game.combos) <= n_selectable_combos
+    ```
+
+    This should be enough to prevent stuck situations in common game
+    configurations.
 
 ## \[0.16.0] - 2023-07-09
 

@@ -149,6 +149,7 @@ class Game(GameState):
             self._invisible_races.append(self.player.decline_race)
 
         self.player._decline()
+        self._reveal_next_combo()
         self._turn_stage = _TurnStage.DECLINED
 
     def select_combo(self, combo_index: int) -> None:
@@ -167,10 +168,7 @@ class Game(GameState):
         chosen_combo = self.combos.pop(combo_index)
         self.player._set_active(chosen_combo)
         self._turn_stage = _TurnStage.ACTIVE
-        # Reveal the next combo
-        next_race = self._invisible_races.popleft()
-        next_ability = self._invisible_abilities.popleft()
-        self.combos.append(Combo(next_race, next_ability))
+        self._reveal_next_combo()
 
     def abandon(self, region: int) -> None:
         """Abandon the given map `region`.
@@ -265,6 +263,15 @@ class Game(GameState):
         for combo in self.combos[:combo_index]:
             combo.coins += 1
         self.combos[combo_index].coins = 0
+
+    def _reveal_next_combo(self) -> None:
+        if len(self.combos) == self._assets.n_selectable_combos \
+                or len(self._invisible_abilities) == 0 \
+                or len(self._invisible_races) == 0:
+            return
+        next_race = self._invisible_races.popleft()
+        next_ability = self._invisible_abilities.popleft()
+        self.combos.append(Combo(next_race, next_ability))
 
     def _conquer_without_dice(self, region: int) -> None:
         """Implementation of `conquer()` with `use_dice=False`.

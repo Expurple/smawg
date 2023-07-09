@@ -103,7 +103,7 @@ class Assets:
     n_coins_on_start: NonNegativeInt
     """The number of coins at the start of the game."""
     n_selectable_combos: PositiveInt
-    """The number of revealed combos at any given time."""
+    """The *maximum* number of revealed combos at any given time."""
     n_turns: PositiveInt
     """The number of turns, after which the game ends."""
     abilities: list[Ability]
@@ -116,24 +116,23 @@ class Assets:
     description: str = "<no description provided>"
 
     @model_validator(mode="after")  # type:ignore  # idk why it complains
-    def _validate_n_selectable_combos(self) -> "Assets":
+    def _validate_combo_availability(self) -> "Assets":
         n_players = self.n_players
-        n_selectable_combos = self.n_selectable_combos
         n_races = len(self.races)
-        safe_n_races = 2 * n_players + n_selectable_combos
+        safe_n_races = 2 * n_players
         if n_races < safe_n_races:
             raise ValueError(
-                f"{n_races} races are not enough to always guarantee "
-                f"{n_selectable_combos} selectable combos for {n_players} "
-                f"players, need at least {safe_n_races} races"
+                f"for {n_players} players {n_races} races are not enough; "
+                f"need at least {safe_n_races} races to always guarantee at "
+                "least 1 combo to choose from"
             )
         n_abilities = len(self.abilities)
-        safe_n_abilities = n_players + n_selectable_combos
+        safe_n_abilities = n_players
         if n_abilities < safe_n_abilities:
             raise ValueError(
-                f"{n_abilities} abilities are not enough to always guarantee "
-                f"{n_selectable_combos} selectable combos for {n_players} "
-                f"players, need at least {safe_n_abilities} abilities"
+                f"for {n_players} players {n_abilities} abilities are not "
+                f"enough; need at least {safe_n_abilities} abilities to "
+                "always guarantee at least 1 combo to choose from"
             )
         return self
 
@@ -235,6 +234,7 @@ class GameState:
 
     def __init__(self, assets: Assets) -> None:
         """Initialize the game state from `assets`."""
+        self._assets = assets
         # Gotta make a copy because we're going to mutate `Region`s.
         self._regions = deepcopy(assets.map.tiles)
         self._borders = [set[int]() for _ in range(len(self._regions))]

@@ -181,6 +181,60 @@ class TestGame(BaseGameTest):
             with self.assertRaises(NotStayingAtHome):
                 game.abandon(0)
 
+    def test_0_extra_races(self) -> None:
+        """Nothing should break when there are 0 extra races."""
+        assets = {
+            **TINY_ASSETS,
+            "n_players": 1,
+            "n_turns": 4,
+            "races": TINY_ASSETS["races"][:2]
+        }
+        game = Game(assets, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            self.assertEqual(len(game.combos), 2)
+            game.select_combo(0)
+            self.assertEqual(len(game.combos), 1)
+            game.conquer(0)
+            game.deploy(game.player.tokens_on_hand, 0)
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            game.decline()
+            self.assertEqual(len(game.combos), 1)
+            game.end_turn()
+        with nullcontext("Player 0, turn 3:"):
+            game.select_combo(0)
+            self.assertEqual(len(game.combos), 0)
+            game.conquer(1)
+            game.deploy(game.player.tokens_on_hand, 1)
+            game.end_turn()
+        with nullcontext("Player 0, turn 4:"):
+            game.decline()
+            self.assertEqual(len(game.combos), 1)
+            game.end_turn()
+
+    def test_0_extra_abilities(self) -> None:
+        """Nothing should break when there are 0 extra abilities."""
+        assets = {
+            **TINY_ASSETS,
+            "n_players": 1,
+            "abilities": TINY_ASSETS["abilities"][:1]
+        }
+        game = Game(assets, shuffle_data=False)
+        with nullcontext("Player 0, turn 1:"):
+            self.assertEqual(len(game.combos), 1)
+            game.select_combo(0)
+            self.assertEqual(len(game.combos), 0)
+            game.conquer(0)
+            game.deploy(game.player.tokens_on_hand, 0)
+            game.end_turn()
+        with nullcontext("Player 0, turn 2:"):
+            game.decline()
+            self.assertEqual(len(game.combos), 1)
+            game.end_turn()
+        with nullcontext("Player 0, turn 3:"):
+            game.select_combo(0)
+            self.assertEqual(len(game.combos), 0)
+
 
 class TestGameHooks(BaseGameTest):
     """Tests for `Game` hooks."""
