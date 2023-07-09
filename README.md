@@ -20,8 +20,9 @@ and easy interoperability with other programming languages.
 * Support for custom rules (see [docs/rules.md](docs/rules.md)).
 * Deterministic or randomized outcomes.
 
-### Missing features (in progress)
+### Missing features
 
+* Asset files for standard game maps and setups.
 * Unique effects for each Race and Special Power.
 
 ### Future plans
@@ -29,16 +30,16 @@ and easy interoperability with other programming languages.
 * Options for more machine-readable CLI output.
 * In-house AI and GUI examples.
 
-## Releases
-
-See [CHANGELOG.md](./CHANGELOG.md)
-
 ## Requirements
 
 * Python 3.11+ (currently, only 3.11 is tested)
 * [pydantic](https://github.com/pydantic/pydantic)
 * [tabulate](https://github.com/astanin/python-tabulate) (only for `smawg.cli`)
 * [graphviz](https://github.com/xflr6/graphviz) (only for `smawg.viz`)
+
+## Releases
+
+See [CHANGELOG.md](./CHANGELOG.md) for the list of releases.
 
 ## Installation
 
@@ -58,54 +59,6 @@ cd smawg/
 python3 -m venv venv
 source venv/bin/activate
 pip install .
-```
-
-## Assets
-
-`smawg` usually gets static assets (like a list of races) from a JSON file.
-
-Currently, the only available set of assets is
-[smawg/assets/tiny.json](smawg/assets/tiny.json).
-
-You can create and use your own asset files.
-You're not required to contribute them back, but I would appreciate it.
-
-For better editing experience (at least in VSCode),
-you can generate a JSON schema:
-
-```sh
-python3 -m smawg schema > assets_schema.json
-```
-
-And then reference it in your assets file:
-
-```json
-"$schema": "some/path/to/assets_schema.json",
-```
-
-The schema doesn't specify a visual layout for game maps.
-I imagine the map from `tiny.json` as `1)`, but it may be as well represented
-as something like `2)` or `3)` and it will still work properly,
-because functionally it's the same map:
-
-```text
-    1)               2)               3)
-+-------+        +-------+        +--------+
-| 0 | 1 |        | 1 ^ 0 |        | 4 |  3 |
-|   ^   |        |  / \  |        |   ^    |
-|  / \  |        |-< 2 >-|        |  / \   |
-|-< 2 >-|        |  \ /  |        |-< 2 >--|
-|  \ /  |        |   v   |        |  \ /   |
-|   v   |        | 4 | 3 |        |   v    |
-| 3 | 4 |        |   |   |        | 1 |  0 |
-+-------+        +-------+        +--------+
-```
-
-To easily reason about your maps, you can use `smawg.viz` utility.
-Typical usage:
-
-```bash
-python3 -m smawg.viz --view some/path/to/assets.json
 ```
 
 ## Usage
@@ -132,9 +85,6 @@ It should guide you through the usage.
 import json
 
 from smawg import Game
-# If you're dealing with (possibly invalid) user input:
-from smawg import RulesViolation
-
 
 # If you want, you can directly construct `assets` as dict or Assets object
 # instead of reading from file.
@@ -152,6 +102,61 @@ game = Game(assets)
 
 You can also find "real world" usage examples in
 [smawg/cli.py](./smawg/cli.py) and [smawg/tests/](./smawg/tests/)
+
+## Assets
+
+`smawg` usually gets static assets (like a list of races) from a JSON file.
+
+Currently, the only available set of assets is
+[smawg/assets/tiny.json](smawg/assets/tiny.json).
+
+You can create and use your own asset files.
+You're not required to contribute them back, but I would appreciate it.
+For example, the standard game maps are currently missing.
+
+### JSON schema
+
+For better editing experience (at least in VSCode),
+you can generate a JSON schema:
+
+```sh
+python3 -m smawg schema > assets_schema.json
+```
+
+And then reference it in your assets file:
+
+```json
+"$schema": "some/path/to/assets_schema.json",
+```
+
+The nice thing about this is that you can make an edit to `smawg`'s source code
+and then instantly generate a new schema that reflects your changes.
+
+### Visualization
+
+The schema doesn't specify a visual layout for game maps.
+I imagine the map from `tiny.json` as `1)`, but it may be as well represented
+as something like `2)` or `3)` and it will still work properly,
+because functionally it's the same map:
+
+```text
+    1)               2)               3)
++-------+        +-------+        +--------+
+| 0 | 1 |        | 1 ^ 0 |        | 4 |  3 |
+|   ^   |        |  / \  |        |   ^    |
+|  / \  |        |-< 2 >-|        |  / \   |
+|-< 2 >-|        |  \ /  |        |-< 2 >--|
+|  \ /  |        |   v   |        |  \ /   |
+|   v   |        | 4 | 3 |        |   v    |
+| 3 | 4 |        |   |   |        | 1 |  0 |
++-------+        +-------+        +--------+
+```
+
+To easily reason about maps, you can use `smawg.viz` utility. Typical usage:
+
+```bash
+python3 -m smawg.viz --view some/path/to/assets.json
+```
 
 ## Contributing
 
