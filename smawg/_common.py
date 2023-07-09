@@ -241,7 +241,6 @@ class GameState:
         for region1, region2 in assets.map.tile_borders:
             self._borders[region1].add(region2)
             self._borders[region2].add(region1)
-        self._n_turns = assets.n_turns
         self._current_turn: int = 1
         abilities = iter(assets.abilities)
         races = iter(assets.races)
@@ -260,7 +259,7 @@ class GameState:
 
         After the last turn is finished, the `Game` ends.
         """
-        return self._n_turns
+        return self._assets.n_turns
 
     @property
     def current_turn(self) -> int:
