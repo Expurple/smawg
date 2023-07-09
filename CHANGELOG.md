@@ -9,7 +9,10 @@ and this project adheres to
 
 ## \[Unreleased]
 
-\-
+### Changed
+
+- To reduce verbosity of map assets, `"is_at_map_border"` is now optional and
+    false by default.
 
 ## \[0.16.0] - 2023-07-09
 

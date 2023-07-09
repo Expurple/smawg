@@ -36,9 +36,9 @@ class Region:
     it becomes `False` after the region is conquered.
     """
 
-    has_a_lost_tribe: bool
-    is_at_map_border: bool
     terrain: str
+    has_a_lost_tribe: bool
+    is_at_map_border: bool = False
     """The type of terrain (Forest, Mountain, etc)"""
 
 

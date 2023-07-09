@@ -68,7 +68,6 @@ class TestTerrain(BaseGameTest):
                 },
                 {
                     "has_a_lost_tribe": False,
-                    "is_at_map_border": False,
                     "terrain": "Forest"
                 }
             ],

@@ -84,7 +84,6 @@
             },
             {
                 "has_a_lost_tribe": false,
-                "is_at_map_border": false,
                 "terrain": "Forest"
             },
             {
