@@ -17,6 +17,7 @@ and this project adheres to
 
 ### Changed
 
+- `smawg.viz` now also displays `Region.symbols`.
 - To reduce verbosity of map assets, `"has_a_lost_tribe"` and
     `"is_at_map_border"` are now optional and false by default.
 
