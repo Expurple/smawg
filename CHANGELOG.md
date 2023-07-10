@@ -9,7 +9,9 @@ and this project adheres to
 
 ## \[Unreleased]
 
-\-
+### Changed
+
+- `smawg.viz` now longer overlaps edges over nodes.
 
 ## \[0.17.0] - 2023-07-10
 
