@@ -12,7 +12,7 @@ and this project adheres to
 ### Changed
 
 - Improvements in `smawg.viz`:
-    - Standard terrain types are now rendered in color.
+    - Standard terrain types and symbols are now rendered in color.
     - Edges no longer overlap with nodes.
     - Large maps look more dense than before.
     - In generated labels, region symbols are now always sorted.
