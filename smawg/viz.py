@@ -62,6 +62,17 @@ def _parse_args() -> Namespace:
     return parser.parse_args()
 
 
+TERRAIN_COLORS = {
+    "Farmland": "gold",
+    "Forest": "green3",
+    "Hill": "lightgreen",
+    "Lake": "deepskyblue",
+    "Mountain": "azure2",
+    "Sea": "deepskyblue",
+    "Swamp": "chocolate2"
+}
+
+
 def build_graph(map: Map) -> Graph:
     """Convert the map into a DOT representation, but don't render it yet."""
     graph = Graph(
@@ -73,12 +84,19 @@ def build_graph(map: Map) -> Graph:
     )
     for i, tile in enumerate(map.tiles):
         node_attrs = {"label": f"{i}. {tile.terrain}"}
+        style_items = list[str]()
         for symbol in tile.symbols:
             node_attrs["label"] += f"\\n{symbol}"
         if tile.has_a_lost_tribe:
             node_attrs["label"] += "\\nLost Tribe"
         if tile.is_at_map_border:
-            node_attrs["style"] = "bold"
+            style_items.append("bold")
+        color = TERRAIN_COLORS.get(tile.terrain, None)
+        if color is not None:
+            style_items.append("filled")
+            node_attrs["fillcolor"] = color
+        if len(style_items) > 0:
+            node_attrs["style"] = ",".join(style_items)
         graph.node(str(i), **node_attrs)
     for tile1, tile2 in map.tile_borders:
         edge_attrs = {}

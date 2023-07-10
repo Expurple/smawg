@@ -12,6 +12,7 @@ and this project adheres to
 ### Changed
 
 - Improvements in `smawg.viz`:
+    - Standard terrain types are now rendered in color.
     - Edges no longer overlap with nodes.
     - Large maps look more dense than before.
     - Generated labels in `.gv` files now contain escaped newlines instead of
