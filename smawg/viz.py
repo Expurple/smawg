@@ -74,9 +74,9 @@ def build_graph(map: Map) -> Graph:
     for i, tile in enumerate(map.tiles):
         node_attrs = {"label": f"{i}. {tile.terrain}"}
         for symbol in tile.symbols:
-            node_attrs["label"] += f"\n{symbol}"
+            node_attrs["label"] += f"\\n{symbol}"
         if tile.has_a_lost_tribe:
-            node_attrs["label"] += "\nLost Tribe"
+            node_attrs["label"] += "\\nLost Tribe"
         if tile.is_at_map_border:
             node_attrs["style"] = "bold"
         graph.node(str(i), **node_attrs)

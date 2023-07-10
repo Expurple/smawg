@@ -14,6 +14,8 @@ and this project adheres to
 - Improvements in `smawg.viz`:
     - Edges no longer overlap with nodes.
     - Large maps look more dense than before.
+    - Generated labels in `.gv` files now contain escaped newlines instead of
+        raw newlines.
 
 ## \[0.17.0] - 2023-07-10
 
