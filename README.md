@@ -22,7 +22,6 @@ and easy interoperability with other programming languages.
 
 ### Missing features
 
-* Asset files for standard 4 player setup.
 * Unique effects for each Race and Special Power.
 
 ### Future plans
@@ -108,13 +107,12 @@ You can also find "real world" usage examples in
 The following sets of assets are provided in `smawg/assets/`:
 
 * `standard_*_players.json` -
-    the standard setups for 2, 3 and 5 players respectively.
+    the standard setups for 2, 3, 4 and 5 players respectively.
 * [tiny.json](smawg/assets/tiny.json) -
     a small setup for testing.
 
 You can create and use your own asset files.
 You're not required to contribute them back, but I would appreciate it.
-For example, the standard 4 player setup is currently missing.
 
 ### JSON schema
 
