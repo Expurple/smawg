@@ -11,12 +11,17 @@ and this project adheres to
 
 ### Changed
 
-- Improvements in `smawg.viz`:
+- `smawg.viz --format=''` now acts as `--no-render`.
+- Improvements in `smawg.viz` output:
     - Standard terrain types and symbols are now rendered in color.
     - Edges no longer overlap with nodes.
     - Large maps look more dense than before.
     - In generated labels, region symbols are now always sorted.
     - Generated labels now contain escaped newlines instead of raw newlines.
+
+### Deprecated
+
+- `smawg.viz --no-render` (use `--format=''` instead).
 
 ## \[0.17.0] - 2023-07-10
 

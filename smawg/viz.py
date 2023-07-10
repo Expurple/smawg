@@ -37,17 +37,17 @@ def _parse_args() -> Namespace:
         "-f", "--format",
         metavar="FMT",
         default=default_format,
-        help=f"the output file format (default: {default_format})",
-    )
-    parser.add_argument(
-        "-v", "--view",
-        action="store_true",
-        help="open the output file after rendering"
+        help=f"image format (don't render if empty; default: {default_format})"
     )
     parser.add_argument(
         "-n", "--no-render",
         action="store_true",
-        help="generate a .gv file without rendering it (overrides --view)"
+        help="deprecated alias to --format=''"
+    )
+    parser.add_argument(
+        "-v", "--view",
+        action="store_true",
+        help="open the image after rendering"
     )
     parser.add_argument(
         "-r", "--relative-path",
@@ -112,7 +112,7 @@ def build_graph(map: Map) -> Graph:
     return graph
 
 
-def save(graph: Graph, render_fmt: str | None = None, *, view: bool = False,
+def save(graph: Graph, render_fmt: str, *, view: bool = False,
          on_save: Callable[[str], None] = _do_nothing) -> None:
     """Save the graph, optionally rendering it or opening the resulting file.
 
@@ -120,7 +120,7 @@ def save(graph: Graph, render_fmt: str | None = None, *, view: bool = False,
     """
     gv_file_name = graph.save()
     on_save(gv_file_name)
-    if render_fmt is not None:
+    if render_fmt != "":
         rendered_file_name = graph.render(
             format=render_fmt, view=view, overwrite_source=False
         )
@@ -140,5 +140,5 @@ if __name__ == "__main__":
         assets_dict = json.load(file)
     assets: Assets = TypeAdapter(Assets).validate_python(assets_dict)
     graph = build_graph(assets.map)
-    format = None if args.no_render else args.format
+    format = "" if args.no_render else args.format
     save(graph, format, view=args.view, on_save=_on_save)
