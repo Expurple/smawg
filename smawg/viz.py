@@ -67,7 +67,9 @@ def build_graph(map: Map) -> Graph:
     graph = Graph(
         name="map",
         engine="sfdp",
-        graph_attr={"overlap": "false", "splines": "spline"}
+        graph_attr={
+            "overlap": "false", "overlap_scaling": "2", "splines": "spline"
+        }
     )
     for i, tile in enumerate(map.tiles):
         node_attrs = {"label": f"{i}. {tile.terrain}"}

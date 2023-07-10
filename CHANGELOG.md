@@ -11,7 +11,9 @@ and this project adheres to
 
 ### Changed
 
-- `smawg.viz` now longer overlaps edges over nodes.
+- Improvements in `smawg.viz`:
+    - Edges no longer overlap with nodes.
+    - Large maps look more dense than before.
 
 ## \[0.17.0] - 2023-07-10
 
