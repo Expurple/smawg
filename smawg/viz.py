@@ -85,7 +85,7 @@ def build_graph(map: Map) -> Graph:
     for i, tile in enumerate(map.tiles):
         node_attrs = {"label": f"{i}. {tile.terrain}"}
         style_items = list[str]()
-        for symbol in tile.symbols:
+        for symbol in sorted(tile.symbols):
             node_attrs["label"] += f"\\n{symbol}"
         if tile.has_a_lost_tribe:
             node_attrs["label"] += "\\nLost Tribe"

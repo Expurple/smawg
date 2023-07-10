@@ -15,8 +15,8 @@ and this project adheres to
     - Standard terrain types are now rendered in color.
     - Edges no longer overlap with nodes.
     - Large maps look more dense than before.
-    - Generated labels in `.gv` files now contain escaped newlines instead of
-        raw newlines.
+    - In generated labels, region symbols are now always sorted.
+    - Generated labels now contain escaped newlines instead of raw newlines.
 
 ## \[0.17.0] - 2023-07-10
 
