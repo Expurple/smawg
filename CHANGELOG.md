@@ -9,6 +9,10 @@ and this project adheres to
 
 ## \[Unreleased]
 
+\-
+
+## \[0.17.0] - 2023-07-10
+
 ### Added
 
 - `Region.symbols` field to support symbols like "Cavern", "Magic Source" and
