@@ -1,0 +1,295 @@
+{
+    "name": "Standard setup for 2 players",
+    "description": "Tiles are enumerated from left to right and from top to bottom.",
+
+    "n_players": 2,
+    "n_coins_on_start": 5,
+    "n_selectable_combos": 5,
+    "n_turns": 10,
+    "abilities": [
+        {
+            "name": "Alchemist",
+            "n_tokens": 4
+        },
+        {
+            "name": "Berserk",
+            "n_tokens": 4
+        },
+        {
+            "name": "Bivouacking",
+            "n_tokens": 5
+        },
+        {
+            "name": "Commando",
+            "n_tokens": 4
+        },
+        {
+            "name": "Diplomat",
+            "n_tokens": 5
+        },
+        {
+            "name": "Dragon Master",
+            "n_tokens": 5
+        },
+        {
+            "name": "Flying",
+            "n_tokens": 5
+        },
+        {
+            "name": "Forest",
+            "n_tokens": 4
+        },
+        {
+            "name": "Fortified",
+            "n_tokens": 3
+        },
+        {
+            "name": "Heroic",
+            "n_tokens": 5
+        },
+        {
+            "name": "Hill",
+            "n_tokens": 4
+        },
+        {
+            "name": "Merchant",
+            "n_tokens": 2
+        },
+        {
+            "name": "Mounted",
+            "n_tokens": 5
+        },
+        {
+            "name": "Pillaging",
+            "n_tokens": 5
+        },
+        {
+            "name": "Seafaring",
+            "n_tokens": 5
+        },
+        {
+            "name": "Spirit",
+            "n_tokens": 5
+        },
+        {
+            "name": "Stout",
+            "n_tokens": 4
+        },
+        {
+            "name": "Swamp",
+            "n_tokens": 4
+        },
+        {
+            "name": "Underworld",
+            "n_tokens": 5
+        },
+        {
+            "name": "Wealthy",
+            "n_tokens": 4
+        }
+    ],
+    "races": [
+        {
+            "name": "Amazons",
+            "n_tokens": 6,
+            "max_n_tokens": 15
+        },
+        {
+            "name": "Dwarves",
+            "n_tokens": 3,
+            "max_n_tokens": 8
+        },
+        {
+            "name": "Elves",
+            "n_tokens": 6,
+            "max_n_tokens": 11
+        },
+        {
+            "name": "Ghouls",
+            "n_tokens": 5,
+            "max_n_tokens": 10
+        },
+        {
+            "name": "Giants",
+            "n_tokens": 6,
+            "max_n_tokens": 11
+        },
+        {
+            "name": "Halfings",
+            "n_tokens": 6,
+            "max_n_tokens": 11
+        },
+        {
+            "name": "Humans",
+            "n_tokens": 5,
+            "max_n_tokens": 10
+        },
+        {
+            "name": "Orcs",
+            "n_tokens": 5,
+            "max_n_tokens": 10
+        },
+        {
+            "name": "Ratmen",
+            "n_tokens": 8,
+            "max_n_tokens": 13
+        },
+        {
+            "name": "Skeletons",
+            "n_tokens": 6,
+            "max_n_tokens": 20
+        },
+        {
+            "name": "Sorcerers",
+            "n_tokens": 5,
+            "max_n_tokens": 18
+        },
+        {
+            "name": "Tritons",
+            "n_tokens": 6,
+            "max_n_tokens": 11
+        },
+        {
+            "name": "Trolls",
+            "n_tokens": 5,
+            "max_n_tokens": 10
+        },
+        {
+            "name": "Wizards",
+            "n_tokens": 5,
+            "max_n_tokens": 10
+        }
+    ],
+    "map": {
+        "tiles": [
+            {
+                "terrain": "Sea",
+                "is_at_map_border": true
+            },
+            {
+                "terrain": "Farmland",
+                "symbols": ["Magic Source"],
+                "is_at_map_border": true
+            },
+            {
+                "terrain": "Forest",
+                "symbols": ["Mine"],
+                "is_at_map_border": true
+            },
+            {
+                "terrain": "Swamp",
+                "symbols": ["Cavern"],
+                "has_a_lost_tribe": true,
+                "is_at_map_border": true
+            },
+            {
+                "terrain": "Hill",
+                "is_at_map_border": true
+            },
+            {
+                "terrain": "Mountain",
+                "symbols": ["Cavern", "Mine"],
+                "is_at_map_border": true
+            },
+            {
+                "terrain": "Hill",
+                "has_a_lost_tribe": true
+            },
+            {
+                "terrain": "Lake"
+            },
+            {
+                "terrain": "Mountain"
+            },
+            {
+                "terrain": "Farmland"
+            },
+            {
+                "terrain": "Forest",
+                "symbols": ["Magic Source"],
+                "has_a_lost_tribe": true,
+                "is_at_map_border": true
+            },
+            {
+                "terrain": "Farmland",
+                "has_a_lost_tribe": true,
+                "is_at_map_border": true
+            },
+            {
+                "terrain": "Forest",
+                "has_a_lost_tribe": true
+            },
+            {
+                "terrain": "Farmland",
+                "symbols": ["Magic Source"],
+                "has_a_lost_tribe": true
+            },
+            {
+                "terrain": "Hill",
+                "symbols": ["Cavern"],
+                "has_a_lost_tribe": true
+            },
+            {
+                "terrain": "Mountain",
+                "symbols": ["Mine"],
+                "is_at_map_border": true
+            },
+            {
+                "terrain": "Swamp",
+                "symbols": ["Magic Source"],
+                "has_a_lost_tribe": true,
+                "is_at_map_border": true
+            },
+            {
+                "terrain": "Hill",
+                "symbols": ["Cavern"],
+                "is_at_map_border": true
+            },
+            {
+                "terrain": "Swamp",
+                "symbols": ["Mine"],
+                "has_a_lost_tribe": true,
+                "is_at_map_border": true
+            },
+            {
+                "terrain": "Mountain",
+                "is_at_map_border": true
+            },
+            {
+                "terrain": "Swamp",
+                "is_at_map_border": true
+            },
+            {
+                "terrain": "Forest"
+            },
+            {
+                "terrain": "Sea",
+                "is_at_map_border": true
+            }
+        ],
+        "tile_borders": [
+            [0, 1], [0, 5],
+            [1, 2], [1, 5], [1, 6],
+            [2, 3], [2, 6], [2, 7], [2, 8],
+            [3, 4], [3, 8], [3, 9],
+            [4, 9], [4, 10],
+            [5, 6], [5, 11],
+            [6, 7], [6, 11], [6, 12],
+            [7, 8], [7, 12], [7, 13],
+            [8, 9], [8, 13], [8, 14],
+            [9, 10], [9, 14],
+            [10, 14], [10, 15],
+            [11, 12], [11, 16], [11, 17],
+            [12, 13], [12, 17], [12, 18],
+            [13, 14], [13, 18], [13, 19], [13, 20],
+            [14, 15], [14, 20], [14, 21],
+            [15, 21], [15, 22],
+            [16, 17],
+            [17, 18],
+            [18, 19],
+            [19, 20],
+            [20, 21], [20, 22],
+            [21, 22]
+        ]
+    }
+}
