@@ -87,11 +87,14 @@ class Map:
             greater_index = max(t1, t2)
             if greater_index >= n_tiles:
                 raise ValueError(
-                    f"tile border ({t1}, {t2}) references a non-existing tile:"
-                    f" {greater_index} (the map has {n_tiles} tiles)"
+                    f"invalid border ({t1}, {t2}): references non-existing "
+                    f"tile {greater_index} (the map has {n_tiles} tiles)"
                 )
             if t1 == t2:
-                raise ValueError(f"tile {t1} can't share a border with itself")
+                raise ValueError(
+                    f"invalid border ({t1}, {t2}): tiles can't share borders "
+                    "with themselves"
+                )
         return self
 
 
