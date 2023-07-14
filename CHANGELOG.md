@@ -12,6 +12,7 @@ and this project adheres to
 ### Added
 
 - `Assets.shuffle()` convenience method.
+- `Game.assets` and `GameState.assets` properties.
 
 ### Changed
 

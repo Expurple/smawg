@@ -286,6 +286,11 @@ class GameState:
         self._turn_stage = _TurnStage.SELECT_COMBO
 
     @property
+    def assets(self) -> Assets:
+        """`Assets` that were used to initialize the `Game`."""
+        return self._assets
+
+    @property
     def n_turns(self) -> int:
         """The total number of turns in the `Game`.
 
