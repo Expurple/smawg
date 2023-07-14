@@ -21,6 +21,10 @@ and this project adheres to
     If you need this functionality, use `Assets.shuffle()`.
 - Maps are no longer allowed to contain "borders" between some tile and itself.
 
+### Deprecated
+
+- `Game.n_turns` and `GameState.n_turns`. Prefer `.assets.n_turns` instead.
+
 ### Removed
 
 - Parameter `shuffle_data` of `Game.__init__()`. If you need this functionality,

@@ -292,10 +292,7 @@ class GameState:
 
     @property
     def n_turns(self) -> int:
-        """The total number of turns in the `Game`.
-
-        After the last turn is finished, the `Game` ends.
-        """
+        """Deprecated alias for `self.assets.n_turns`."""
         return self._assets.n_turns
 
     @property
