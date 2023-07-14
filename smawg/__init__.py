@@ -5,7 +5,6 @@ See https://github.com/expurple/smawg for more info about the project.
 
 import random
 from collections import defaultdict
-from dataclasses import replace
 from typing import Any, Callable, Literal, Type, TypedDict, cast, overload
 
 from pydantic import TypeAdapter
@@ -31,22 +30,6 @@ def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
     Parameter `strict` is deprecated and doesn't do anything.
     """
     _ = TypeAdapter(Assets).validate_python(assets)
-
-
-def _shuffle(assets: Assets) -> Assets:
-    """Shuffle the order of `Race` and `Ability` banners in `assets`.
-
-    Just like you would do in a physical Small World game.
-
-    Returns a copy as shallow as possible. Resulting `races` and `abilities`
-    are new lists with references to the same objects. Other fields also
-    reference the same objects.
-    """
-    races = list(assets.races)
-    abilities = list(assets.abilities)
-    random.shuffle(races)
-    random.shuffle(abilities)
-    return replace(assets, races=races, abilities=abilities)
 
 
 def _roll_dice() -> int:
@@ -114,7 +97,7 @@ class Game(GameState):
         if not isinstance(assets, Assets):
             assets = TypeAdapter(Assets).validate_python(assets)
         if shuffle_data:
-            assets = _shuffle(assets)
+            assets = assets.shuffle()
         super().__init__(assets)
         self._next_player_id = self._increment(self.player_id)
         """Helper to preserve `_current_player_id` during redeployment."""

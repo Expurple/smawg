@@ -9,6 +9,10 @@ and this project adheres to
 
 ## \[Unreleased]
 
+### Added
+
+- `Assets.shuffle()` convenience method.
+
 ### Changed
 
 - Maps are no longer allowed to contain "borders" between some tile and itself.

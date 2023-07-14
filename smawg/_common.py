@@ -6,12 +6,14 @@ to avoid circular imports in bundled rule plugins.
 See https://github.com/expurple/smawg for more info about the project.
 """
 
+import random
 from abc import ABC, abstractmethod
 from collections import deque
 from copy import deepcopy
+from dataclasses import replace
 from enum import auto, Enum
 from itertools import islice
-from typing import Iterator
+from typing import Iterator, Self
 
 from pydantic import Field, NonNegativeInt, PositiveInt, model_validator
 from pydantic.dataclasses import dataclass
@@ -97,6 +99,8 @@ class Map:
 class Assets:
     """A complete set of game assets and constants.
 
+    You may want to `.shuffle()` these.
+
     If assets are invalid, constructor raises `pydantic.ValidationError`.
     """
 
@@ -137,6 +141,24 @@ class Assets:
                 "always guarantee at least 1 combo to choose from"
             )
         return self
+
+    def shuffle(self: Self, rng: random.Random | None = None) -> Self:
+        """Shuffle the order of `Race` and `Ability` banners.
+
+        Just like you would do in a physical Small World game.
+
+        Returns a copy as shallow as possible. Resulting `races` and
+        `abilities` are new lists with references to the same objects.
+        Other fields also reference the same objects.
+
+        If `rng` is given and not `None`, it is used instead of the global one.
+        """
+        shuffle = rng.shuffle if rng is not None else random.shuffle
+        races = list(self.races)
+        abilities = list(self.abilities)
+        shuffle(races)
+        shuffle(abilities)
+        return replace(self, races=races, abilities=abilities)
 
 
 # ----------------------------- Runtime game data -----------------------------
