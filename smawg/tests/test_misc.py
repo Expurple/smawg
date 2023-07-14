@@ -84,6 +84,11 @@ class TestValidate(unittest.TestCase):
                 "tiles": [],
                 "tile_borders": [[2, 1]]
             }),
+            # Tile shares a border with itself:
+            ("map", {
+                "tiles": [{"terrain": "Forest"}],
+                "tile_borders": [[0, 0]]
+            }),
             # Impossible to achieve n_visible_combos=2:
             ("races", []),
             ("abilities", []),

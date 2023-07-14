@@ -88,6 +88,8 @@ class Map:
                     f"tile border ({t1}, {t2}) references a non-existing tile:"
                     f" {greater_index} (the map has {n_tiles} tiles)"
                 )
+            if t1 == t2:
+                raise ValueError(f"tile {t1} can't share a border with itself")
         return self
 
 

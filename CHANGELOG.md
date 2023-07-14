@@ -9,7 +9,9 @@ and this project adheres to
 
 ## \[Unreleased]
 
-\-
+### Changed
+
+- Maps are no longer allowed to contain "borders" between some tile and itself.
 
 ## \[0.18.0] - 2023-07-14
 
