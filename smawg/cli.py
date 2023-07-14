@@ -19,9 +19,10 @@ from importlib import import_module
 from pathlib import Path
 from typing import Iterable, Literal, Type, assert_never
 
+from pydantic import TypeAdapter
 from tabulate import tabulate
 
-from smawg import AbstractRules, Game, RulesViolation
+from smawg import AbstractRules, Assets, Game, RulesViolation
 from smawg._metadata import PACKAGE_DIR, VERSION
 
 
@@ -208,13 +209,15 @@ class Client:
         if args.relative_path:
             assets_file = f"{PACKAGE_DIR}/{assets_file}"
         with open(assets_file) as file:
-            assets = json.load(file)
+            assets_json = json.load(file)
+        assets: Assets = TypeAdapter(Assets).validate_python(assets_json)
+        if not args.no_shuffle:
+            assets = assets.shuffle()
         rules = import_rules(args.rules)
         if args.read_dice:
-            game = Game(assets, rules, shuffle_data=not args.no_shuffle,
-                        dice_roll_func=read_dice)
+            game = Game(assets, rules, dice_roll_func=read_dice)
         else:
-            game = Game(assets, rules, shuffle_data=not args.no_shuffle)
+            game = Game(assets, rules)
         self.game = game
         self.player_of_last_command = -1  # Not equal to any actual player.
         self.reported_game_end = False

@@ -87,6 +87,7 @@ from smawg import Game
 # instead of reading from file.
 with open('some/path/to/assets.json') as assets_file:
     assets = json.load(assets_file)
+assets = assets.shuffle()  # If you need to.
 
 # Provide additional arguments or set hooks on game events, if needed.
 # See `docs/hooks.md` for more info about hooks.

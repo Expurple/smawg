@@ -16,7 +16,14 @@ and this project adheres to
 ### Changed
 
 - `Combo` is now a dataclass that's compared by value.
+- `Game` no longer shuffles `assets` by default or provides a switch for this.
+    If you need this functionality, use `Assets.shuffle()`.
 - Maps are no longer allowed to contain "borders" between some tile and itself.
+
+### Removed
+
+- Parameter `shuffle_data` of `Game.__init__()`. If you need this functionality,
+    use `Assets.shuffle()`.
 
 ## \[0.18.0] - 2023-07-14
 

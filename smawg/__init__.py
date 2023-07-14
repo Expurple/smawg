@@ -72,21 +72,18 @@ class Game(GameState):
 
     def __init__(self, assets: Assets | dict[str, Any],
                  RulesT: Type[AbstractRules] = DefaultRules, *,
-                 shuffle_data: bool = True,
                  dice_roll_func: Callable[[], int] = _roll_dice,
                  hooks: Hooks = {}) -> None:
         """Initialize a game based on given `assets`.
 
         `assets` are converted to `Assets` if necessary.
         When `assets` are invalid, this will raise `pydantic.ValidationError`.
+        You may want to convert and `.shuffle()` `assets` in advance.
 
         When initialization is finished, the object is ready to be used by
         player 0. `"on_turn_start"` hook is fired immediately, if provided.
 
         Provide `RulesT` to play with custom rules (see `docs/rules.md`).
-
-        Provide `shuffle_data=False` to preserve
-        the known order of races and ablities in `assets`.
 
         Provide custom `dice_roll_func` to get pre-determined
         (or even dynamically controlled) dice roll results.
@@ -96,8 +93,6 @@ class Game(GameState):
         """
         if not isinstance(assets, Assets):
             assets = TypeAdapter(Assets).validate_python(assets)
-        if shuffle_data:
-            assets = assets.shuffle()
         super().__init__(assets)
         self._next_player_id = self._increment(self.player_id)
         """Helper to preserve `_current_player_id` during redeployment."""

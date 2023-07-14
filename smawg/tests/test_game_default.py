@@ -26,7 +26,7 @@ class TestTerrain(BaseGameTest):
         assets["map"]["tiles"][2]["terrain"] = "Mountain"
         assets["map"]["tiles"][2]["has_a_lost_tribe"] = True
         assets["map"]["tiles"][3]["terrain"] = "Mountain"
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         game.select_combo(0)
         # Empty Forest.
         with self.assertConquers(game, 0, cost=3):
@@ -48,7 +48,7 @@ class TestTerrain(BaseGameTest):
         assets = deepcopy(TINY_ASSETS)
         assets["map"]["tiles"][0]["terrain"] = "Sea"
         assets["map"]["tiles"][1]["terrain"] = "Lake"
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         game.select_combo(0)
         with self.assertRaises(dr.ConqueringSeaOrLake):
             game.conquer(0)
@@ -73,7 +73,7 @@ class TestTerrain(BaseGameTest):
                 [0, 1]
             ]
         }
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         game.select_combo(0)
         # With `basic_rules`, this would raise an error.
         # But here with `default_rules`, it shouldn't.

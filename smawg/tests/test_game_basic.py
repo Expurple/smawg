@@ -8,8 +8,10 @@ from copy import deepcopy
 from contextlib import AbstractContextManager, nullcontext
 from typing import Any, Callable, Iterator
 
+from pydantic import TypeAdapter
+
 import smawg.basic_rules as br
-from smawg import Game, RulesViolation
+from smawg import Assets, Combo, Game, RulesViolation
 from smawg.tests.common import BaseGameTest, TINY_ASSETS
 
 
@@ -20,13 +22,25 @@ class TestGame(BaseGameTest):
     are extracted into separate test fixtures.
     """
 
+    def test_no_shuffle_by_default(self) -> None:
+        """Check that `Game` no longer shuffles assets by default.
+
+        That was the old behavior in v0.18.0 and before.
+        """
+        assets: Assets = TypeAdapter(Assets).validate_python(TINY_ASSETS)
+        game = Game(assets)
+        expected_combos = [
+            Combo(r, a) for r, a in zip(assets.races, assets.abilities)
+        ][:len(game.combos)]
+        self.assertEqual(game.combos, expected_combos)
+
     def test_disconnected_map(self) -> None:
         """Check if the `Game` can handle disconnected maps."""
         # Set up a map where region 4 is not connected to any other regions.
         assets = deepcopy(TINY_ASSETS)
         borders = assets["map"]["tile_borders"]
         assets["map"]["tile_borders"] = [b for b in borders if 4 not in b]
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         game.select_combo(0)
         game.conquer(4)
         self.assertIn(4, game.player.active_regions)
@@ -37,7 +51,7 @@ class TestGame(BaseGameTest):
 
     def test_game_end(self) -> None:
         """Run a full game and then check if it's in end state."""
-        game = Game(TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
             game.conquer(0)
@@ -60,7 +74,7 @@ class TestGame(BaseGameTest):
     def test_redeployment_pseudo_turn(self) -> None:
         """Check if redeployment pseudo-turn works as expected."""
         assets = {**TINY_ASSETS, "n_players": 3}
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
             game.conquer(0)
@@ -96,7 +110,7 @@ class TestGame(BaseGameTest):
     def test_no_redeployment_pseudo_turn_with_no_regions(self) -> None:
         """Check that with no regions there's no redeployment pseudo-turn."""
         assets = {**TINY_ASSETS, "n_players": 3}
-        game = Game(assets, shuffle_data=False, dice_roll_func=lambda: 3)
+        game = Game(assets, dice_roll_func=lambda: 3)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
             game.conquer(0)
@@ -124,7 +138,7 @@ class TestGame(BaseGameTest):
 
     def test_coin_rewards(self) -> None:
         """Check if coin rewards work as expected."""
-        game = Game(TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS)
         self.assertBalances(game, [1, 1])  # Initial coin balances
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
@@ -170,7 +184,7 @@ class TestGame(BaseGameTest):
         assets = deepcopy(TINY_ASSETS)
         assets["abilities"][0]["name"] = "Stay-At-Home"
         assets["n_players"] = 1
-        game = Game(assets, CustomRules, shuffle_data=False)
+        game = Game(assets, CustomRules)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
             game.conquer(0)
@@ -189,7 +203,7 @@ class TestGame(BaseGameTest):
             "n_turns": 4,
             "races": TINY_ASSETS["races"][:2]
         }
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         with nullcontext("Player 0, turn 1:"):
             self.assertEqual(len(game.combos), 2)
             game.select_combo(0)
@@ -219,7 +233,7 @@ class TestGame(BaseGameTest):
             "n_players": 1,
             "abilities": TINY_ASSETS["abilities"][:1]
         }
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         with nullcontext("Player 0, turn 1:"):
             self.assertEqual(len(game.combos), 1)
             game.select_combo(0)
@@ -247,7 +261,7 @@ class TestGameHooks(BaseGameTest):
         """Check if `"on_turn_start"` hook fires when expected."""
         assets = {**TINY_ASSETS, "n_players": 3}
         with self.assertFiresHook():
-            game = Game(assets, shuffle_data=False,
+            game = Game(assets,
                         hooks={"on_turn_start": self.default_hook_handler()})
         game.select_combo(0)
         game.conquer(0)
@@ -265,7 +279,7 @@ class TestGameHooks(BaseGameTest):
             self._hook_has_fired = True
 
         assets = {**TINY_ASSETS, "n_players": 3}
-        game = Game(assets, shuffle_data=False, dice_roll_func=lambda: 2,
+        game = Game(assets, dice_roll_func=lambda: 2,
                     hooks={"on_dice_rolled": on_dice_rolled})
         game.select_combo(0)
         with self.assertFiresHook():
@@ -274,8 +288,7 @@ class TestGameHooks(BaseGameTest):
     def test_on_turn_end(self) -> None:
         """Check if `"on_turn_end"` hook fires when expected."""
         assets = {**TINY_ASSETS, "n_players": 3}
-        game = Game(assets, shuffle_data=False,
-                    hooks={"on_turn_end": self.default_hook_handler()})
+        game = Game(assets, hooks={"on_turn_end": self.default_hook_handler()})
         game.select_combo(0)
         game.conquer(0)
         game.deploy(game.player.tokens_on_hand, 0)
@@ -285,8 +298,7 @@ class TestGameHooks(BaseGameTest):
     def test_on_redeploy(self) -> None:
         """Check if `"on_redeploy"` hook fires when expected."""
         assets = {**TINY_ASSETS, "n_players": 3}
-        game = Game(assets, shuffle_data=False,
-                    hooks={"on_redeploy": self.default_hook_handler()})
+        game = Game(assets, hooks={"on_redeploy": self.default_hook_handler()})
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
             game.conquer(0)
@@ -302,7 +314,7 @@ class TestGameHooks(BaseGameTest):
 
     def test_on_game_end(self) -> None:
         """Check if `"on_game_end"` hook fires when expected."""
-        game = Game(TINY_ASSETS, shuffle_data=False,
+        game = Game(TINY_ASSETS,
                     hooks={"on_game_end": self.default_hook_handler()})
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
@@ -363,7 +375,7 @@ class TestGameDecline(BaseGameTest):
         assets = deepcopy(TINY_ASSETS)
         assets["n_selectable_combos"] = 1
         assets["abilities"] = assets["abilities"][:3]
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         with nullcontext("Player 0, turn 1:"):
             # Grab (Race0, Ability0).
             game.select_combo(0)
@@ -400,7 +412,7 @@ class TestGameDecline(BaseGameTest):
         convenience.
         """
         assets = {**TINY_ASSETS, "n_players": 1}
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         with nullcontext("Player 0, turn 1:"):
             with self.assertRaises(br.NoActiveRace):
                 game.decline()
@@ -432,7 +444,7 @@ class TestGameSelectCombo(BaseGameTest):
         convenience.
         """
         assets = {**TINY_ASSETS, "n_players": 1, "n_coins_on_start": 0}
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         with nullcontext("Player 0, turn 1:"):
             for combo in [-10, -1, len(game.combos), 999]:
                 # "combo_index must be between 0 and {len(game.combos)}"
@@ -458,7 +470,7 @@ class TestGameAbandon(BaseGameTest):
     def test_functionality(self) -> None:
         """Check if the method behaves as expected when used correctly."""
         assets = {**TINY_ASSETS, "n_players": 1}
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
             game.conquer(0)
@@ -479,7 +491,7 @@ class TestGameAbandon(BaseGameTest):
         convenience.
         """
         assets = {**TINY_ASSETS, "n_players": 1}
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         with nullcontext("Player 0, turn 1:"):
             with self.assertRaises(br.NoActiveRace):
                 game.abandon(0)
@@ -506,7 +518,7 @@ class TestGameConquer(BaseGameTest):
 
     def test_diceless_functionality(self) -> None:
         """Check if the method behaves as expected with `use_dice=False`."""
-        game = Game(TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(1)
             with self.assertConquers(game, 0, cost=3):
@@ -528,7 +540,7 @@ class TestGameConquer(BaseGameTest):
     def test_dice_win(self) -> None:
         """Common victory cases with `use_dice=True`."""
         assets = {**TINY_ASSETS, "n_players": 1}
-        game = Game(assets, shuffle_data=False, dice_roll_func=lambda: 1)
+        game = Game(assets, dice_roll_func=lambda: 1)
         with nullcontext("Player 0, turn 1:"):
             # The dice isn't necessary and results in using less tokens:
             game.select_combo(0)
@@ -544,14 +556,14 @@ class TestGameConquer(BaseGameTest):
 
     def test_dice_rolled_3_when_needed_3(self) -> None:
         """1 token should be put on a region."""
-        game = Game(TINY_ASSETS, shuffle_data=False, dice_roll_func=lambda: 3)
+        game = Game(TINY_ASSETS, dice_roll_func=lambda: 3)
         game.select_combo(0)
         with self.assertConquers(game, 0, cost=1):
             game.conquer(0, use_dice=True)
 
     def test_dice_fail(self) -> None:
         """Check if conquest fails when given insufficient dice value."""
-        game = Game(TINY_ASSETS, shuffle_data=False, dice_roll_func=lambda: 1)
+        game = Game(TINY_ASSETS, dice_roll_func=lambda: 1)
         game.select_combo(0)
         game.conquer(0)
         game.deploy(game.player.tokens_on_hand - 1, 0)  # Leave 1 in hand.
@@ -562,9 +574,7 @@ class TestGameConquer(BaseGameTest):
     def test_returned_dice_value(self) -> None:
         """A simple sanity check for return value with `use_dice=True`."""
         DICE_VALUE = 1
-        game = Game(
-            TINY_ASSETS, shuffle_data=False, dice_roll_func=lambda: DICE_VALUE
-        )
+        game = Game(TINY_ASSETS, dice_roll_func=lambda: DICE_VALUE)
         game.select_combo(0)
         return_value = game.conquer(0, use_dice=True)
         self.assertEqual(return_value, DICE_VALUE)
@@ -574,7 +584,7 @@ class TestGameConquer(BaseGameTest):
         assets = deepcopy(TINY_ASSETS)
         assets["map"]["tiles"][0]["has_a_lost_tribe"] = True
         assets["n_players"] = 1
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
             # Conquest should require 4 tokens instead of 3.
@@ -597,7 +607,7 @@ class TestGameConquer(BaseGameTest):
         as if the player has just chosen a new race.
         """
         assets = {**TINY_ASSETS, "n_players": 1}
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
             game.conquer(0)
@@ -622,7 +632,7 @@ class TestGameConquer(BaseGameTest):
         convenience.
         """
         assets = {**TINY_ASSETS, "n_players": 1}
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         with nullcontext("Player 0, turn 1:"):
             with self.assertRaises(br.NoActiveRace):
                 game.conquer(0)  # Attempt to conquer without an active race.
@@ -650,7 +660,7 @@ class TestGameConquer(BaseGameTest):
 
     def test_diceless_exceptions(self) -> None:
         """Check if method raises exceptions specific to `use_dice=False`."""
-        game = Game(TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS)
         game.select_combo(0)
         game.conquer(0)
         game.deploy(game.player.tokens_on_hand - 2, 0)
@@ -659,7 +669,7 @@ class TestGameConquer(BaseGameTest):
 
     def test_dice_only_exceptions(self) -> None:
         """Check if method raises exceptions specific to `use_dice=True`."""
-        game = Game(TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS)
         with nullcontext("Player 0, turn 1:"):
             game.select_combo(0)
             game.conquer(0)
@@ -687,7 +697,7 @@ class TestGameStartRedeployment(BaseGameTest):
     def test_functionality(self) -> None:
         """Check if the method behaves as expected when used correctly."""
         assets = {**TINY_ASSETS, "n_players": 1}
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         game.select_combo(0)
         TOKENS_TOTAL = game.player.tokens_on_hand
         game.conquer(0)
@@ -705,7 +715,7 @@ class TestGameStartRedeployment(BaseGameTest):
         convenience.
         """
         assets = {**TINY_ASSETS, "n_players": 1}
-        game = Game(assets, shuffle_data=False)
+        game = Game(assets)
         with nullcontext("Player 0, turn 1:"):
             with self.assertRaises(br.NoActiveRace):
                 game.start_redeployment()
@@ -729,7 +739,7 @@ class TestGameDeploy(BaseGameTest):
 
     def test_functionality(self) -> None:
         """Check if the method behaves as expected when used correctly."""
-        game = Game(TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS)
         game.select_combo(0)
         TOKENS_TOTAL = game.player.tokens_on_hand
         game.conquer(0)
@@ -745,7 +755,7 @@ class TestGameDeploy(BaseGameTest):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        game = Game(TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS)
         with self.assertRaises(br.NoActiveRace):
             game.deploy(1, 0)
         game.select_combo(0)
@@ -778,7 +788,7 @@ class TestGameEndTurn(BaseGameTest):
         assets = deepcopy(TINY_ASSETS)
         assets["races"][0]["n_tokens"] = 1
         assets["abilities"][0]["n_tokens"] = 1
-        game = Game(assets, shuffle_data=False, dice_roll_func=lambda: 0)
+        game = Game(assets, dice_roll_func=lambda: 0)
         game.select_combo(0)
         # Make a failed conquest with dice.
         game.conquer(0, use_dice=True)
@@ -795,7 +805,7 @@ class TestGameEndTurn(BaseGameTest):
         This doesn't include `GameEnded`, which is tested separately for
         convenience.
         """
-        game = Game(TINY_ASSETS, shuffle_data=False)
+        game = Game(TINY_ASSETS)
         with self.assertRaises(br.EndBeforeSelect):
             game.end_turn()
         game.select_combo(0)
