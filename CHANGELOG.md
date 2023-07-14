@@ -15,6 +15,7 @@ and this project adheres to
 
 ### Changed
 
+- `Combo` is now a dataclass that's compared by value.
 - Maps are no longer allowed to contain "borders" between some tile and itself.
 
 ## \[0.18.0] - 2023-07-14

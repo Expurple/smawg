@@ -33,6 +33,14 @@ class TestCombo(unittest.TestCase):
         combo = Combo(race, ability)
         self.assertEqual(combo.base_n_tokens, 8)
 
+    def test_eq(self) -> None:
+        """Combos should be compared by value."""
+        race = Race("Example", n_tokens=5, max_n_tokens=15)
+        ability = Ability("Example", n_tokens=5)
+        combo1 = Combo(race, ability)
+        combo2 = Combo(race, ability)
+        self.assertEqual(combo1, combo2)
+
 
 class TestValidate(unittest.TestCase):
     """Tests for `smawg.validate()` function.

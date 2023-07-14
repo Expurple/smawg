@@ -166,19 +166,24 @@ class Assets:
 
 # ----------------------------- Runtime game data -----------------------------
 
+@dataclass
 class Combo:
     """Immutable pair of `Race` and `Ability` banners.
 
     Also contains a mutable amount of `coins` put on top during the game.
     """
 
-    def __init__(self, race: Race, ability: Ability) -> None:
-        """Construct a freshly revealed `Race`+`Ability` combo."""
-        self.race = race
-        self.ability = ability
-        self.base_n_tokens = min(race.n_tokens + ability.n_tokens,
-                                 race.max_n_tokens)
-        self.coins: int = 0
+    race: Race
+    ability: Ability
+    coins: int = Field(default=0, init_var=False)
+
+    @property
+    def base_n_tokens(self) -> int:
+        """The number of tokens on hand at the start of the game."""
+        return min(
+            self.race.n_tokens + self.ability.n_tokens,
+            self.race.max_n_tokens
+        )
 
 
 class Player:
