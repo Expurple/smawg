@@ -9,6 +9,10 @@ and this project adheres to
 
 ## \[Unreleased]
 
+\-
+
+## \[0.18.0] - 2023-07-14
+
 ### Changed
 
 - `smawg.viz --format=''` now acts as `--no-render`.
