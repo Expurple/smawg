@@ -17,7 +17,7 @@ from smawg.default_rules import Rules as DefaultRules
 
 __all__ = [
     # Defined in this file:
-    "Game", "Hooks", "validate",
+    "Game", "Hooks", "roll_dice", "validate",
     # Re-exported from smawg._common:
     "Region", "Ability", "Race", "Map", "Assets", "Combo", "Player",
     "GameState", "RulesViolation", "AbstractRules"
@@ -32,9 +32,16 @@ def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
     _ = TypeAdapter(Assets).validate_python(assets)
 
 
-def _roll_dice() -> int:
-    """Return a random dice roll result."""
-    return random.choice((0, 0, 0, 1, 2, 3))
+def roll_dice(rng: random.Random | None = None) -> int:
+    """Return a random dice roll result.
+
+    If `rng` is given and not `None`, it is used instead of the global one.
+    """
+    dice_sides = [0, 0, 0, 1, 2, 3]
+    if rng is not None:
+        return rng.choice(dice_sides)
+    else:
+        return random.choice(dice_sides)
 
 
 def _do_nothing(*args: Any, **kwargs: Any) -> None:
@@ -72,7 +79,7 @@ class Game(GameState):
 
     def __init__(self, assets: Assets | dict[str, Any],
                  RulesT: Type[AbstractRules] = DefaultRules, *,
-                 dice_roll_func: Callable[[], int] = _roll_dice,
+                 dice_roll_func: Callable[[], int] = roll_dice,
                  hooks: Hooks = {}) -> None:
         """Initialize a game based on given `assets`.
 

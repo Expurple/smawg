@@ -11,6 +11,7 @@ and this project adheres to
 
 ### Added
 
+- `roll_dice()` convenience function.
 - `Assets.shuffle()` convenience method.
 - `Game.assets` and `GameState.assets` properties.
 
