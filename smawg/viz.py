@@ -17,7 +17,6 @@ from smawg import Assets, Map
 from smawg._metadata import PACKAGE_DIR, VERSION
 
 
-DESCRIPTION = f"graphviz visualizer for smawg v{VERSION} maps"
 VISIT_HOME_PAGE = "For more info, visit https://github.com/expurple/smawg"
 
 
@@ -28,7 +27,13 @@ def _do_nothing(*args: Any, **kwargs: Any) -> None:
 
 def argument_parser() -> ArgumentParser:
     """Configure and create a command line argument parser."""
-    parser = ArgumentParser(description=DESCRIPTION, epilog=VISIT_HOME_PAGE)
+    parser = ArgumentParser(
+        description=f"Vizualize smawg {VERSION} maps using graphviz.\n\n"
+                    "Creates two files: map.gv and map.gv.FMT "
+                    "(the rendered image).",
+        epilog=VISIT_HOME_PAGE,
+        formatter_class=RawDescriptionHelpFormatter
+    )
     default_format = "png"
     parser.add_argument(
         "-f", "--format",
@@ -149,7 +154,7 @@ def _main() -> None:
     parser = argument_parser()
     assert isinstance(parser.description, str), "type narrowing for mypy"
     parser.description += "\n\nTHIS ENTRY POINT IS DEPRECATED, " \
-                          "launch as 'python3 -m smawg viz' instead"
+                          "launch as 'python3 -m smawg viz' instead."
     parser.formatter_class = RawDescriptionHelpFormatter
     args = parser.parse_args()
     root_command(args)

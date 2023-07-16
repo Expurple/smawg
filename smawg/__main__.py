@@ -6,7 +6,7 @@ See https://github.com/expurple/smawg for more info about the project.
 """
 
 import json
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 
 from pydantic import TypeAdapter
 
@@ -32,8 +32,7 @@ def _parse_args() -> Namespace:
     )
     subparsers = parser.add_subparsers(
         dest="subcommand",
-        help="(see --help of each for more details)",
-        metavar="SUBCOMMAND",
+        description="See --help of each for more details.",
         required=True,
     )
     play_parser = cli.argument_parser()
@@ -62,7 +61,8 @@ def _parse_args() -> Namespace:
         conflict_handler="resolve",
         # For some reason, these aren't automatically inherited from `parents`:
         description=viz_parser.description,
-        epilog=viz_parser.epilog
+        epilog=viz_parser.epilog,
+        formatter_class=RawDescriptionHelpFormatter
     )
     return parser.parse_args()
 
