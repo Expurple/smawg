@@ -2,10 +2,7 @@
 
 """CLI client for Small World engine.
 
-The internals aren't stable
-and aren't supposed to be imported by anything but `smawg.tests`.
-
-Although, this module can serve as an example of how to use `smawg` library.
+This module can serve as an example of how to use `smawg` library.
 
 Running this module directly is deprecated, run it using `smawg play`.
 
@@ -27,11 +24,14 @@ from smawg import AbstractRules, Assets, Game, RulesViolation
 from smawg._metadata import PACKAGE_DIR, VERSION
 
 
-TITLE = f"smawg CLI v{VERSION}"
-HELP_SUGGESTION = "Type 'help' to see available commands."
-VISIT_HOME_PAGE = "For more info, visit https://github.com/expurple/smawg"
-START_SCREEN = "\n".join([TITLE, HELP_SUGGESTION, VISIT_HOME_PAGE, ""])
-HELP = """\
+__all__ = ["argument_parser", "root_command"]
+
+
+_TITLE = f"smawg CLI v{VERSION}"
+_HELP_SUGGESTION = "Type 'help' to see available commands."
+_VISIT_HOME_PAGE = "For more info, visit https://github.com/expurple/smawg"
+_START_SCREEN = "\n".join([_TITLE, _HELP_SUGGESTION, _VISIT_HOME_PAGE, ""])
+_HELP = """\
 Available commands:
     help                       show this message
     quit                       quit game
@@ -57,14 +57,14 @@ but won't actually attempt to conquer it:
 
 Press Tab to use command autocompletion."""
 
-COMMANDS = [
+_COMMANDS = [
     "help", "quit", "show-combos", "show-players", "show-regions", "combo",
     "abandon", "conquer", "conquer-dice", "deploy", "redeploy", "decline",
     "end-turn"
 ]
 
 
-Command = (
+_Command = (
     Literal["help", "quit", "show-combos", "show-players"]
     | tuple[Literal["show-regions"], int]
     | tuple[bool, Literal["combo", "abandon", "conquer", "conquer-dice"], int]
@@ -73,13 +73,13 @@ Command = (
 )
 
 
-def parse_command(line: str) -> Command | None:
+def _parse_command(line: str) -> _Command | None:
     """Parse a CLI `Command` from string.
 
     Return `None` if the line is empty.
 
     Raise:
-    * `smawg.cli.InvalidCommand`
+    * `smawg.cli._InvalidCommand`
         if command is unknown, given wrong number or arguments,
         or a dry run is requested for command that doesn't support it.
     * `ValueError`
@@ -92,7 +92,7 @@ def parse_command(line: str) -> Command | None:
     if line == "":
         return None
     command, *args = line.split()
-    dry_run_err = InvalidCommand(f"'{command}' does not support dry run mode")
+    dry_run_err = _InvalidCommand(f"'{command}' does not support dry run mode")
     match command:
         case "help" | "quit" | "show-combos" | "show-players":
             if dry_run:
@@ -114,13 +114,13 @@ def parse_command(line: str) -> Command | None:
             _parse_ints(args, n=0)
             return (dry_run, command)
         case _:
-            raise InvalidCommand(f"unknown command '{command}'")
+            raise _InvalidCommand(f"unknown command '{command}'")
 
 
 def _parse_ints(args: list[str], *, n: int) -> list[int]:
     """Parse `args` as a list of `n` integers."""
     if len(args) != n:
-        raise InvalidCommand(f"expected {n} argument(s), but got {len(args)}")
+        raise _InvalidCommand(f"expected {n} argument(s), but got {len(args)}")
     return [_parse_int(a) for a in args]
 
 
@@ -132,9 +132,9 @@ def _parse_int(s: str) -> int:
         raise ValueError(f"'{s}' is not an integer")
 
 
-def autocomplete(text: str, state: int) -> str | None:
+def _autocomplete(text: str, state: int) -> str | None:
     """Command completer for `readline`."""
-    results: list[str | None] = [c for c in COMMANDS if c.startswith(text)]
+    results: list[str | None] = [c for c in _COMMANDS if c.startswith(text)]
     results.append(None)
     return results[state]
 
@@ -143,7 +143,7 @@ def argument_parser() -> ArgumentParser:
     """Configure and create a command line argument parser."""
     parser = ArgumentParser(
         description=f"CLI client for playing smawg {VERSION}",
-        epilog=VISIT_HOME_PAGE
+        epilog=_VISIT_HOME_PAGE
     )
     parser.add_argument(
         "assets_file",
@@ -174,7 +174,7 @@ def argument_parser() -> ArgumentParser:
     return parser
 
 
-def read_dice() -> int:
+def _read_dice() -> int:
     """Get result of a dice roll from an interactive console."""
     prompt = "Enter the result of the dice roll: "
     while True:
@@ -184,7 +184,7 @@ def read_dice() -> int:
             prompt = "The result must be an integer, try again: "
 
 
-def import_rules(filename: str) -> Type[AbstractRules]:
+def _import_rules(filename: str) -> Type[AbstractRules]:
     """Dynamically load `Rules` from a Python file."""
     rules_file_path = Path(filename).resolve()
     rules_file_name = rules_file_path.name
@@ -195,17 +195,17 @@ def import_rules(filename: str) -> Type[AbstractRules]:
     return rules
 
 
-class InvalidCommand(ValueError):
-    """Exception raised in `Client` when an invalid command is entered."""
+class _InvalidCommand(ValueError):
+    """Exception raised in `_Client` when an invalid command is entered."""
 
     pass
 
 
-class Client:
+class _Client:
     """Handles console IO."""
 
     def __init__(self, args: Namespace) -> None:
-        """Construct `Client` with respect to command line `args`."""
+        """Construct `_Client` with respect to command line `args`."""
         assets_file = args.assets_file
         if args.relative_path:
             assets_file = f"{PACKAGE_DIR}/{assets_file}"
@@ -214,9 +214,9 @@ class Client:
         assets: Assets = TypeAdapter(Assets).validate_python(assets_json)
         if not args.no_shuffle:
             assets = assets.shuffle()
-        rules = import_rules(args.rules)
+        rules = _import_rules(args.rules)
         if args.read_dice:
-            game = Game(assets, rules, dice_roll_func=read_dice)
+            game = Game(assets, rules, dice_roll_func=_read_dice)
         else:
             game = Game(assets, rules)
         self.game = game
@@ -225,7 +225,7 @@ class Client:
 
     def run(self) -> None:
         """Interpret user commands until stopped by `'quit'`, ^C or ^D."""
-        print(START_SCREEN)
+        print(_START_SCREEN)
         try:
             self._run_main_loop()
         except (EOFError, KeyboardInterrupt):
@@ -236,12 +236,12 @@ class Client:
             self._print_change_player_message()
             line = input("> ")
             try:
-                command = parse_command(line)
+                command = _parse_command(line)
                 if command is not None:
                     self._execute(command)
-            except InvalidCommand as e:
+            except _InvalidCommand as e:
                 print(f"Invalid command: {e.args[0]}")
-                print(HELP_SUGGESTION)
+                print(_HELP_SUGGESTION)
             except ValueError as e:
                 print(f"Invalid argument: {e.args[0]}")
             except RulesViolation as e:
@@ -265,7 +265,7 @@ class Client:
                       f"{self.game.current_turn}/{self.game.n_turns}.")
             self.player_of_last_command = self.game.player_id
 
-    def _execute(self, command: Command) -> None:
+    def _execute(self, command: _Command) -> None:
         """Execute the given `command`.
 
         Raise:
@@ -276,7 +276,7 @@ class Client:
         """
         match command:
             case "help":
-                print(HELP)
+                print(_HELP)
             case "quit":
                 exit(0)
             case "show-combos":
@@ -412,13 +412,13 @@ def root_command(args: Namespace) -> None:
     """The function that is run after parsing the command line arguments."""
     import readline
     readline.set_completer_delims(" ")
-    readline.set_completer(autocomplete)
+    readline.set_completer(_autocomplete)
     readline.parse_and_bind("tab: complete")
-    client = Client(args)
+    client = _Client(args)
     client.run()
 
 
-def main() -> None:
+def _main() -> None:
     """The entry point of `smawg.cli` command.
 
     Deprecated in favor of `smawg play`.
@@ -433,4 +433,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    _main()

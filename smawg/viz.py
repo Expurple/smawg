@@ -2,6 +2,8 @@
 
 """Utility for visualizing maps from smawg asset files.
 
+Running this module directly is deprecated, run it using `smawg viz`.
+
 See https://github.com/expurple/smawg for more info about the project.
 """
 
@@ -17,7 +19,7 @@ from smawg import Assets, Map
 from smawg._metadata import PACKAGE_DIR, VERSION
 
 
-VISIT_HOME_PAGE = "For more info, visit https://github.com/expurple/smawg"
+__all__ = ["argument_parser", "root_command"]
 
 
 def _do_nothing(*args: Any, **kwargs: Any) -> None:
@@ -31,7 +33,7 @@ def argument_parser() -> ArgumentParser:
         description=f"Vizualize smawg {VERSION} maps using graphviz.\n\n"
                     "Creates two files: map.gv and map.gv.FMT "
                     "(the rendered image).",
-        epilog=VISIT_HOME_PAGE,
+        epilog="For more info, visit https://github.com/expurple/smawg",
         formatter_class=RawDescriptionHelpFormatter
     )
     default_format = "png"
@@ -64,7 +66,7 @@ def argument_parser() -> ArgumentParser:
     return parser
 
 
-TERRAIN_COLORS = {
+_TERRAIN_COLORS = {
     "Farmland": "gold",
     "Forest": "green3",
     "Hill": "lightgreen",
@@ -73,14 +75,14 @@ TERRAIN_COLORS = {
     "Sea": "deepskyblue",
     "Swamp": "chocolate2"
 }
-MARKED_SYMBOLS = {
+_MARKED_SYMBOLS = {
     "Cavern": "⬛ Cavern",
     "Magic Source": "🟦 Magic Source",
     "Mine": "🟥 Mine",
 }
 
 
-def build_graph(map: Map) -> Graph:
+def _build_graph(map: Map) -> Graph:
     """Convert the map into a DOT representation, but don't render it yet."""
     graph = Graph(
         name="map",
@@ -93,12 +95,12 @@ def build_graph(map: Map) -> Graph:
         node_attrs = {"label": f"{i}. {tile.terrain}"}
         style_items = list[str]()
         for symbol in sorted(tile.symbols):
-            node_attrs["label"] += f"\\n{MARKED_SYMBOLS.get(symbol, symbol)}"
+            node_attrs["label"] += f"\\n{_MARKED_SYMBOLS.get(symbol, symbol)}"
         if tile.has_a_lost_tribe:
             node_attrs["label"] += "\\n⬜ Lost Tribe"
         if tile.is_at_map_border:
             style_items.append("bold")
-        color = TERRAIN_COLORS.get(tile.terrain, None)
+        color = _TERRAIN_COLORS.get(tile.terrain, None)
         if color is not None:
             style_items.append("filled")
             node_attrs["fillcolor"] = color
@@ -114,8 +116,8 @@ def build_graph(map: Map) -> Graph:
     return graph
 
 
-def save(graph: Graph, render_fmt: str, *, view: bool = False,
-         on_save: Callable[[str], None] = _do_nothing) -> None:
+def _save(graph: Graph, render_fmt: str, *, view: bool = False,
+          on_save: Callable[[str], None] = _do_nothing) -> None:
     """Save the graph, optionally rendering it or opening the resulting file.
 
     For each saved file, fire `on_save` callback and pass a filename.
@@ -141,9 +143,9 @@ def root_command(args: Namespace) -> None:
     with open(assets_file) as file:
         assets_dict = json.load(file)
     assets: Assets = TypeAdapter(Assets).validate_python(assets_dict)
-    graph = build_graph(assets.map)
+    graph = _build_graph(assets.map)
     format = "" if args.no_render else args.format
-    save(graph, format, view=args.view, on_save=_on_save)
+    _save(graph, format, view=args.view, on_save=_on_save)
 
 
 def _main() -> None:
