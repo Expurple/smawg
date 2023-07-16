@@ -12,10 +12,12 @@ and this project adheres to
 ### Added
 
 - `smawg play` subcommand as the new recommended way to run `smawg.cli`.
+- `smawg viz` subcommand as the new recommended way to run `smawg.viz`.
 
 ### Deprecated
 
 - `smawg.cli` entry point in favor of `smawg play`.
+- `smawg.viz` entry point in favor of `smawg viz`.
 
 ## \[0.19.0] - 2023-07-16
 

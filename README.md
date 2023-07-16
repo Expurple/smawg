@@ -35,7 +35,7 @@ and easy interoperability with other programming languages.
 * Python 3.11+ (currently, only 3.11 is tested)
 * [pydantic](https://github.com/pydantic/pydantic)
 * [tabulate](https://github.com/astanin/python-tabulate) (for `smawg play`)
-* [graphviz](https://github.com/xflr6/graphviz) (only for `smawg.viz`)
+* [graphviz](https://github.com/xflr6/graphviz) (for `smawg viz`)
 
 ## Releases
 
@@ -149,10 +149,10 @@ because functionally it's the same map:
 +-------+        +-------+        +--------+
 ```
 
-To easily reason about maps, you can use `smawg.viz` utility. Typical usage:
+To easily reason about maps, you can use `smawg viz` utility. Typical usage:
 
 ```bash
-python3 -m smawg.viz --view some/path/to/assets.json
+python3 -m smawg viz --view some/path/to/assets.json
 ```
 
 ## Contributing

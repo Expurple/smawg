@@ -7,7 +7,7 @@ See https://github.com/expurple/smawg for more info about the project.
 
 import json
 import sys
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 from typing import Any, Callable
 
 from graphviz import Graph  # type:ignore
@@ -26,11 +26,8 @@ def _do_nothing(*args: Any, **kwargs: Any) -> None:
     pass
 
 
-def _parse_args() -> Namespace:
-    """Parse and return command line arguments.
-
-    On error, print usage and exit.
-    """
+def argument_parser() -> ArgumentParser:
+    """Configure and create a command line argument parser."""
     parser = ArgumentParser(description=DESCRIPTION, epilog=VISIT_HOME_PAGE)
     default_format = "png"
     parser.add_argument(
@@ -59,7 +56,7 @@ def _parse_args() -> Namespace:
         metavar="ASSETS_FILE",
         help="path to JSON file with assets"
     )
-    return parser.parse_args()
+    return parser
 
 
 TERRAIN_COLORS = {
@@ -128,11 +125,11 @@ def save(graph: Graph, render_fmt: str, *, view: bool = False,
 
 
 def _on_save(filename: str) -> None:
-    print(f"smawg.viz: saved {repr(filename)}", file=sys.stderr)
+    print(f"smawg: saved {repr(filename)}", file=sys.stderr)
 
 
-if __name__ == "__main__":
-    args = _parse_args()
+def root_command(args: Namespace) -> None:
+    """The function that is run after parsing the command line arguments."""
     assets_file = args.assets_file
     if args.relative_path:
         assets_file = f"{PACKAGE_DIR}/{assets_file}"
@@ -142,3 +139,21 @@ if __name__ == "__main__":
     graph = build_graph(assets.map)
     format = "" if args.no_render else args.format
     save(graph, format, view=args.view, on_save=_on_save)
+
+
+def _main() -> None:
+    """The entry point of `smawg.viz` command.
+
+    Deprecated in favor of `smawg viz`.
+    """
+    parser = argument_parser()
+    assert isinstance(parser.description, str), "type narrowing for mypy"
+    parser.description += "\n\nTHIS ENTRY POINT IS DEPRECATED, " \
+                          "launch as 'python3 -m smawg viz' instead"
+    parser.formatter_class = RawDescriptionHelpFormatter
+    args = parser.parse_args()
+    root_command(args)
+
+
+if __name__ == "__main__":
+    _main()

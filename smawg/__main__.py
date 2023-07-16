@@ -11,6 +11,7 @@ from argparse import ArgumentParser, Namespace
 from pydantic import TypeAdapter
 
 import smawg.cli as cli
+import smawg.viz as viz
 from smawg import Assets
 from smawg._metadata import VERSION
 
@@ -53,6 +54,16 @@ def _parse_args() -> Namespace:
         epilog=VISIT_HOME_PAGE,
         help="generate and print JSON schema for assets",
     )
+    viz_parser = viz.argument_parser()
+    subparsers.add_parser(
+        "viz",
+        help="vizualize game maps using graphviz",
+        parents=[viz_parser],
+        conflict_handler="resolve",
+        # For some reason, these aren't automatically inherited from `parents`:
+        description=viz_parser.description,
+        epilog=viz_parser.epilog
+    )
     return parser.parse_args()
 
 
@@ -64,6 +75,8 @@ def _main() -> None:
         case "schema":
             schema = TypeAdapter(Assets).json_schema()
             print(json.dumps(schema, indent=2))
+        case "viz":
+            viz.root_command(args)
         case _:
             assert False, "all commands should be handled"
 
