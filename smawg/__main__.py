@@ -39,10 +39,10 @@ def _parse_args() -> Namespace:
     subparsers.add_parser(
         "play",
         help="play the game through a CLI",
-        description=f"CLI client for playing smawg {VERSION}",
         parents=[play_parser],
         conflict_handler="resolve",
-        # For some reason, this isn't automatically inherited from `parents`
+        # For some reason, these aren't automatically inherited from `parents`:
+        description=play_parser.description,
         epilog=play_parser.epilog
     )
     SCHEMA_DESCRIPTION =\

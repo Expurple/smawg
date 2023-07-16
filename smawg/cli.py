@@ -142,11 +142,8 @@ def autocomplete(text: str, state: int) -> str | None:
 def argument_parser() -> ArgumentParser:
     """Configure and create a command line argument parser."""
     parser = ArgumentParser(
-        description=f"CLI client for playing smawg {VERSION}\n\n"
-                    "THIS ENTRY POINT IS DEPRECATED, "
-                    "launch as 'smawg play' instead of 'smawg.cli'",
-        epilog=VISIT_HOME_PAGE,
-        formatter_class=RawDescriptionHelpFormatter
+        description=f"CLI client for playing smawg {VERSION}",
+        epilog=VISIT_HOME_PAGE
     )
     parser.add_argument(
         "assets_file",
@@ -427,6 +424,10 @@ def main() -> None:
     Deprecated in favor of `smawg play`.
     """
     parser = argument_parser()
+    assert isinstance(parser.description, str), "type narrowing for mypy"
+    parser.description += "\n\nTHIS ENTRY POINT IS DEPRECATED, " \
+                          "launch as 'python3 -m smawg play' instead"
+    parser.formatter_class = RawDescriptionHelpFormatter
     args = parser.parse_args()
     root_command(args)
 
