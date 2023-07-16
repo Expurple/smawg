@@ -9,6 +9,10 @@ and this project adheres to
 
 ## \[Unreleased]
 
+\-
+
+## \[0.19.0] - 2023-07-16
+
 ### Added
 
 - `roll_dice()` convenience function.
