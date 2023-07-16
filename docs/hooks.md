@@ -2,7 +2,8 @@
 
 Hooks are supposed to provide an ergonomic way to act on specific game events,
 rather than manually check the game state after every action to see if that
-event has occured. Initially I implemented them to simplify `smawg.cli`.
+event has occured. Initially I implemented them to simplify `smawg.cli`
+(`smawg play`).
 
 However, over time I've discovered that using them
 brings weird dependencies to the code and complicates control flow.
@@ -90,4 +91,4 @@ game.end_turn()
 # but this leads to horrible recursing stack traces.
 ```
 
-You can find other examples in tests and in pre-0.14.0 `smawg.cli` sources.
+You can find other examples in tests and in pre-0.14.0 `smawg/cli.py` sources.

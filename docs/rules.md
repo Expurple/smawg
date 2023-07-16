@@ -60,7 +60,7 @@ game = Game(assets, CustomRules)
 
 That's it!
 
-### With `smawg.cli`
+### With `smawg` CLI client
 
 The first step is mostly the same.
 You need to define your `smawg.AbstractRules` sublass in a Python file.
@@ -70,8 +70,8 @@ This is a convention so that the loader can find it.
 
 Then, again, you need to create an assets file that contains this ability.
 
-Then, pass the rules plugin and the assets file to `smawg.cli`:
+Then, pass the rules plugin and the assets file to the client:
 
 ```bash
-python3 -m smawg.cli --rules=custom_rules.py custom_assets.json
+python3 -m smawg play --rules=custom_rules.py custom_assets.json
 ```

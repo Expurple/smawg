@@ -7,6 +7,8 @@ and aren't supposed to be imported by anything but `smawg.tests`.
 
 Although, this module can serve as an example of how to use `smawg` library.
 
+Running this module directly is deprecated, run it using `smawg play`.
+
 See https://github.com/expurple/smawg for more info about the project.
 """
 
@@ -14,7 +16,7 @@ See https://github.com/expurple/smawg for more info about the project.
 import json
 import readline
 import sys
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 from importlib import import_module
 from pathlib import Path
 from typing import Iterable, Literal, Type, assert_never
@@ -138,12 +140,15 @@ def autocomplete(text: str, state: int) -> str | None:
     return results[state]
 
 
-def parse_args() -> Namespace:
-    """Parse and return command line arguments.
-
-    On error, print usage and exit.
-    """
-    parser = ArgumentParser(description=TITLE, epilog=VISIT_HOME_PAGE)
+def argument_parser() -> ArgumentParser:
+    """Configure and create a command line argument parser."""
+    parser = ArgumentParser(
+        description=f"CLI client for playing smawg {VERSION}\n\n"
+                    "THIS ENTRY POINT IS DEPRECATED, "
+                    "launch as 'smawg play' instead of 'smawg.cli'",
+        epilog=VISIT_HOME_PAGE,
+        formatter_class=RawDescriptionHelpFormatter
+    )
     parser.add_argument(
         "assets_file",
         metavar="ASSETS_FILE",
@@ -170,7 +175,7 @@ def parse_args() -> Namespace:
         action="store_true",
         help="search for ASSETS_FILE inside of smawg package directory"
     )
-    return parser.parse_args()
+    return parser
 
 
 def read_dice() -> int:
@@ -407,14 +412,23 @@ class Client:
               "you can remove '?' and perform it")
 
 
-def main() -> None:
-    """The entry point of `smawg.cli`."""
+def root_command(args: Namespace) -> None:
+    """The function that is run after parsing the command line arguments."""
     readline.set_completer_delims(" ")
     readline.set_completer(autocomplete)
     readline.parse_and_bind("tab: complete")
-    args = parse_args()
     client = Client(args)
     client.run()
+
+
+def main() -> None:
+    """The entry point of `smawg.cli` command.
+
+    Deprecated in favor of `smawg play`.
+    """
+    parser = argument_parser()
+    args = parser.parse_args()
+    root_command(args)
 
 
 if __name__ == "__main__":

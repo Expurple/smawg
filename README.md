@@ -34,7 +34,7 @@ and easy interoperability with other programming languages.
 
 * Python 3.11+ (currently, only 3.11 is tested)
 * [pydantic](https://github.com/pydantic/pydantic)
-* [tabulate](https://github.com/astanin/python-tabulate) (only for `smawg.cli`)
+* [tabulate](https://github.com/astanin/python-tabulate) (for `smawg play`)
 * [graphviz](https://github.com/xflr6/graphviz) (only for `smawg.viz`)
 
 ## Releases
@@ -62,19 +62,15 @@ pip install .
 
 ### As a CLI app
 
-Generally, it's invoked as
+You can play the game at the command line, using the bundled client.
+
+A simple set of options to get you started:
 
 ```bash
-python3 -m smawg.cli
+python3 -m smawg play --relative-path assets/tiny.json
 ```
 
-A simple example set of options would be
-
-```bash
-python3 -m smawg.cli --relative-path assets/tiny.json
-```
-
-It should guide you through the usage.
+It should guide you through the usage. See `--help` for more details.
 
 ### As a library
 

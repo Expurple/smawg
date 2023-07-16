@@ -13,6 +13,7 @@ class TestMain(unittest.TestCase):
         commands = [
             ["python3", "-m", "smawg", "--help"],
             ["python3", "-m", "smawg", "schema"],
+            ["python3", "-m", "smawg", "play", "--help"],
             ["python3", "-m", "smawg.cli", "--help"],
             ["python3", "-m", "smawg.viz", "--help"],
         ]

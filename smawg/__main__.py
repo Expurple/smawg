@@ -10,6 +10,7 @@ from argparse import ArgumentParser, Namespace
 
 from pydantic import TypeAdapter
 
+import smawg.cli as cli
 from smawg import Assets
 from smawg._metadata import VERSION
 
@@ -33,6 +34,16 @@ def _parse_args() -> Namespace:
         metavar="SUBCOMMAND",
         required=True,
     )
+    play_parser = cli.argument_parser()
+    subparsers.add_parser(
+        "play",
+        help="play the game through a CLI",
+        description=f"CLI client for playing smawg {VERSION}",
+        parents=[play_parser],
+        conflict_handler="resolve",
+        # For some reason, this isn't automatically inherited from `parents`
+        epilog=play_parser.epilog
+    )
     SCHEMA_DESCRIPTION =\
         f"generate and print JSON schema for smawg {VERSION} assets"
     subparsers.add_parser(
@@ -47,6 +58,8 @@ def _parse_args() -> Namespace:
 def _main() -> None:
     args = _parse_args()
     match args.subcommand:
+        case "play":
+            cli.root_command(args)
         case "schema":
             schema = TypeAdapter(Assets).json_schema()
             print(json.dumps(schema, indent=2))

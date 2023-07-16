@@ -9,7 +9,13 @@ and this project adheres to
 
 ## \[Unreleased]
 
-\-
+### Added
+
+- `smawg play` subcommand as the new recommended way to run `smawg.cli`.
+
+### Deprecated
+
+- `smawg.cli` entry point in favor of `smawg play`.
 
 ## \[0.19.0] - 2023-07-16
 
