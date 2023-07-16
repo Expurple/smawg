@@ -25,7 +25,8 @@ def _parse_args() -> Namespace:
     """
     parser = ArgumentParser(
         "smawg",
-        description=f"smawg {VERSION}",
+        description=f"smawg {VERSION}, "
+                    "free implementation of Small World board game.",
         epilog=VISIT_HOME_PAGE,
     )
     subparsers = parser.add_subparsers(
