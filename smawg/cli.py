@@ -14,7 +14,6 @@ See https://github.com/expurple/smawg for more info about the project.
 
 
 import json
-import readline
 import sys
 from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 from importlib import import_module
@@ -414,6 +413,7 @@ class Client:
 
 def root_command(args: Namespace) -> None:
     """The function that is run after parsing the command line arguments."""
+    import readline
     readline.set_completer_delims(" ")
     readline.set_completer(autocomplete)
     readline.parse_and_bind("tab: complete")
