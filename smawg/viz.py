@@ -10,7 +10,6 @@ See https://github.com/expurple/smawg for more info about the project.
 import json
 import sys
 from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
-from typing import Any, Callable
 
 from graphviz import Graph  # type:ignore
 from pydantic import TypeAdapter
@@ -20,11 +19,6 @@ from smawg._metadata import PACKAGE_DIR, VERSION
 
 
 __all__ = ["argument_parser", "root_command"]
-
-
-def _do_nothing(*args: Any, **kwargs: Any) -> None:
-    """Just accept any arguments and do nothing."""
-    pass
 
 
 def argument_parser() -> ArgumentParser:
@@ -116,25 +110,6 @@ def _build_graph(map: Map) -> Graph:
     return graph
 
 
-def _save(graph: Graph, render_fmt: str, *, view: bool = False,
-          on_save: Callable[[str], None] = _do_nothing) -> None:
-    """Save the graph, optionally rendering it or opening the resulting file.
-
-    For each saved file, fire `on_save` callback and pass a filename.
-    """
-    gv_file_name = graph.save()
-    on_save(gv_file_name)
-    if render_fmt != "":
-        rendered_file_name = graph.render(
-            format=render_fmt, view=view, overwrite_source=False
-        )
-        on_save(rendered_file_name)
-
-
-def _on_save(filename: str) -> None:
-    print(f"smawg: saved {repr(filename)}", file=sys.stderr)
-
-
 def root_command(args: Namespace) -> None:
     """The function that is run after parsing the command line arguments."""
     assets_file = args.assets_file
@@ -144,8 +119,14 @@ def root_command(args: Namespace) -> None:
         assets_dict = json.load(file)
     assets: Assets = TypeAdapter(Assets).validate_python(assets_dict)
     graph = _build_graph(assets.map)
+    gv_file_name = graph.save()
+    print(f"smawg: saved {repr(gv_file_name)}", file=sys.stderr)
     format = "" if args.no_render else args.format
-    _save(graph, format, view=args.view, on_save=_on_save)
+    if format != "":
+        rendered_file_name = graph.render(
+            format=format, view=args.view, overwrite_source=False
+        )
+        print(f"smawg: saved {repr(rendered_file_name)}", file=sys.stderr)
 
 
 def _main() -> None:
