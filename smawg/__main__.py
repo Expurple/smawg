@@ -15,6 +15,8 @@ import smawg.viz as viz
 from smawg import Assets
 from smawg._metadata import VERSION
 
+__all__: list[str] = []
+
 
 def _parse_args() -> Namespace:
     """Parse and return command line arguments.

@@ -7,6 +7,7 @@ import importlib.metadata
 from configparser import ConfigParser
 from pathlib import Path
 
+__all__: list[str] = ["ASSETS_DIR", "PACKAGE_DIR", "VERSION"]
 
 PACKAGE_DIR = Path(__file__).parent.resolve()
 """Path to the currently used `smawg` package."""
@@ -27,9 +28,3 @@ except importlib.metadata.PackageNotFoundError:
     cfg = ConfigParser()
     cfg.read(f"{repo_dir}/setup.cfg")
     VERSION = cfg["metadata"]["version"]
-    # Clean up namespace
-    del repo_dir, cfg
-
-
-# Clean up namespace
-del ConfigParser, importlib, Path
