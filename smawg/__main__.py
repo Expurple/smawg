@@ -16,19 +16,17 @@ from smawg import Assets
 from smawg._metadata import VERSION
 
 
-VISIT_HOME_PAGE = "For more info, visit https://github.com/expurple/smawg"
-
-
 def _parse_args() -> Namespace:
     """Parse and return command line arguments.
 
     On error, print usage and exit.
     """
+    EPILOG = "For more info, visit https://github.com/expurple/smawg"
     parser = ArgumentParser(
         "smawg",
         description=f"smawg {VERSION}, "
                     "free implementation of Small World board game.",
-        epilog=VISIT_HOME_PAGE,
+        epilog=EPILOG,
     )
     subparsers = parser.add_subparsers(
         dest="subcommand",
@@ -50,7 +48,7 @@ def _parse_args() -> Namespace:
     subparsers.add_parser(
         "schema",
         description=SCHEMA_DESCRIPTION,
-        epilog=VISIT_HOME_PAGE,
+        epilog=EPILOG,
         help="generate and print JSON schema for assets",
     )
     viz_parser = viz.argument_parser()
