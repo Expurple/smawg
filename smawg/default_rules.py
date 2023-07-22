@@ -65,7 +65,7 @@ class Rules(br.Rules):
         return cost
 
     def _is_adjacent_to_border_sea(self, region: int) -> bool:
-        for i in self._game._borders[region]:
+        for i in self._game.assets.map.adjacent[region]:
             r = self._game.regions[i]
             if r.is_at_map_border and r.terrain == "Sea":
                 return True

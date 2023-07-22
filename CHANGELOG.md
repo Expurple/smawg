@@ -11,6 +11,7 @@ and this project adheres to
 
 ### Added
 
+- `Map.adjacent` property.
 - `smawg play` subcommand as the new recommended way to run `smawg.cli`.
 - `smawg viz` subcommand as the new recommended way to run `smawg.viz`.
 

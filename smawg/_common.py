@@ -68,7 +68,7 @@ class Race:
     """The total number of race tokens in the storage."""
 
 
-@dataclass(frozen=True)
+@dataclass
 class Map:
     """Machine-readable, graph-like representation of the game map.
 
@@ -80,7 +80,7 @@ class Map:
     tile_borders: list[tuple[NonNegativeInt, NonNegativeInt]]
     """A list of borders between adjacent tiles (edges in the graph)."""
 
-    @model_validator(mode="after")  # type:ignore  # idk why it complains
+    @model_validator(mode="after")
     def _validate_tile_indexes(self) -> "Map":
         n_tiles = len(self.tiles)
         for t1, t2 in self.tile_borders:
@@ -95,7 +95,19 @@ class Map:
                     f"invalid border ({t1}, {t2}): tiles can't share borders "
                     "with themselves"
                 )
+        # Here instead of __post_init__, because
+        # https://github.com/pydantic/pydantic/issues/6806
+        adjacency_lists = [set[int]() for _ in range(len(self.tiles))]
+        for region1, region2 in self.tile_borders:
+            adjacency_lists[region1].add(region2)
+            adjacency_lists[region2].add(region1)
+        self._adjacency_lists = [frozenset(s) for s in adjacency_lists]
         return self
+
+    @property
+    def adjacent(self) -> list[frozenset[int]]:
+        """Adjacent regions for each region, listed as frozensets."""
+        return self._adjacency_lists
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -124,7 +136,7 @@ class Assets:
     name: str = "<no name provided>"
     description: str = "<no description provided>"
 
-    @model_validator(mode="after")  # type:ignore  # idk why it complains
+    @model_validator(mode="after")
     def _validate_combo_availability(self) -> "Assets":
         n_players = self.n_players
         n_races = len(self.races)
@@ -269,10 +281,6 @@ class GameState:
         self._assets = assets
         # Gotta make a copy because we're going to mutate `Region`s.
         self._regions = deepcopy(assets.map.tiles)
-        self._borders = [set[int]() for _ in range(len(self._regions))]
-        for region1, region2 in assets.map.tile_borders:
-            self._borders[region1].add(region2)
-            self._borders[region2].add(region1)
         self._current_turn: int = 1
         abilities = iter(assets.abilities)
         races = iter(assets.races)

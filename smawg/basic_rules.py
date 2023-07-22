@@ -484,12 +484,12 @@ class Rules(AbstractRules):
                 yield ForbiddenDuringRedeployment()
             case _TS.USED_DICE:
                 yield AlreadyUsedDice()
-        if len(self._game.player.active_regions) == 0 \
-                and not self._game.regions[region].is_at_map_border:
+        active_regions = frozenset(self._game.player.active_regions)
+        is_at_map_border = self._game.regions[region].is_at_map_border
+        if len(active_regions) == 0 and not is_at_map_border:
             yield NotAtBorder()
-        if region in self._game.player.active_regions:
+        if region in active_regions:
             yield ConqueringOwnRegion()
-        has_adjacent = any(region in self._game._borders[own]
-                           for own in self._game.player.active_regions)
-        if len(self._game.player.active_regions) > 0 and not has_adjacent:
+        around_target = self._game.assets.map.adjacent[region]
+        if len(active_regions) > 0 and not (active_regions & around_target):
             yield NonAdjacentRegion()
