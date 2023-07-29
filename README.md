@@ -131,29 +131,35 @@ and then instantly generate a new schema that reflects your changes.
 
 ### Visualization
 
-The schema doesn't specify a visual layout for game maps.
-I imagine the map from `tiny.json` as `1)`, but it may be as well represented
-as something like `2)` or `3)` and it will still work properly,
-because functionally it's the same map:
+Assets don't specify a visual layout for game maps, because it doesn't matter
+to the backend. I imagine the map from [tiny.json](./smawg/assets/tiny.json) as
+`I`, but `II` and `III` are exactly the same from `smawg`'s point of view:
 
 ```text
-    1)               2)               3)
-+-------+        +-------+        +--------+
-| 0 | 1 |        | 1 ^ 0 |        | 4 |  3 |
-|   ^   |        |  / \  |        |   ^    |
-|  / \  |        |-< 2 >-|        |  / \   |
-|-< 2 >-|        |  \ /  |        |-< 2 >--|
-|  \ /  |        |   v   |        |  \ /   |
-|   v   |        | 4 | 3 |        |   v    |
-| 3 | 4 |        |   |   |        | 1 |  0 |
-+-------+        +-------+        +--------+
+    I                II               III
++-------+        +-------+        +---------+
+| 0 | 1 |        | 1 ^ 0 |        | 4 |   3 |
+|   ^   |        |  / \  |        |   ^     |
+|  / \  |        |-< 2 >-|        |  / \    |
+|-< 2 >-|        |  \ /  |        |-< 2 >---|
+|  \ /  |        |   v   |        |  \ /    |
+|   v   |        | 4 | 3 |        |   v     |
+| 3 | 4 |        |   |   |        | 1 |   0 |
++-------+        +-------+        +---------+
 ```
 
-To easily reason about maps, you can use `smawg viz` utility. Typical usage:
+It may be hard to imagine larger maps in your head.
+`smawg viz` utility allows to always have an accurate picture.
+Typical usage:
 
 ```bash
 python3 -m smawg viz --view some/path/to/assets.json
 ```
+
+As of 0.19.0, here's how `smawg viz` renders
+[standard_2_players.json](./smawg/assets/standard_2_players.json):
+
+![rendered map](./docs/files/standard_2_players.png)
 
 ## Contributing
 
