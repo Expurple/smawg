@@ -173,7 +173,9 @@ class Assets:
         abilities = list(self.abilities)
         shuffle(races)
         shuffle(abilities)
-        return replace(self, races=races, abilities=abilities)
+        # mypy 1.5.1 doesn't recognize Assets as a dataclass.
+        # Remove 'type:ignore' when this is fixed in mypy.
+        return replace(self, races=races, abilities=abilities)  # type:ignore
 
 
 # ----------------------------- Runtime game data -----------------------------
