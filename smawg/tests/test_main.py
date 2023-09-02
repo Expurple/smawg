@@ -8,7 +8,7 @@ from smawg.basic_rules import (
     Abandon, Action, Conquer, ConquerWithDice, Decline, Deploy, EndTurn,
     SelectCombo, StartRedeployment
 )
-from smawg.cli import _InvalidCommand, _MaybeDry, _parse_command
+from smawg.cli import _MaybeDry, _parse_command
 
 
 class TestMain(unittest.TestCase):
@@ -51,6 +51,11 @@ class TestCliParseCommand(unittest.TestCase):
         self.assertEqual(_parse_command(""), None)
         self.assertEqual(_parse_command("  "), None)
 
+    def test_unknown_command(self) -> None:
+        """The function should raise ValueError on unknown commands."""
+        self.assertRaises(ValueError, _parse_command, "foo")
+        self.assertRaises(ValueError, _parse_command, "bar")
+
     def test_question_mark_spaces(self) -> None:
         """Spaces before and after the question mark should not matter."""
         self.assertEqual(_parse_command("?decline"), _dry(Decline()))
@@ -75,11 +80,11 @@ class TestCliParseCommand(unittest.TestCase):
 
     def test_unsupported_dry_run(self) -> None:
         """These commands should not support dry runs."""
-        self.assertRaises(_InvalidCommand, _parse_command, "?help")
-        self.assertRaises(_InvalidCommand, _parse_command, "?quit")
-        self.assertRaises(_InvalidCommand, _parse_command, "?show-combos")
-        self.assertRaises(_InvalidCommand, _parse_command, "?show-players")
-        self.assertRaises(_InvalidCommand, _parse_command, "?show-regions 0")
+        self.assertRaises(ValueError, _parse_command, "?help")
+        self.assertRaises(ValueError, _parse_command, "?quit")
+        self.assertRaises(ValueError, _parse_command, "?show-combos")
+        self.assertRaises(ValueError, _parse_command, "?show-players")
+        self.assertRaises(ValueError, _parse_command, "?show-regions 0")
 
 
 if __name__ == "__main__":

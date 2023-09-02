@@ -107,16 +107,15 @@ _Command = _NonActionCommand | _MaybeDry
 
 
 def _parse_command(line: str) -> _Command | None:
-    """Parse a CLI `Command` from string.
+    """Parse a CLI `_Command` from string.
 
     Return `None` if the line is empty.
 
-    Raise:
-    * `smawg.cli._InvalidCommand`
-        if command is unknown, given wrong number or arguments,
-        or a dry run is requested for command that doesn't support it.
-    * `ValueError` or `pydantic.ValidationError`
-        if some argument has invalid type or value.
+    Raise `ValueError` or `pydantic.ValidationError` if:
+    * Command is unknown
+    * Wrong number or arguments is given
+    * A dry run is requested for command that doesn't support it
+    * Some argument has invalid type or value
     """
     line = line.strip()
     dry_run = line.startswith("?")
@@ -129,7 +128,7 @@ def _parse_command(line: str) -> _Command | None:
     match command:
         case "help" | "quit" | "show-combos" | "show-players" | "show-regions"\
                 if dry_run:
-            raise _InvalidCommand(f"'{command}' does not support dry run mode")
+            raise ValueError(f"'{command}' does not support dry run mode")
         case "help":
             return _Help(*args)
         case "quit":
@@ -157,7 +156,7 @@ def _parse_command(line: str) -> _Command | None:
         case "end-turn":
             return _MaybeDry(dry_run, EndTurn(*args))
         case _:
-            raise _InvalidCommand(f"unknown command '{command}'")
+            raise ValueError(f"unknown command '{command}'")
     assert_never(command)  # type:ignore  # mypy 1.5.1 doesn't get it yet
 
 
@@ -224,12 +223,6 @@ def _import_rules(filename: str) -> Type[AbstractRules]:
     return rules
 
 
-class _InvalidCommand(ValueError):
-    """Exception raised in `_Client` when an invalid command is entered."""
-
-    pass
-
-
 class _Client:
     """Handles console IO."""
 
@@ -268,14 +261,11 @@ class _Client:
                 command = _parse_command(line)
                 if command is not None:
                     self._execute(command)
-            except _InvalidCommand as e:
-                print(f"Invalid command: {e.args[0]}")
-                print(_HELP_SUGGESTION)
             except ValidationError as e:
-                print(f"Invalid command or argument: {e}")
+                print(f"Invalid command: {e}")
                 print(_HELP_SUGGESTION)
             except ValueError as e:
-                print(f"Invalid command or argument: {e.args[0]}")
+                print(f"Invalid command: {e.args[0]}")
                 print(_HELP_SUGGESTION)
             except RulesViolation as e:
                 print(f"Rules violated: {e.args[0]}")
