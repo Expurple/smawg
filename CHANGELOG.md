@@ -9,6 +9,10 @@ and this project adheres to
 
 ## \[Unreleased]
 
+\-
+
+## \[0.20.0] - 2023-09-02
+
 ### Added
 
 - `Map.adjacent` property.
