@@ -9,7 +9,11 @@ and this project adheres to
 
 ## \[Unreleased]
 
-\-
+### Added
+
+- `smawg.basic_rules.Action` and its variants: `Decline`, `SelectCombo`,
+    `Abandon`, `Conquer`, `ConquerWithDice`, `StartRedeployment`, `Deploy`,
+    `EndTurn`.
 
 ## \[0.20.0] - 2023-09-02
 

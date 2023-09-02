@@ -9,12 +9,17 @@ See https://github.com/expurple/smawg for more info about the project.
 
 from typing import Iterator
 
+from pydantic import NonNegativeInt, PositiveInt
+from pydantic.dataclasses import dataclass
+
 # Importing directly from `smawg` would cause a circular import.
 from smawg._common import (
     AbstractRules, GameState, RulesViolation, _TurnStage as _TS
 )
 
 __all__ = [
+    "Decline", "SelectCombo", "Abandon", "Conquer", "ConquerWithDice",
+    "StartRedeployment", "Deploy", "EndTurn", "Action",
     "Rules", "GameEnded", "NoActiveRace", "ForbiddenDuringRedeployment",
     "DecliningWhenActive", "SelectingOnDeclineTurn", "SelectingWhenActive",
     "NonControlledRegion", "AbandoningAfterConquests", "AlreadyUsedDice",
@@ -23,6 +28,72 @@ __all__ = [
     "RollingWithoutTokens", "NotEnoughTokensToConquer",
     "NotEnoughTokensToRoll", "NotEnoughTokensToDeploy", "UndeployedTokens"
 ]
+
+
+# -----------------------------------------------------------------------------
+#                                  Actions
+# -----------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class Decline:
+    """Put player's active race in decline state."""
+
+    pass
+
+
+@dataclass(frozen=True)
+class SelectCombo:
+    """Select the combo at specified `combo_index` as active."""
+
+    combo_index: NonNegativeInt
+
+
+@dataclass(frozen=True)
+class Abandon:
+    """Abandon the given map `region`."""
+
+    region: NonNegativeInt
+
+
+@dataclass(frozen=True)
+class Conquer:
+    """Conquer the given map `region` without using the reinforcements dice."""
+
+    region: NonNegativeInt
+
+
+@dataclass(frozen=True)
+class ConquerWithDice:
+    """Roll the reinforcements dice and attempt to conquer `region`."""
+
+    region: NonNegativeInt
+
+
+@dataclass(frozen=True)
+class StartRedeployment:
+    """Pick up tokens to redeploy, leaving 1 token in each owned region."""
+
+    pass
+
+
+@dataclass(frozen=True)
+class Deploy:
+    """Deploy `n_tokens` from hand to the specified own `region`."""
+
+    n_tokens: PositiveInt
+    region: NonNegativeInt
+
+
+@dataclass(frozen=True)
+class EndTurn:
+    """End turn (full or redeployment) and give control to the next player."""
+
+    pass
+
+
+Action = Decline | SelectCombo | Abandon | Conquer | ConquerWithDice | \
+    StartRedeployment | Deploy | EndTurn
+"""A sum type of all Actions."""
 
 
 # -----------------------------------------------------------------------------

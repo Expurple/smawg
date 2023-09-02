@@ -22,7 +22,10 @@ from tabulate import tabulate
 
 from smawg import AbstractRules, Assets, Game, RulesViolation
 from smawg._metadata import PACKAGE_DIR, VERSION
-
+from smawg.basic_rules import (
+    Abandon, Action, Conquer, ConquerWithDice, Decline, Deploy, EndTurn,
+    SelectCombo, StartRedeployment
+)
 
 __all__ = ["argument_parser", "root_command"]
 
@@ -67,9 +70,7 @@ _COMMANDS = [
 _Command = (
     Literal["help", "quit", "show-combos", "show-players"]
     | tuple[Literal["show-regions"], int]
-    | tuple[bool, Literal["combo", "abandon", "conquer", "conquer-dice"], int]
-    | tuple[bool, Literal["deploy"], int, int]
-    | tuple[bool, Literal["redeploy", "decline", "end-turn"]]
+    | tuple[bool, Action]
 )
 
 
@@ -104,15 +105,22 @@ def _parse_command(line: str) -> _Command | None:
                 raise dry_run_err
             [player] = _parse_ints(args, n=1)
             return ("show-regions", player)
-        case "combo" | "abandon" | "conquer" | "conquer-dice":
-            [arg] = _parse_ints(args, n=1)
-            return (dry_run, command, arg)
+        case "combo":
+            return dry_run, SelectCombo(*_parse_ints(args, n=1))
+        case "abandon":
+            return dry_run, Abandon(*_parse_ints(args, n=1))
+        case "conquer":
+            return dry_run, Conquer(*_parse_ints(args, n=1))
+        case "conquer-dice":
+            return dry_run, ConquerWithDice(*_parse_ints(args, n=1))
         case "deploy":
-            [n, region] = _parse_ints(args, n=2)
-            return (dry_run, "deploy", n, region)
-        case "redeploy" | "decline" | "end-turn":
-            _parse_ints(args, n=0)
-            return (dry_run, command)
+            return dry_run, Deploy(*_parse_ints(args, n=2))
+        case "redeploy":
+            return dry_run, StartRedeployment(*_parse_ints(args, n=0))
+        case "decline":
+            return dry_run, Decline(*_parse_ints(args, n=0))
+        case "end-turn":
+            return dry_run, EndTurn(*_parse_ints(args, n=0))
         case _:
             raise _InvalidCommand(f"unknown command '{command}'")
 
@@ -285,25 +293,26 @@ class _Client:
                 self._command_show_players()
             case ("show-regions", int(player_id)):
                 self._command_show_regions(player_id)
-            case (bool(dry_run), "combo", int(index)):
+            case (bool(dry_run), SelectCombo(index)):
                 self._command_combo(index, dry_run=dry_run)
-            case (bool(dry_run), "abandon", int(region)):
+            case (bool(dry_run), Abandon(region)):
                 self._command_abandon(region, dry_run=dry_run)
-            case (bool(dry_run), "conquer", int(region)):
+            case (bool(dry_run), Conquer(region)):
                 self._command_conquer(region, dry_run=dry_run)
-            case (bool(dry_run), "conquer-dice", int(region)):
+            case (bool(dry_run), ConquerWithDice(region)):
                 self._command_conquer_dice(region, dry_run=dry_run)
-            case (bool(dry_run), "deploy", int(n), int(region)):
+            case (bool(dry_run), Deploy(n, region)):
                 self._command_deploy(n, region, dry_run=dry_run)
-            case (bool(dry_run), "redeploy"):
+            case (bool(dry_run), StartRedeployment()):
                 self._command_redeploy(dry_run=dry_run)
-            case (bool(dry_run), "decline"):
+            case (bool(dry_run), Decline()):
                 self._command_decline(dry_run=dry_run)
-            case (bool(dry_run), "end-turn"):
+            case (bool(dry_run), EndTurn()):
                 self._command_end_turn(dry_run=dry_run)
             case not_covered:
-                # As of 1.4.1, mypy can't deduce `not_covered: Never` here.
-                # Remove 'type:ignore' when this is fixed in mypy.
+                # As of 1.5.1, mypy can't deduce `not_covered: Never` here.
+                # When this is fixed in mypy, remove 'type:ignore'
+                # and set the minimum mypy version in `setup.cfg`.
                 assert_never(not_covered)  # type:ignore
 
     def _command_show_players(self) -> None:
