@@ -4,6 +4,12 @@ import subprocess
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 
+from smawg.basic_rules import (
+    Abandon, Conquer, ConquerWithDice, Decline, Deploy, EndTurn, SelectCombo,
+    StartRedeployment
+)
+from smawg.cli import _InvalidCommand, _parse_command
+
 
 class TestMain(unittest.TestCase):
     """Tests for bundled CLI utilities."""
@@ -28,6 +34,48 @@ class TestMain(unittest.TestCase):
         If it can't, an exception is raised and the test is failed.
         """
         subprocess.run(command, capture_output=True, check=True, timeout=2)
+
+
+class TestCliParseCommand(unittest.TestCase):
+    """Tests for `smawg.cli._parse_command()`.
+
+    That function is private, but having tests helps with fearless refactoring.
+    """
+
+    def test_empty_line(self) -> None:
+        """The function should return None for empty and whitespace lines."""
+        self.assertEqual(_parse_command(""), None)
+        self.assertEqual(_parse_command("  "), None)
+
+    def test_question_mark_spaces(self) -> None:
+        """Spaces before and after the question mark should not matter."""
+        self.assertEqual(_parse_command("?decline"), (True, Decline()))
+        self.assertEqual(_parse_command("? decline"), (True, Decline()))
+        self.assertEqual(_parse_command(" ?decline"), (True, Decline()))
+        self.assertEqual(_parse_command(" ? decline"), (True, Decline()))
+
+    def test_valid_dry_run(self) -> None:
+        """These commands should support dry runs."""
+        self.assertEqual(_parse_command("?combo 0"), (True, SelectCombo(0)))
+        self.assertEqual(_parse_command("?abandon 0"), (True, Abandon(0)))
+        self.assertEqual(_parse_command("?conquer 0"), (True, Conquer(0)))
+        self.assertEqual(
+            _parse_command("?conquer-dice 0"), (True, ConquerWithDice(0))
+        )
+        self.assertEqual(_parse_command("?deploy 1 0"), (True, Deploy(1, 0)))
+        self.assertEqual(
+            _parse_command("?redeploy"), (True, StartRedeployment())
+        )
+        self.assertEqual(_parse_command("?decline"), (True, Decline()))
+        self.assertEqual(_parse_command("?end-turn"), (True, EndTurn()))
+
+    def test_unsupported_dry_run(self) -> None:
+        """These commands should not support dry runs."""
+        self.assertRaises(_InvalidCommand, _parse_command, "?help")
+        self.assertRaises(_InvalidCommand, _parse_command, "?quit")
+        self.assertRaises(_InvalidCommand, _parse_command, "?show-combos")
+        self.assertRaises(_InvalidCommand, _parse_command, "?show-players")
+        self.assertRaises(_InvalidCommand, _parse_command, "?show-regions 0")
 
 
 if __name__ == "__main__":

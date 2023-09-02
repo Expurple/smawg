@@ -15,9 +15,10 @@ import sys
 from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 from importlib import import_module
 from pathlib import Path
-from typing import Iterable, Literal, Type, assert_never
+from typing import Any, Iterable, Type, assert_never
 
-from pydantic import TypeAdapter
+from pydantic import NonNegativeInt, TypeAdapter, ValidationError
+from pydantic.dataclasses import dataclass
 from tabulate import tabulate
 
 from smawg import AbstractRules, Assets, Game, RulesViolation
@@ -67,11 +68,35 @@ _COMMANDS = [
 ]
 
 
-_Command = (
-    Literal["help", "quit", "show-combos", "show-players"]
-    | tuple[Literal["show-regions"], int]
-    | tuple[bool, Action]
-)
+@dataclass(frozen=True)
+class _Help:
+    pass
+
+
+@dataclass(frozen=True)
+class _Quit:
+    pass
+
+
+@dataclass(frozen=True)
+class _ShowCombos:
+    pass
+
+
+@dataclass(frozen=True)
+class _ShowPlayers:
+    pass
+
+
+@dataclass(frozen=True)
+class _ShowRegions:
+    player: NonNegativeInt
+
+
+_NonActionCommand = _Help | _Quit | _ShowCombos | _ShowPlayers | _ShowRegions
+"""These commands don't support dry runs."""
+
+_Command = _NonActionCommand | tuple[bool, Action]
 
 
 def _parse_command(line: str) -> _Command | None:
@@ -83,61 +108,50 @@ def _parse_command(line: str) -> _Command | None:
     * `smawg.cli._InvalidCommand`
         if command is unknown, given wrong number or arguments,
         or a dry run is requested for command that doesn't support it.
-    * `ValueError`
+    * `ValueError` or `pydantic.ValidationError`
         if some argument has invalid type or value.
     """
     line = line.strip()
     dry_run = line.startswith("?")
-    if dry_run:
-        line = line.removeprefix("?").strip()
-    if line == "":
-        return None
-    command, *args = line.split()
-    dry_run_err = _InvalidCommand(f"'{command}' does not support dry run mode")
+    match line.removeprefix("?").strip().split():
+        case []:
+            return None
+        case [command, *str_args]:
+            # Pydantic will coerce and validate argument types for us.
+            args: list[Any] = str_args
     match command:
-        case "help" | "quit" | "show-combos" | "show-players":
-            if dry_run:
-                raise dry_run_err
-            _parse_ints(args, n=0)
-            return command
+        case "help" | "quit" | "show-combos" | "show-players" | "show-regions"\
+                if dry_run:
+            raise _InvalidCommand(f"'{command}' does not support dry run mode")
+        case "help":
+            return _Help(*args)
+        case "quit":
+            return _Quit(*args)
+        case "show-combos":
+            return _ShowCombos(*args)
+        case "show-players":
+            return _ShowPlayers(*args)
         case "show-regions":
-            if dry_run:
-                raise dry_run_err
-            [player] = _parse_ints(args, n=1)
-            return ("show-regions", player)
+            return _ShowRegions(*args)
         case "combo":
-            return dry_run, SelectCombo(*_parse_ints(args, n=1))
+            return dry_run, SelectCombo(*args)
         case "abandon":
-            return dry_run, Abandon(*_parse_ints(args, n=1))
+            return dry_run, Abandon(*args)
         case "conquer":
-            return dry_run, Conquer(*_parse_ints(args, n=1))
+            return dry_run, Conquer(*args)
         case "conquer-dice":
-            return dry_run, ConquerWithDice(*_parse_ints(args, n=1))
+            return dry_run, ConquerWithDice(*args)
         case "deploy":
-            return dry_run, Deploy(*_parse_ints(args, n=2))
+            return dry_run, Deploy(*args)
         case "redeploy":
-            return dry_run, StartRedeployment(*_parse_ints(args, n=0))
+            return dry_run, StartRedeployment(*args)
         case "decline":
-            return dry_run, Decline(*_parse_ints(args, n=0))
+            return dry_run, Decline(*args)
         case "end-turn":
-            return dry_run, EndTurn(*_parse_ints(args, n=0))
+            return dry_run, EndTurn(*args)
         case _:
             raise _InvalidCommand(f"unknown command '{command}'")
-
-
-def _parse_ints(args: list[str], *, n: int) -> list[int]:
-    """Parse `args` as a list of `n` integers."""
-    if len(args) != n:
-        raise _InvalidCommand(f"expected {n} argument(s), but got {len(args)}")
-    return [_parse_int(a) for a in args]
-
-
-def _parse_int(s: str) -> int:
-    """Parse an integer or raise `ValueError` with a frendly message."""
-    try:
-        return int(s)
-    except ValueError:
-        raise ValueError(f"'{s}' is not an integer")
+    assert_never(command)  # type:ignore  # mypy 1.5.1 doesn't get it yet
 
 
 def _autocomplete(text: str, state: int) -> str | None:
@@ -250,8 +264,12 @@ class _Client:
             except _InvalidCommand as e:
                 print(f"Invalid command: {e.args[0]}")
                 print(_HELP_SUGGESTION)
+            except ValidationError as e:
+                print(f"Invalid command or argument: {e}")
+                print(_HELP_SUGGESTION)
             except ValueError as e:
-                print(f"Invalid argument: {e.args[0]}")
+                print(f"Invalid command or argument: {e.args[0]}")
+                print(_HELP_SUGGESTION)
             except RulesViolation as e:
                 print(f"Rules violated: {e.args[0]}")
 
@@ -283,15 +301,15 @@ class _Client:
             if given command violates the game rules.
         """
         match command:
-            case "help":
+            case _Help():
                 print(_HELP)
-            case "quit":
+            case _Quit():
                 exit(0)
-            case "show-combos":
+            case _ShowCombos():
                 self._command_show_combos()
-            case "show-players":
+            case _ShowPlayers():
                 self._command_show_players()
-            case ("show-regions", int(player_id)):
+            case _ShowRegions(player_id):
                 self._command_show_regions(player_id)
             case (bool(dry_run), SelectCombo(index)):
                 self._command_combo(index, dry_run=dry_run)
@@ -310,9 +328,8 @@ class _Client:
             case (bool(dry_run), EndTurn()):
                 self._command_end_turn(dry_run=dry_run)
             case not_covered:
-                # As of 1.5.1, mypy can't deduce `not_covered: Never` here.
-                # When this is fixed in mypy, remove 'type:ignore'
-                # and set the minimum mypy version in `setup.cfg`.
+                # mypy 1.5.1 can't deduce `not_covered: Never` here.
+                # When this is fixed in the pinned mypy, remove 'type:ignore'.
                 assert_never(not_covered)  # type:ignore
 
     def _command_show_players(self) -> None:

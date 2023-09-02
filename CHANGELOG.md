@@ -15,6 +15,10 @@ and this project adheres to
     `Abandon`, `Conquer`, `ConquerWithDice`, `StartRedeployment`, `Deploy`,
     `EndTurn`.
 
+### Changed
+
+- Error messages in `smawg play`.
+
 ## \[0.20.0] - 2023-09-02
 
 ### Added
