@@ -96,7 +96,14 @@ class _ShowRegions:
 _NonActionCommand = _Help | _Quit | _ShowCombos | _ShowPlayers | _ShowRegions
 """These commands don't support dry runs."""
 
-_Command = _NonActionCommand | tuple[bool, Action]
+
+@dataclass(frozen=True)
+class _MaybeDry:
+    dry_run: bool
+    action: Action
+
+
+_Command = _NonActionCommand | _MaybeDry
 
 
 def _parse_command(line: str) -> _Command | None:
@@ -134,21 +141,21 @@ def _parse_command(line: str) -> _Command | None:
         case "show-regions":
             return _ShowRegions(*args)
         case "combo":
-            return dry_run, SelectCombo(*args)
+            return _MaybeDry(dry_run, SelectCombo(*args))
         case "abandon":
-            return dry_run, Abandon(*args)
+            return _MaybeDry(dry_run, Abandon(*args))
         case "conquer":
-            return dry_run, Conquer(*args)
+            return _MaybeDry(dry_run, Conquer(*args))
         case "conquer-dice":
-            return dry_run, ConquerWithDice(*args)
+            return _MaybeDry(dry_run, ConquerWithDice(*args))
         case "deploy":
-            return dry_run, Deploy(*args)
+            return _MaybeDry(dry_run, Deploy(*args))
         case "redeploy":
-            return dry_run, StartRedeployment(*args)
+            return _MaybeDry(dry_run, StartRedeployment(*args))
         case "decline":
-            return dry_run, Decline(*args)
+            return _MaybeDry(dry_run, Decline(*args))
         case "end-turn":
-            return dry_run, EndTurn(*args)
+            return _MaybeDry(dry_run, EndTurn(*args))
         case _:
             raise _InvalidCommand(f"unknown command '{command}'")
     assert_never(command)  # type:ignore  # mypy 1.5.1 doesn't get it yet
@@ -311,21 +318,21 @@ class _Client:
                 self._command_show_players()
             case _ShowRegions(player_id):
                 self._command_show_regions(player_id)
-            case (bool(dry_run), SelectCombo(index)):
+            case _MaybeDry(dry_run, SelectCombo(index)):
                 self._command_combo(index, dry_run=dry_run)
-            case (bool(dry_run), Abandon(region)):
+            case _MaybeDry(dry_run, Abandon(region)):
                 self._command_abandon(region, dry_run=dry_run)
-            case (bool(dry_run), Conquer(region)):
+            case _MaybeDry(dry_run, Conquer(region)):
                 self._command_conquer(region, dry_run=dry_run)
-            case (bool(dry_run), ConquerWithDice(region)):
+            case _MaybeDry(dry_run, ConquerWithDice(region)):
                 self._command_conquer_dice(region, dry_run=dry_run)
-            case (bool(dry_run), Deploy(n, region)):
+            case _MaybeDry(dry_run, Deploy(n, region)):
                 self._command_deploy(n, region, dry_run=dry_run)
-            case (bool(dry_run), StartRedeployment()):
+            case _MaybeDry(dry_run, StartRedeployment()):
                 self._command_redeploy(dry_run=dry_run)
-            case (bool(dry_run), Decline()):
+            case _MaybeDry(dry_run, Decline()):
                 self._command_decline(dry_run=dry_run)
-            case (bool(dry_run), EndTurn()):
+            case _MaybeDry(dry_run, EndTurn()):
                 self._command_end_turn(dry_run=dry_run)
             case not_covered:
                 # mypy 1.5.1 can't deduce `not_covered: Never` here.

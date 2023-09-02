@@ -5,10 +5,10 @@ import unittest
 from concurrent.futures import ThreadPoolExecutor
 
 from smawg.basic_rules import (
-    Abandon, Conquer, ConquerWithDice, Decline, Deploy, EndTurn, SelectCombo,
-    StartRedeployment
+    Abandon, Action, Conquer, ConquerWithDice, Decline, Deploy, EndTurn,
+    SelectCombo, StartRedeployment
 )
-from smawg.cli import _InvalidCommand, _parse_command
+from smawg.cli import _InvalidCommand, _MaybeDry, _parse_command
 
 
 class TestMain(unittest.TestCase):
@@ -36,6 +36,10 @@ class TestMain(unittest.TestCase):
         subprocess.run(command, capture_output=True, check=True, timeout=2)
 
 
+def _dry(action: Action) -> _MaybeDry:
+    return _MaybeDry(dry_run=True, action=action)
+
+
 class TestCliParseCommand(unittest.TestCase):
     """Tests for `smawg.cli._parse_command()`.
 
@@ -49,25 +53,25 @@ class TestCliParseCommand(unittest.TestCase):
 
     def test_question_mark_spaces(self) -> None:
         """Spaces before and after the question mark should not matter."""
-        self.assertEqual(_parse_command("?decline"), (True, Decline()))
-        self.assertEqual(_parse_command("? decline"), (True, Decline()))
-        self.assertEqual(_parse_command(" ?decline"), (True, Decline()))
-        self.assertEqual(_parse_command(" ? decline"), (True, Decline()))
+        self.assertEqual(_parse_command("?decline"), _dry(Decline()))
+        self.assertEqual(_parse_command("? decline"), _dry(Decline()))
+        self.assertEqual(_parse_command(" ?decline"), _dry(Decline()))
+        self.assertEqual(_parse_command(" ? decline"), _dry(Decline()))
 
     def test_valid_dry_run(self) -> None:
         """These commands should support dry runs."""
-        self.assertEqual(_parse_command("?combo 0"), (True, SelectCombo(0)))
-        self.assertEqual(_parse_command("?abandon 0"), (True, Abandon(0)))
-        self.assertEqual(_parse_command("?conquer 0"), (True, Conquer(0)))
+        self.assertEqual(_parse_command("?combo 0"), _dry(SelectCombo(0)))
+        self.assertEqual(_parse_command("?abandon 0"), _dry(Abandon(0)))
+        self.assertEqual(_parse_command("?conquer 0"), _dry(Conquer(0)))
         self.assertEqual(
-            _parse_command("?conquer-dice 0"), (True, ConquerWithDice(0))
+            _parse_command("?conquer-dice 0"), _dry(ConquerWithDice(0))
         )
-        self.assertEqual(_parse_command("?deploy 1 0"), (True, Deploy(1, 0)))
+        self.assertEqual(_parse_command("?deploy 1 0"), _dry(Deploy(1, 0)))
         self.assertEqual(
-            _parse_command("?redeploy"), (True, StartRedeployment())
+            _parse_command("?redeploy"), _dry(StartRedeployment())
         )
-        self.assertEqual(_parse_command("?decline"), (True, Decline()))
-        self.assertEqual(_parse_command("?end-turn"), (True, EndTurn()))
+        self.assertEqual(_parse_command("?decline"), _dry(Decline()))
+        self.assertEqual(_parse_command("?end-turn"), _dry(EndTurn()))
 
     def test_unsupported_dry_run(self) -> None:
         """These commands should not support dry runs."""
