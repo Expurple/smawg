@@ -31,6 +31,9 @@ from smawg.default_rules import Action
 
 __all__ = ["argument_parser", "root_command"]
 
+# -----------------------------------------------------------------------------
+#                              Global constants
+# -----------------------------------------------------------------------------
 
 _TITLE = f"smawg CLI v{VERSION}"
 _HELP_SUGGESTION = "Type 'help' to see available commands."
@@ -68,6 +71,10 @@ _COMMANDS = [
     "end-turn"
 ]
 
+
+# -----------------------------------------------------------------------------
+#                              Command parsing
+# -----------------------------------------------------------------------------
 
 @dataclass(frozen=True)
 class _Help:
@@ -161,46 +168,15 @@ def _parse_command(line: str) -> _Command | None:
     assert_never(command)  # type:ignore  # mypy 1.5.1 doesn't get it yet
 
 
+# -----------------------------------------------------------------------------
+#                        The interactive interpreter
+# -----------------------------------------------------------------------------
+
 def _autocomplete(text: str, state: int) -> str | None:
     """Command completer for `readline`."""
     results: list[str | None] = [c for c in _COMMANDS if c.startswith(text)]
     results.append(None)
     return results[state]
-
-
-def argument_parser() -> ArgumentParser:
-    """Configure and create a command line argument parser."""
-    parser = ArgumentParser(
-        description=f"CLI client for playing smawg {VERSION}",
-        epilog=_VISIT_HOME_PAGE
-    )
-    parser.add_argument(
-        "assets_file",
-        metavar="ASSETS_FILE",
-        help="path to JSON file with assets"
-    )
-    parser.add_argument(
-        "--rules",
-        metavar="RULES_PLUGIN",
-        default=f"{PACKAGE_DIR}/default_rules.py",
-        help="import RULES_PLUGIN instead of smawg/default_rules.py"
-    )
-    parser.add_argument(
-        "-s", "--no-shuffle",
-        action="store_true",
-        help="don't shuffle data from ASSETS_FILE"
-    )
-    parser.add_argument(
-        "-d", "--read-dice",
-        action="store_true",
-        help="read dice roll results from stdin instead of generating randomly"
-    )
-    parser.add_argument(
-        "-r", "--relative-path",
-        action="store_true",
-        help="search for ASSETS_FILE inside of smawg package directory"
-    )
-    return parser
 
 
 def _read_dice() -> int:
@@ -211,30 +187,6 @@ def _read_dice() -> int:
             return int(input(prompt))
         except ValueError:
             prompt = "The result must be an integer, try again: "
-
-
-def _init_assets(assets_file: str, relative_path: bool, no_shuffle: bool
-                 ) -> Assets:
-    """Initialize assets with respect to command line arguments."""
-    if relative_path:
-        assets_file = f"{PACKAGE_DIR}/{assets_file}"
-    with open(assets_file) as file:
-        assets_json = json.load(file)
-    assets: Assets = TypeAdapter(Assets).validate_python(assets_json)
-    if not no_shuffle:
-        assets = assets.shuffle()
-    return assets
-
-
-def _import_rules(filename: str) -> Type[AbstractRules]:
-    """Dynamically load `Rules` from a Python file."""
-    rules_file_path = Path(filename).resolve()
-    rules_file_name = rules_file_path.name
-    rules_dir_name = str(rules_file_path.parent)
-    sys.path.append(rules_dir_name)
-    rules_module = import_module(rules_file_name[:-3])
-    rules: Type[AbstractRules] = rules_module.Rules
-    return rules
 
 
 class _Client:
@@ -388,6 +340,69 @@ class _Client:
         is_success = region in self.game.player.active_regions
         description = "successful" if is_success else "unsuccessful"
         print(f"Rolled {dice_value} on the dice, conquest was {description}.")
+
+
+# -----------------------------------------------------------------------------
+#                    Argument parsing and the entry point
+# -----------------------------------------------------------------------------
+
+def argument_parser() -> ArgumentParser:
+    """Configure and create a command line argument parser."""
+    parser = ArgumentParser(
+        description=f"CLI client for playing smawg {VERSION}",
+        epilog=_VISIT_HOME_PAGE
+    )
+    parser.add_argument(
+        "assets_file",
+        metavar="ASSETS_FILE",
+        help="path to JSON file with assets"
+    )
+    parser.add_argument(
+        "--rules",
+        metavar="RULES_PLUGIN",
+        default=f"{PACKAGE_DIR}/default_rules.py",
+        help="import RULES_PLUGIN instead of smawg/default_rules.py"
+    )
+    parser.add_argument(
+        "-s", "--no-shuffle",
+        action="store_true",
+        help="don't shuffle data from ASSETS_FILE"
+    )
+    parser.add_argument(
+        "-d", "--read-dice",
+        action="store_true",
+        help="read dice roll results from stdin instead of generating randomly"
+    )
+    parser.add_argument(
+        "-r", "--relative-path",
+        action="store_true",
+        help="search for ASSETS_FILE inside of smawg package directory"
+    )
+    return parser
+
+
+def _init_assets(assets_file: str, relative_path: bool, no_shuffle: bool
+                 ) -> Assets:
+    """Initialize assets with respect to command line arguments."""
+    if relative_path:
+        assets_file = f"{PACKAGE_DIR}/{assets_file}"
+    with open(assets_file) as file:
+        assets_json = json.load(file)
+    assets: Assets = TypeAdapter(Assets).validate_python(assets_json)
+    if not no_shuffle:
+        assets = assets.shuffle()
+    return assets
+
+
+def _import_rules(filename: str) -> Type[AbstractRules]:
+    """Dynamically load `Rules` from a Python file."""
+    rules_file_path = Path(filename).resolve()
+    rules_file_name = rules_file_path.name
+    rules_dir_name = str(rules_file_path.parent)
+    sys.path.append(rules_dir_name)
+    rules_module = import_module(rules_file_name[:-3])
+    rules: Type[AbstractRules] = rules_module.Rules
+    return rules
 
 
 def root_command(args: Namespace) -> None:
