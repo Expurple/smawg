@@ -197,26 +197,31 @@ class _Client:
         self.player_of_last_command = -1  # Not equal to any actual player.
         self.reported_game_end = False
 
-    def run(self) -> None:
-        """Interpret user commands until stopped by `'quit'`, ^C or ^D."""
+    def run(self) -> int:
+        """Interpret user commands until stopped by `'quit'`, ^C or ^D.
+
+        Return an exit code.
+        """
         print(_START_SCREEN)
         import readline
         readline.set_completer_delims(" ")
         readline.set_completer(_autocomplete)
         readline.parse_and_bind("tab: complete")
         try:
-            self._run_main_loop()
+            return self._run_main_loop()
         except (EOFError, KeyboardInterrupt):
-            exit(1)
+            return 1
 
-    def _run_main_loop(self) -> None:
-        while True:
+    def _run_main_loop(self) -> int:
+        """Return an exit code."""
+        exit_code: int | None = None
+        while exit_code is None:
             self._print_change_player_message()
             line = input("> ")
             try:
                 command = _parse_command(line)
                 if command is not None:
-                    self._execute(command)
+                    exit_code = self._execute(command)
             except ValidationError as e:
                 print(f"Invalid command: {e}")
                 print(_HELP_SUGGESTION)
@@ -225,6 +230,7 @@ class _Client:
                 print(_HELP_SUGGESTION)
             except RulesViolation as e:
                 print(f"Rules violated: {e.args[0]}")
+        return exit_code
 
     def _print_change_player_message(self) -> None:
         """If active player changed or game ended, print a message."""
@@ -244,8 +250,10 @@ class _Client:
                       f"{self.game.current_turn}/{self.game.n_turns}.")
             self.player_of_last_command = self.game.player_id
 
-    def _execute(self, command: _Command) -> None:
+    def _execute(self, command: _Command) -> int | None:
         """Execute the given `command`.
+
+        Return an exit code if the command is `_Quit`, or `None` otherwise.
 
         Raise:
         * `ValueError`
@@ -257,7 +265,7 @@ class _Client:
             case _Help():
                 print(_HELP)
             case _Quit():
-                exit(0)
+                return 0
             case _ShowCombos():
                 self._command_show_combos()
             case _ShowPlayers():
@@ -274,6 +282,7 @@ class _Client:
                 # mypy 1.5.1 can't deduce `not_covered: Never` here.
                 # When this is fixed in the pinned mypy, remove 'type:ignore'.
                 assert_never(not_covered)  # type:ignore
+        return None
 
     def _dry_run(self, action: Action) -> None:
         errors: Iterator[ValueError | RulesViolation]
@@ -416,7 +425,8 @@ def root_command(args: Namespace) -> None:
     else:
         game = Game(assets, rules)
     client = _Client(game)
-    client.run()
+    exit_code = client.run()
+    sys.exit(exit_code)
 
 
 def _main() -> None:

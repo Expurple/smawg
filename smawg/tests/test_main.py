@@ -3,13 +3,17 @@
 import subprocess
 import unittest
 from concurrent.futures import ThreadPoolExecutor
+from io import StringIO
+from unittest.mock import patch
 
+from smawg import Game
 from smawg.basic_rules import (
     Abandon, Conquer, ConquerWithDice, Decline, Deploy, EndTurn, SelectCombo,
     StartRedeployment
 )
-from smawg.cli import _MaybeDry, _parse_command
+from smawg.cli import _Client, _MaybeDry, _parse_command
 from smawg.default_rules import Action
+from smawg.tests.common import TINY_ASSETS
 
 
 class TestMain(unittest.TestCase):
@@ -86,6 +90,25 @@ class TestCliParseCommand(unittest.TestCase):
         self.assertRaises(ValueError, _parse_command, "?show-combos")
         self.assertRaises(ValueError, _parse_command, "?show-players")
         self.assertRaises(ValueError, _parse_command, "?show-regions 0")
+
+
+class TestCliClient(unittest.TestCase):
+    """Tests for `smawg.cli._Client`.
+
+    That class is private, but having tests helps with fearless refactoring.
+    """
+
+    @patch("sys.stdout", new=StringIO())
+    def test_exit_codes(self) -> None:
+        """`_Client.run()` should return 0 on 'quit' and 1 on EOF."""
+        with patch("sys.stdin", new=StringIO("quit\n")):
+            game = Game(TINY_ASSETS)
+            client = _Client(game)
+            self.assertEqual(client.run(), 0)
+        with patch("sys.stdin", new=StringIO("")):
+            game = Game(TINY_ASSETS)
+            client = _Client(game)
+            self.assertEqual(client.run(), 1)
 
 
 if __name__ == "__main__":
