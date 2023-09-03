@@ -248,6 +248,10 @@ class _Client:
     def run(self) -> None:
         """Interpret user commands until stopped by `'quit'`, ^C or ^D."""
         print(_START_SCREEN)
+        import readline
+        readline.set_completer_delims(" ")
+        readline.set_completer(_autocomplete)
+        readline.parse_and_bind("tab: complete")
         try:
             self._run_main_loop()
         except (EOFError, KeyboardInterrupt):
@@ -388,10 +392,6 @@ class _Client:
 
 def root_command(args: Namespace) -> None:
     """The function that is run after parsing the command line arguments."""
-    import readline
-    readline.set_completer_delims(" ")
-    readline.set_completer(_autocomplete)
-    readline.parse_and_bind("tab: complete")
     assets = _init_assets(
         args.assets_file, args.relative_path, args.no_shuffle
     )
