@@ -5,10 +5,11 @@ import unittest
 from concurrent.futures import ThreadPoolExecutor
 
 from smawg.basic_rules import (
-    Abandon, Action, Conquer, ConquerWithDice, Decline, Deploy, EndTurn,
-    SelectCombo, StartRedeployment
+    Abandon, Conquer, ConquerWithDice, Decline, Deploy, EndTurn, SelectCombo,
+    StartRedeployment
 )
 from smawg.cli import _MaybeDry, _parse_command
+from smawg.default_rules import Action
 
 
 class TestMain(unittest.TestCase):

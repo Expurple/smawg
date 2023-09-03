@@ -14,6 +14,8 @@ and this project adheres to
 - `smawg.basic_rules.Action` and its variants: `Decline`, `SelectCombo`,
     `Abandon`, `Conquer`, `ConquerWithDice`, `StartRedeployment`, `Deploy`,
     `EndTurn`.
+- `smawg.default_rules.Action` (currently, it's the same as
+  `smawg.basic_rules.Action`).
 
 ### Changed
 

@@ -1,5 +1,8 @@
 """Rules that are used by `smawg.Game` by default.
 
+These correspond to the "Core Game" without expansions:
+https://www.daysofwonder.com/smallworld/en/content/rules.
+
 See https://github.com/expurple/smawg for more info about the project.
 """
 
@@ -9,7 +12,15 @@ import smawg.basic_rules as br
 # Importing directly from `smawg` would cause a circular import.
 from smawg._common import RulesViolation
 
-__all__ = ["ConqueringSeaOrLake", "Rules"]
+__all__ = ["Action", "ConqueringSeaOrLake", "Rules"]
+
+
+# -----------------------------------------------------------------------------
+#                                  Actions
+# -----------------------------------------------------------------------------
+
+Action = br.Action
+"""All actions defined in the "default" edition of the game."""
 
 
 # -----------------------------------------------------------------------------

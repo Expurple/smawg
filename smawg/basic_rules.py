@@ -93,7 +93,7 @@ class EndTurn:
 
 Action = Decline | SelectCombo | Abandon | Conquer | ConquerWithDice | \
     StartRedeployment | Deploy | EndTurn
-"""A sum type of all Actions."""
+"""All actions defined by the basic rules."""
 
 
 # -----------------------------------------------------------------------------

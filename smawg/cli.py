@@ -24,9 +24,10 @@ from tabulate import tabulate
 from smawg import AbstractRules, Assets, Game, RulesViolation
 from smawg._metadata import PACKAGE_DIR, VERSION
 from smawg.basic_rules import (
-    Abandon, Action, Conquer, ConquerWithDice, Decline, Deploy, EndTurn,
-    SelectCombo, StartRedeployment
+    Abandon, Conquer, ConquerWithDice, Decline, Deploy, EndTurn, SelectCombo,
+    StartRedeployment
 )
+from smawg.default_rules import Action
 
 __all__ = ["argument_parser", "root_command"]
 
