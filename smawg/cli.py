@@ -213,6 +213,19 @@ def _read_dice() -> int:
             prompt = "The result must be an integer, try again: "
 
 
+def _init_assets(assets_file: str, relative_path: bool, no_shuffle: bool
+                 ) -> Assets:
+    """Initialize assets with respect to command line arguments."""
+    if relative_path:
+        assets_file = f"{PACKAGE_DIR}/{assets_file}"
+    with open(assets_file) as file:
+        assets_json = json.load(file)
+    assets: Assets = TypeAdapter(Assets).validate_python(assets_json)
+    if not no_shuffle:
+        assets = assets.shuffle()
+    return assets
+
+
 def _import_rules(filename: str) -> Type[AbstractRules]:
     """Dynamically load `Rules` from a Python file."""
     rules_file_path = Path(filename).resolve()
@@ -227,21 +240,7 @@ def _import_rules(filename: str) -> Type[AbstractRules]:
 class _Client:
     """Handles console IO."""
 
-    def __init__(self, args: Namespace) -> None:
-        """Construct `_Client` with respect to command line `args`."""
-        assets_file = args.assets_file
-        if args.relative_path:
-            assets_file = f"{PACKAGE_DIR}/{assets_file}"
-        with open(assets_file) as file:
-            assets_json = json.load(file)
-        assets: Assets = TypeAdapter(Assets).validate_python(assets_json)
-        if not args.no_shuffle:
-            assets = assets.shuffle()
-        rules = _import_rules(args.rules)
-        if args.read_dice:
-            game = Game(assets, rules, dice_roll_func=_read_dice)
-        else:
-            game = Game(assets, rules)
+    def __init__(self, game: Game) -> None:
         self.game = game
         self.player_of_last_command = -1  # Not equal to any actual player.
         self.reported_game_end = False
@@ -393,7 +392,15 @@ def root_command(args: Namespace) -> None:
     readline.set_completer_delims(" ")
     readline.set_completer(_autocomplete)
     readline.parse_and_bind("tab: complete")
-    client = _Client(args)
+    assets = _init_assets(
+        args.assets_file, args.relative_path, args.no_shuffle
+    )
+    rules = _import_rules(args.rules)
+    if args.read_dice:
+        game = Game(assets, rules, dice_roll_func=_read_dice)
+    else:
+        game = Game(assets, rules)
+    client = _Client(game)
     client.run()
 
 
