@@ -15,7 +15,7 @@ import sys
 from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Iterable, Type, assert_never
+from typing import Any, Iterator, Type, assert_never
 
 from pydantic import NonNegativeInt, TypeAdapter, ValidationError
 from pydantic.dataclasses import dataclass
@@ -309,26 +309,41 @@ class _Client:
                 self._command_show_players()
             case _ShowRegions(player_id):
                 self._command_show_regions(player_id)
-            case _MaybeDry(dry_run, SelectCombo(index)):
-                self._command_combo(index, dry_run=dry_run)
-            case _MaybeDry(dry_run, Abandon(region)):
-                self._command_abandon(region, dry_run=dry_run)
-            case _MaybeDry(dry_run, Conquer(region)):
-                self._command_conquer(region, dry_run=dry_run)
-            case _MaybeDry(dry_run, ConquerWithDice(region)):
-                self._command_conquer_dice(region, dry_run=dry_run)
-            case _MaybeDry(dry_run, Deploy(n, region)):
-                self._command_deploy(n, region, dry_run=dry_run)
-            case _MaybeDry(dry_run, StartRedeployment()):
-                self._command_redeploy(dry_run=dry_run)
-            case _MaybeDry(dry_run, Decline()):
-                self._command_decline(dry_run=dry_run)
-            case _MaybeDry(dry_run, EndTurn()):
-                self._command_end_turn(dry_run=dry_run)
+            case _MaybeDry(False, ConquerWithDice(region)):
+                self._command_conquer_dice(region)
+            case _MaybeDry(False, action):
+                self.game.do(action)
+            case _MaybeDry(True, action):
+                self._dry_run(action)
             case not_covered:
                 # mypy 1.5.1 can't deduce `not_covered: Never` here.
                 # When this is fixed in the pinned mypy, remove 'type:ignore'.
                 assert_never(not_covered)  # type:ignore
+
+    def _dry_run(self, action: Action) -> None:
+        errors: Iterator[ValueError | RulesViolation]
+        match action:
+            case SelectCombo(index):
+                errors = self.game.rules.check_select_combo(index)
+            case Abandon(region):
+                errors = self.game.rules.check_abandon(region)
+            case Conquer(region):
+                errors = self.game.rules.check_conquer(region, use_dice=False)
+            case ConquerWithDice(region):
+                errors = self.game.rules.check_conquer(region, use_dice=True)
+            case Deploy(n_tokens, region):
+                errors = self.game.rules.check_deploy(n_tokens, region)
+            case StartRedeployment():
+                errors = self.game.rules.check_start_redeployment()
+            case Decline():
+                errors = self.game.rules.check_decline()
+            case EndTurn():
+                errors = self.game.rules.check_end_turn()
+            case not_covered:
+                assert_never(not_covered)
+        for e in errors:
+            raise e  # Raise the first error, if any.
+        print("Check passed: you can remove the '?' and perform this action")
 
     def _command_show_players(self) -> None:
         headers = ["Player", "Active ability", "Active race", "Declined race",
@@ -365,71 +380,11 @@ class _Client:
             rows.append([r, 1, "Declined"])
         print(tabulate(rows, headers, stralign="center", numalign="center"))
 
-    def _command_combo(self, i: int, *, dry_run: bool) -> None:
-        if dry_run:
-            errors = self.game.rules.check_select_combo(i)
-            self._raise_first_or_print_ok(errors)
-        else:
-            self.game.select_combo(i)
-
-    def _command_abandon(self, region: int, *, dry_run: bool) -> None:
-        if dry_run:
-            errors = self.game.rules.check_abandon(region)
-            self._raise_first_or_print_ok(errors)
-        else:
-            self.game.abandon(region)
-
-    def _command_conquer(self, region: int, *, dry_run: bool) -> None:
-        if dry_run:
-            errors = self.game.rules.check_conquer(region, use_dice=False)
-            self._raise_first_or_print_ok(errors)
-        else:
-            self.game.conquer(region)
-
-    def _command_conquer_dice(self, region: int, *, dry_run: bool) -> None:
-        if dry_run:
-            errors = self.game.rules.check_conquer(region, use_dice=True)
-            self._raise_first_or_print_ok(errors)
-        else:
-            dice_value = self.game.conquer(region, use_dice=True)
-            is_success = region in self.game.player.active_regions
-            description = "successful" if is_success else "unsuccessful"
-            print(f"Rolled {dice_value} on the dice, "
-                  f"conquest was {description}.")
-
-    def _command_deploy(self, n: int, region: int, *, dry_run: bool) -> None:
-        if dry_run:
-            errors = self.game.rules.check_deploy(n, region)
-            self._raise_first_or_print_ok(errors)
-        else:
-            self.game.deploy(n, region)
-
-    def _command_redeploy(self, *, dry_run: bool) -> None:
-        if dry_run:
-            errors = self.game.rules.check_start_redeployment()
-            self._raise_first_or_print_ok(errors)
-        else:
-            self.game.start_redeployment()
-
-    def _command_decline(self, *, dry_run: bool) -> None:
-        if dry_run:
-            errors = self.game.rules.check_decline()
-            self._raise_first_or_print_ok(errors)
-        else:
-            self.game.decline()
-
-    def _command_end_turn(self, *, dry_run: bool) -> None:
-        if dry_run:
-            errors = self.game.rules.check_end_turn()
-            self._raise_first_or_print_ok(errors)
-        else:
-            self.game.end_turn()
-
-    def _raise_first_or_print_ok(self, errors: Iterable[Exception]) -> None:
-        for e in errors:
-            raise e
-        print("Check passed: this action is legal, "
-              "you can remove '?' and perform it")
+    def _command_conquer_dice(self, region: int) -> None:
+        dice_value = self.game.conquer(region, use_dice=True)
+        is_success = region in self.game.player.active_regions
+        description = "successful" if is_success else "unsuccessful"
+        print(f"Rolled {dice_value} on the dice, conquest was {description}.")
 
 
 def root_command(args: Namespace) -> None:

@@ -5,7 +5,9 @@ See https://github.com/expurple/smawg for more info about the project.
 
 import random
 from collections import defaultdict
-from typing import Any, Callable, Literal, Type, TypedDict, cast, overload
+from typing import (
+    Any, Callable, Literal, Type, TypedDict, assert_never, cast, overload
+)
 
 from pydantic import TypeAdapter
 
@@ -13,7 +15,11 @@ from smawg._common import (
     Ability, AbstractRules, Assets, Combo, GameState,
     Map, Player, Race, Region, RulesViolation, _TurnStage
 )
-from smawg.default_rules import Rules as DefaultRules
+from smawg.basic_rules import (
+    Abandon, Conquer, ConquerWithDice, Decline, Deploy, EndTurn, SelectCombo,
+    StartRedeployment
+)
+from smawg.default_rules import Action, Rules as DefaultRules
 
 __all__ = [
     # Defined in this file:
@@ -22,6 +28,10 @@ __all__ = [
     "Region", "Ability", "Race", "Map", "Assets", "Combo", "Player",
     "GameState", "RulesViolation", "AbstractRules"
 ]
+
+_VoidAction = Abandon | Conquer | Decline | Deploy | EndTurn | SelectCombo | \
+    StartRedeployment
+"""Actions, for which Game methods return None."""
 
 
 def validate(assets: dict[str, Any], *, strict: bool = False) -> None:
@@ -118,6 +128,44 @@ class Game(GameState):
         performing it.
         """
         return self._rules
+
+    @overload
+    def do(self, action: ConquerWithDice) -> int:
+        ...
+
+    @overload
+    def do(self, action: _VoidAction) -> None:
+        ...
+
+    def do(self, action: Action) -> int | None:
+        """Execute the given `Action` or raise an error if it's not valid.
+
+        For `ConquerWithDice`, return the value rolled on the dice.
+        For other actions, return `None`.
+
+        This method is an abstraction over all methods that perform individual
+        actions. Refer to their docs for details of each action.
+        """
+        match action:
+            case Decline():
+                self.decline()
+            case SelectCombo(combo_index):
+                self.select_combo(combo_index)
+            case Abandon(region):
+                self.abandon(region)
+            case Conquer(region):
+                self.conquer(region, use_dice=False)
+            case ConquerWithDice(region):
+                return self.conquer(region, use_dice=True)
+            case StartRedeployment():
+                self.start_redeployment()
+            case Deploy(n_tokens, region):
+                self.deploy(n_tokens, region)
+            case EndTurn():
+                self.end_turn()
+            case not_handled:
+                assert_never(not_handled)
+        return None
 
     def decline(self) -> None:
         """Put player's active race in decline state.

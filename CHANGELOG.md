@@ -16,6 +16,7 @@ and this project adheres to
     `EndTurn`.
 - `smawg.default_rules.Action` (currently, it's the same as
   `smawg.basic_rules.Action`).
+- `Game.do()` method as a single entry point for performing any `Action`.
 
 ### Changed
 
