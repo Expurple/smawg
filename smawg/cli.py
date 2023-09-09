@@ -15,7 +15,7 @@ import sys
 from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 from importlib import import_module
 from pathlib import Path
-from typing import Any, Iterator, Type, assert_never
+from typing import Any, Type, assert_never
 
 from pydantic import NonNegativeInt, TypeAdapter, ValidationError
 from pydantic.dataclasses import dataclass
@@ -285,27 +285,7 @@ class _Client:
         return None
 
     def _dry_run(self, action: Action) -> None:
-        errors: Iterator[ValueError | RulesViolation]
-        match action:
-            case SelectCombo(index):
-                errors = self.game.rules.check_select_combo(index)
-            case Abandon(region):
-                errors = self.game.rules.check_abandon(region)
-            case Conquer(region):
-                errors = self.game.rules.check_conquer(region, use_dice=False)
-            case ConquerWithDice(region):
-                errors = self.game.rules.check_conquer(region, use_dice=True)
-            case Deploy(n_tokens, region):
-                errors = self.game.rules.check_deploy(n_tokens, region)
-            case StartRedeployment():
-                errors = self.game.rules.check_start_redeployment()
-            case Decline():
-                errors = self.game.rules.check_decline()
-            case EndTurn():
-                errors = self.game.rules.check_end_turn()
-            case not_covered:
-                assert_never(not_covered)
-        for e in errors:
+        for e in self.game.rules.check(action):
             raise e  # Raise the first error, if any.
         print("Check passed: you can remove the '?' and perform this action")
 
@@ -403,14 +383,14 @@ def _init_assets(assets_file: str, relative_path: bool, no_shuffle: bool
     return assets
 
 
-def _import_rules(filename: str) -> Type[AbstractRules]:
+def _import_rules(filename: str) -> Type[AbstractRules[Action]]:
     """Dynamically load `Rules` from a Python file."""
     rules_file_path = Path(filename).resolve()
     rules_file_name = rules_file_path.name
     rules_dir_name = str(rules_file_path.parent)
     sys.path.append(rules_dir_name)
     rules_module = import_module(rules_file_name[:-3])
-    rules: Type[AbstractRules] = rules_module.Rules
+    rules: Type[AbstractRules[Action]] = rules_module.Rules
     return rules
 
 

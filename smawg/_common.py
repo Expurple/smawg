@@ -13,7 +13,7 @@ from copy import deepcopy
 from dataclasses import replace
 from enum import auto, Enum
 from itertools import islice
-from typing import Iterator, Self
+from typing import Generic, Iterator, Self, TypeVar
 
 from pydantic import Field, NonNegativeInt, PositiveInt, model_validator
 from pydantic.dataclasses import dataclass
@@ -364,12 +364,24 @@ class RulesViolation(Exception):
     """
 
 
-class AbstractRules(ABC):
+_ActionT = TypeVar("_ActionT")
+
+
+class AbstractRules(ABC, Generic[_ActionT]):
     """Interface that all `Rules` plugins must implement."""
 
     @abstractmethod
     def __init__(self, game: GameState) -> None:
         """Create an instance that will work on provided `game` instance."""
+        ...
+
+    @abstractmethod
+    def check(self, action: _ActionT) -> Iterator[ValueError | RulesViolation]:
+        """Check any supported action and yield errors if it is invalid.
+
+        This method is an abstraction over all methods that check individual
+        actions. Refer to their docs for details of each action.
+        """
         ...
 
     @abstractmethod

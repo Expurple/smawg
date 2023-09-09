@@ -88,7 +88,7 @@ class Game(GameState):
     # This class only implements game actions and hooks.
 
     def __init__(self, assets: Assets | dict[str, Any],
-                 RulesT: Type[AbstractRules] = DefaultRules, *,
+                 RulesT: Type[AbstractRules[Action]] = DefaultRules, *,
                  dice_roll_func: Callable[[], int] = roll_dice,
                  hooks: Hooks = {}) -> None:
         """Initialize a game based on given `assets`.
@@ -116,12 +116,12 @@ class Game(GameState):
         self._roll_dice = dice_roll_func
         self._hooks = cast(Hooks, defaultdict(lambda: _do_nothing, **hooks))
         # Only after all other fields have been initialized.
-        self._rules: AbstractRules = RulesT(self)
+        self._rules: AbstractRules[Action] = RulesT(self)
         # Only after `self` has been fully initialized.
         self._hooks["on_turn_start"](self)
 
     @property
-    def rules(self) -> AbstractRules:
+    def rules(self) -> AbstractRules[Action]:
         """Access the rule checker.
 
         This is useful if you want to test an action without actually

@@ -7,7 +7,7 @@ Intented to be reused between different "editions" of the game.
 See https://github.com/expurple/smawg for more info about the project.
 """
 
-from typing import Iterator
+from typing import Iterator, assert_never
 
 from pydantic import NonNegativeInt, PositiveInt
 from pydantic.dataclasses import dataclass
@@ -287,7 +287,7 @@ class UndeployedTokens(RulesViolation):
 #                                   Rules
 # -----------------------------------------------------------------------------
 
-class Rules(AbstractRules):
+class Rules(AbstractRules[Action]):
     """Basic Small World rules.
 
     Without special effects from different terrain types, races or abilities.
@@ -298,6 +298,32 @@ class Rules(AbstractRules):
     def __init__(self, game: GameState) -> None:
         """Create an instance that will work on provided `game` instance."""
         self._game = game
+
+    def check(self, action: Action) -> Iterator[ValueError | RulesViolation]:
+        """Check any supported action and yield errors if it is invalid.
+
+        This method is an abstraction over all methods that check individual
+        actions. Refer to their docs for details of each action.
+        """
+        match action:
+            case Decline():
+                return self.check_decline()
+            case SelectCombo(index):
+                return self.check_select_combo(index)
+            case Abandon(region):
+                return self.check_abandon(region)
+            case Conquer(region):
+                return self.check_conquer(region, use_dice=False)
+            case ConquerWithDice(region):
+                return self.check_conquer(region, use_dice=True)
+            case StartRedeployment():
+                return self.check_start_redeployment()
+            case Deploy(n_tokens, region):
+                return self.check_deploy(n_tokens, region)
+            case EndTurn():
+                return self.check_end_turn()
+            case not_covered:
+                assert_never(not_covered)
 
     def check_decline(self) -> Iterator[RulesViolation]:
         """Check if `decline()` violates the rules.

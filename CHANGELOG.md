@@ -15,12 +15,17 @@ and this project adheres to
     `Abandon`, `Conquer`, `ConquerWithDice`, `StartRedeployment`, `Deploy`,
     `EndTurn`.
 - `smawg.default_rules.Action` (currently, it's the same as
-  `smawg.basic_rules.Action`).
+    `smawg.basic_rules.Action`).
 - `Game.do()` method as a single entry point for performing any `Action`.
+- `AbstractRules.check()` method as a single entry point for checking any
+        `Action`.
+    - Its implementations in `smawg.basic_rules` and `smawg.default_rules`.
 
 ### Changed
 
 - Error messages in `smawg play`.
+- Rule plugins now must implement `AbstractRules.check()`.
+- `AbstractRules` is now a `Generic` class, old code may not typecheck.
 
 ## \[0.20.0] - 2023-09-02
 
