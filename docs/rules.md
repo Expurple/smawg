@@ -1,7 +1,8 @@
 # Rules
 
-`smawg` can use custom Python plugins
-that introduce new rules and new terrain/race/ability effects.
+`smawg` can use custom Python plugins that introduce new rules and new
+terrain/race/ability effects. Currently, plugins can't add new actions like
+placing a Dragon.
 
 ## Example
 
