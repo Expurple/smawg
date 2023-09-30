@@ -9,6 +9,10 @@ and this project adheres to
 
 ## \[Unreleased]
 
+\-
+
+## \[0.21.0] - 2023-09-30
+
 ### Added
 
 - `smawg.basic_rules.Action` and its variants: `Decline`, `SelectCombo`,
