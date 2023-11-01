@@ -200,6 +200,7 @@ class Combo:
         )
 
 
+@dataclass
 class Player:
     """A bunch of "dumb" mutable stats, related to the same player.
 
@@ -207,17 +208,16 @@ class Player:
     they aren't supposed to be directly modified by library users.
     """
 
-    def __init__(self, coins: int) -> None:
-        """Initialize `Player` with an initial supply of `coins`."""
-        self.active_ability: Ability | None = None
-        self.active_race: Race | None = None
-        self.decline_race: Race | None = None
-        self.active_regions = dict[int, int]()
-        """Dict of controlled regions, in form of `{region: n_tokens}`."""
-        self.decline_regions = set[int]()
-        """A set of regions controlled by a single declined race token."""
-        self.tokens_on_hand = 0
-        self.coins = coins
+    coins: int
+    tokens_on_hand: int = Field(init_var=False, default=0)
+    active_ability: Ability | None = Field(init_var=False, default=None)
+    active_race: Race | None = Field(init_var=False, default=None)
+    decline_race: Race | None = Field(init_var=False, default=None)
+    active_regions: dict[int, int] = \
+        Field(init_var=False, default_factory=dict)
+    """Dict of controlled regions, in form of `{region: n_tokens}`."""
+    decline_regions: set[int] = Field(init_var=False, default_factory=set)
+    """A set of regions controlled by a single declined race token."""
 
     def _is_owning(self, region: int) -> bool:
         """Check if `Player` owns the given `region`."""
