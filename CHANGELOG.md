@@ -9,7 +9,9 @@ and this project adheres to
 
 ## \[Unreleased]
 
-\-
+### Added
+
+- `--style=machine` for `smawg play`.
 
 ## \[0.21.0] - 2023-09-30
 

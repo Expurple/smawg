@@ -12,6 +12,7 @@ See https://github.com/expurple/smawg for more info about the project.
 
 import json
 import sys
+from abc import ABC, abstractmethod
 from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 from importlib import import_module
 from pathlib import Path
@@ -21,7 +22,7 @@ from pydantic import NonNegativeInt, TypeAdapter, ValidationError
 from pydantic.dataclasses import dataclass
 from tabulate import tabulate
 
-from smawg import AbstractRules, Assets, Game, RulesViolation
+from smawg import AbstractRules, Assets, Combo, Game, Player, RulesViolation
 from smawg._metadata import PACKAGE_DIR, VERSION
 from smawg.basic_rules import (
     Abandon, Conquer, ConquerWithDice, Decline, Deploy, EndTurn, SelectCombo,
@@ -172,6 +173,18 @@ def _parse_command(line: str) -> _Command | None:
 #                        The interactive interpreter
 # -----------------------------------------------------------------------------
 
+class _Client(ABC):
+    """The interface for command line interaction styles."""
+
+    @abstractmethod
+    def __init__(self, game: Game) -> None:
+        ...
+
+    @abstractmethod
+    def run(self) -> int:
+        ...
+
+
 def _autocomplete(text: str, state: int) -> str | None:
     """Command completer for `readline`."""
     results: list[str | None] = [c for c in _COMMANDS if c.startswith(text)]
@@ -179,7 +192,14 @@ def _autocomplete(text: str, state: int) -> str | None:
     return results[state]
 
 
-def _read_dice() -> int:
+def _init_readline() -> None:
+    import readline
+    readline.set_completer_delims(" ")
+    readline.set_completer(_autocomplete)
+    readline.parse_and_bind("tab: complete")
+
+
+def _read_dice_with_reenter() -> int:
     """Get result of a dice roll from an interactive console."""
     prompt = "Enter the result of the dice roll: "
     while True:
@@ -189,8 +209,8 @@ def _read_dice() -> int:
             prompt = "The result must be an integer, try again: "
 
 
-class _Client:
-    """Handles console IO."""
+class _HumanClient(_Client):
+    """Command line interactions with --style=human."""
 
     def __init__(self, game: Game) -> None:
         self.game = game
@@ -203,10 +223,7 @@ class _Client:
         Return an exit code.
         """
         print(_START_SCREEN)
-        import readline
-        readline.set_completer_delims(" ")
-        readline.set_completer(_autocomplete)
-        readline.parse_and_bind("tab: complete")
+        _init_readline()
         try:
             return self._run_main_loop()
         except (EOFError, KeyboardInterrupt):
@@ -331,6 +348,99 @@ class _Client:
         print(f"Rolled {dice_value} on the dice, conquest was {description}.")
 
 
+class _MachineClient(_Client):
+    """Command line interactions with --style=machine."""
+
+    def __init__(self, game: Game) -> None:
+        self.game = game
+
+    def run(self) -> int:
+        """Interpret user commands until stopped by `'quit'`, ^C or ^D.
+
+        Return an exit code.
+
+        In contrast with `_HumanClient`, `EOFError` and `KeyboardInterrupt` are
+        intentionally not caught and cause a crash.
+        """
+        _init_readline()  # Just in case, for manual testing.
+        exit_code: int | None = None
+        while exit_code is None:
+            line = input()
+            try:
+                command = _parse_command(line)
+                if command is None:
+                    raise ValueError("no command provided")
+                exit_code = self._execute(command)
+            except ValidationError as e:
+                # Workaround to serialize `ArgsKwargs`.
+                # Straightforward `e.errors()` causes `json.dumps` to crash
+                # when the `ValidationError` is caused by missing arguments.
+                args = json.loads(e.json())
+                error = {"type": e.__class__.__name__, "args": args}
+                print(json.dumps({"error": error}))
+            except (ValueError, RulesViolation) as e:
+                error = {"type": e.__class__.__name__, "args": e.args}
+                print(json.dumps({"error": error}))
+        return exit_code
+
+    def _execute(self, command: _Command) -> int | None:
+        """Execute the given `command`.
+
+        Return an exit code if the command is `_Quit`, or `None` otherwise.
+
+        Raise:
+        * `ValueError`
+            if some argument has invalid value.
+        * `smawg.RulesViolation` subtypes
+            if given command violates the game rules.
+        """
+        result: Any
+        match command:
+            case _Help():
+                result = _HELP
+            case _Quit():
+                return 0
+            case _ShowCombos():
+                result = self._command_show_combos()
+            case _ShowPlayers():
+                result = self._command_show_players()
+            case _ShowRegions(player_id):
+                result = self._command_show_regions(player_id)
+            case _MaybeDry(False, action):
+                result = self.game.do(action)
+            case _MaybeDry(True, action):
+                for e in self.game.rules.check(action):
+                    raise e  # Raise the first error, if any.
+                result = None
+            case not_covered:
+                # mypy 1.5.1 can't deduce `not_covered: Never` here.
+                # When this is fixed in the pinned mypy, remove 'type:ignore'.
+                assert_never(not_covered)  # type:ignore
+        print(json.dumps({"result": result}))
+        return None
+
+    def _command_show_players(self) -> Any:
+        return [
+            TypeAdapter(Player).dump_python(p, mode="json")
+            for p in self.game.players
+        ]
+
+    def _command_show_combos(self) -> Any:
+        return [
+            TypeAdapter(Combo).dump_python(c, mode="json")
+            for c in self.game.combos
+        ]
+
+    def _command_show_regions(self, player_id: int) -> Any:
+        if not 0 <= player_id < len(self.game.players):
+            msg = f"<player> must be between 0 and {len(self.game.players)}"
+            raise ValueError(msg)
+        player = self.game.players[player_id]
+        return TypeAdapter(Player).dump_python(
+            player, mode="json", include={"active_regions", "decline_regions"}
+        )
+
+
 # -----------------------------------------------------------------------------
 #                    Argument parsing and the entry point
 # -----------------------------------------------------------------------------
@@ -345,6 +455,12 @@ def argument_parser() -> ArgumentParser:
         "assets_file",
         metavar="ASSETS_FILE",
         help="path to JSON file with assets"
+    )
+    parser.add_argument(
+        "--style",
+        choices=["human", "machine"],
+        default="human",
+        help="set the output style (see docs/style.md for details)",
     )
     parser.add_argument(
         "--rules",
@@ -400,11 +516,21 @@ def root_command(args: Namespace) -> None:
         args.assets_file, args.relative_path, args.no_shuffle
     )
     rules = _import_rules(args.rules)
+    client_type: Type[_Client]
+    match args.style:
+        case "human":
+            roll_dice = _read_dice_with_reenter
+            client_type = _HumanClient
+        case "machine":
+            roll_dice = lambda: int(input())  # noqa
+            client_type = _MachineClient
+        case _:
+            assert False, "invalid styles should be caught by argparse"
     if args.read_dice:
-        game = Game(assets, rules, dice_roll_func=_read_dice)
+        game = Game(assets, rules, dice_roll_func=roll_dice)
     else:
         game = Game(assets, rules)
-    client = _Client(game)
+    client = client_type(game)
     exit_code = client.run()
     sys.exit(exit_code)
 

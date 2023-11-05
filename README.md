@@ -19,6 +19,8 @@ and easy interoperability with other programming languages.
 * Support for custom maps, races and other assets.
 * Support for custom rules (see [docs/rules.md](docs/rules.md)).
 * Deterministic or randomized outcomes.
+* Machine-readable output for interoperability with other programming languages
+    (see [docs/style.md](docs/style.md)).
 
 ### Missing features
 
@@ -26,7 +28,6 @@ and easy interoperability with other programming languages.
 
 ### Future plans
 
-* Options for more machine-readable CLI output.
 * In-house AI and GUI examples.
 * Better support for expansions.
 
@@ -70,7 +71,12 @@ A simple set of options to get you started:
 python3 -m smawg play --relative-path assets/tiny.json
 ```
 
-It should guide you through the usage. See `--help` for more details.
+It should guide you through the usage.
+
+You can also pass `--style=machine` to get machine-readable output and use it
+from a different programming language (see [docs/style.md](docs/style.md))
+
+See `--help` for more details.
 
 ### As a library
 
