@@ -90,6 +90,7 @@ class TestCliParseCommand(unittest.TestCase):
         self.assertRaises(ValueError, _parse_command, "?show-combos")
         self.assertRaises(ValueError, _parse_command, "?show-players")
         self.assertRaises(ValueError, _parse_command, "?show-regions 0")
+        self.assertRaises(ValueError, _parse_command, "?show-turn")
 
 
 class TestCliHumanClient(unittest.TestCase):

@@ -11,7 +11,8 @@ and this project adheres to
 
 ### Added
 
-- `--style=machine` for `smawg play`.
+- `--style=machine` option for `smawg play`.
+- `show-turn` command for `smawg play`.
 
 ## \[0.21.0] - 2023-09-30
 

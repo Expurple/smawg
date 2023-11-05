@@ -48,6 +48,7 @@ Available commands:
     show-combos                show available combos
     show-players               show general player stats
     show-regions <player>      show regions owned by <player>
+    show-turn                  show the current turn and player
 
     [?] combo <index>          pick race+ability combo by <index>
     [?] abandon <region>       abandon <region> by index
@@ -67,9 +68,9 @@ but won't actually attempt to conquer it:
 Press Tab to use command autocompletion."""
 
 _COMMANDS = [
-    "help", "quit", "show-combos", "show-players", "show-regions", "combo",
-    "abandon", "conquer", "conquer-dice", "deploy", "redeploy", "decline",
-    "end-turn"
+    "help", "quit", "show-combos", "show-players", "show-regions", "show-turn",
+    "combo", "abandon", "conquer", "conquer-dice", "deploy", "redeploy",
+    "decline", "end-turn"
 ]
 
 
@@ -102,7 +103,13 @@ class _ShowRegions:
     player: NonNegativeInt
 
 
-_NonActionCommand = _Help | _Quit | _ShowCombos | _ShowPlayers | _ShowRegions
+@dataclass(frozen=True)
+class _ShowTurn:
+    pass
+
+
+_NonActionCommand = \
+    _Help | _Quit | _ShowCombos | _ShowPlayers | _ShowRegions | _ShowTurn
 """These commands don't support dry runs."""
 
 
@@ -136,7 +143,7 @@ def _parse_command(line: str) -> _Command | None:
             args: list[Any] = str_args
     match command:
         case "help" | "quit" | "show-combos" | "show-players" | "show-regions"\
-                if dry_run:
+                | "show-turn" if dry_run:
             raise ValueError(f"'{command}' does not support dry run mode")
         case "help":
             return _Help(*args)
@@ -148,6 +155,8 @@ def _parse_command(line: str) -> _Command | None:
             return _ShowPlayers(*args)
         case "show-regions":
             return _ShowRegions(*args)
+        case "show-turn":
+            return _ShowTurn(*args)
         case "combo":
             return _MaybeDry(dry_run, SelectCombo(*args))
         case "abandon":
@@ -289,6 +298,8 @@ class _HumanClient(_Client):
                 self._command_show_players()
             case _ShowRegions(player_id):
                 self._command_show_regions(player_id)
+            case _ShowTurn():
+                self._command_show_turn()
             case _MaybeDry(False, ConquerWithDice(region)):
                 self._command_conquer_dice(region)
             case _MaybeDry(False, action):
@@ -340,6 +351,18 @@ class _HumanClient(_Client):
         for r in player.decline_regions:
             rows.append([r, 1, "Declined"])
         print(tabulate(rows, headers, stralign="center", numalign="center"))
+
+    def _command_show_turn(self) -> Any:
+        headers = [
+            "Turn", "Player", "Is redeployment pseudo-turn?", "Game has ended?"
+        ]
+        row = [
+            self.game.current_turn,
+            self.game.player_id,
+            "Yes" if self.game.is_in_redeployment_turn else "No",
+            "Yes" if self.game.has_ended else "No",
+        ]
+        print(tabulate([row], headers, stralign="center", numalign="center"))
 
     def _command_conquer_dice(self, region: int) -> None:
         dice_value = self.game.conquer(region, use_dice=True)
@@ -406,6 +429,8 @@ class _MachineClient(_Client):
                 result = self._command_show_players()
             case _ShowRegions(player_id):
                 result = self._command_show_regions(player_id)
+            case _ShowTurn():
+                result = self._command_show_turn()
             case _MaybeDry(False, action):
                 result = self.game.do(action)
             case _MaybeDry(True, action):
@@ -439,6 +464,14 @@ class _MachineClient(_Client):
         return TypeAdapter(Player).dump_python(
             player, mode="json", include={"active_regions", "decline_regions"}
         )
+
+    def _command_show_turn(self) -> Any:
+        return {
+            "current_turn": self.game.current_turn,
+            "player_id": self.game.player_id,
+            "is_in_redeployment_turn": self.game.is_in_redeployment_turn,
+            "game_has_ended": self.game.has_ended,
+        }
 
 
 # -----------------------------------------------------------------------------
