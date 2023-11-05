@@ -173,9 +173,7 @@ def _parse_command(line: str) -> _Command | None:
             return _MaybeDry(dry_run, Decline(*args))
         case "end-turn":
             return _MaybeDry(dry_run, EndTurn(*args))
-        case _:
-            raise ValueError(f"unknown command '{command}'")
-    assert_never(command)  # type:ignore  # mypy 1.5.1 doesn't get it yet
+    raise ValueError(f"unknown command '{command}'")
 
 
 # -----------------------------------------------------------------------------
@@ -307,7 +305,7 @@ class _HumanClient(_Client):
             case _MaybeDry(True, action):
                 self._dry_run(action)
             case not_covered:
-                # mypy 1.5.1 can't deduce `not_covered: Never` here.
+                # mypy 1.6.1 can't deduce `not_covered: Never` here.
                 # When this is fixed in the pinned mypy, remove 'type:ignore'.
                 assert_never(not_covered)  # type:ignore
         return None
@@ -438,7 +436,7 @@ class _MachineClient(_Client):
                     raise e  # Raise the first error, if any.
                 result = None
             case not_covered:
-                # mypy 1.5.1 can't deduce `not_covered: Never` here.
+                # mypy 1.6.1 can't deduce `not_covered: Never` here.
                 # When this is fixed in the pinned mypy, remove 'type:ignore'.
                 assert_never(not_covered)  # type:ignore
         print(json.dumps({"result": result}))
