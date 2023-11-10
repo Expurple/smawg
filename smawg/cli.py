@@ -11,6 +11,7 @@ See https://github.com/expurple/smawg for more info about the project.
 
 
 import json
+import re
 import sys
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
@@ -65,12 +66,15 @@ but won't actually attempt to conquer it:
 
     ? conquer 3
 
-Press Tab to use command autocompletion."""
+Press Tab to use autocompletion."""
 
-_COMMANDS = [
-    "help", "quit", "show-combos", "show-players", "show-regions", "show-turn",
+_ACTION_COMMANDS = [
     "combo", "abandon", "conquer", "conquer-dice", "deploy", "redeploy",
     "decline", "end-turn"
+]
+_COMMANDS = [
+    "help", "quit", "show-combos", "show-players", "show-regions", "show-turn",
+    *_ACTION_COMMANDS
 ]
 
 
@@ -181,29 +185,49 @@ def _parse_command(line: str) -> _Command | None:
 # -----------------------------------------------------------------------------
 
 class _Client(ABC):
-    """The interface for command line interaction styles."""
+    """The interface for command line interaction styles.
 
-    @abstractmethod
+    I'm lazy, so it also contains common readline initialization code.
+    """
+
     def __init__(self, game: Game) -> None:
-        ...
+        self.game = game
 
     @abstractmethod
     def run(self) -> int:
         ...
 
+    def _init_readline(self) -> None:
+        import readline
+        readline.set_completer_delims(" ")
+        readline.parse_and_bind("tab: complete")
 
-def _autocomplete(text: str, state: int) -> str | None:
-    """Command completer for `readline`."""
-    results: list[str | None] = [c for c in _COMMANDS if c.startswith(text)]
-    results.append(None)
-    return results[state]
+        def buffer_matches(pat: str) -> bool:
+            return re.fullmatch(pat, readline.get_line_buffer()) is not None
 
+        def completer(text: str, state: int) -> str | None:
+            if buffer_matches(r"\s*[^\s]*"):
+                options = [
+                    "?", *[f"?{a}" for a in _ACTION_COMMANDS], *_COMMANDS
+                ]
+            elif buffer_matches(r"\s*[?]\s+[^\s]*"):
+                options = _ACTION_COMMANDS
+            elif buffer_matches(r"\s*show-regions\s+[^\s]*"):
+                options = [str(i) for i in range(len(self.game.players))]
+            elif buffer_matches(r"\s*([?]\s*)?combo\s+[^\s]*"):
+                options = [str(i) for i in range(len(self.game.combos))]
+            elif buffer_matches(r"\s*([?]\s*)?deploy\s+[^\s]*"):
+                tokens_on_hand = self.game.player.tokens_on_hand
+                options = [str(i) for i in range(1, tokens_on_hand + 1)]
+            elif buffer_matches(r"\s*([?]\s*)?(abandon|conquer(-dice)?|"
+                                r"deploy\s+[^\s]+)\s+[^\s]*"):
+                options = [str(i) for i in range(len(self.game.regions))]
+            else:
+                options = []
+            results = [*[o for o in options if o.startswith(text)], None]
+            return results[state]
 
-def _init_readline() -> None:
-    import readline
-    readline.set_completer_delims(" ")
-    readline.set_completer(_autocomplete)
-    readline.parse_and_bind("tab: complete")
+        readline.set_completer(completer)
 
 
 def _read_dice_with_reenter() -> int:
@@ -220,7 +244,7 @@ class _HumanClient(_Client):
     """Command line interactions with --style=human."""
 
     def __init__(self, game: Game) -> None:
-        self.game = game
+        super().__init__(game)
         self.player_of_last_command = -1  # Not equal to any actual player.
         self.reported_game_end = False
 
@@ -230,7 +254,7 @@ class _HumanClient(_Client):
         Return an exit code.
         """
         print(_START_SCREEN)
-        _init_readline()
+        self._init_readline()
         try:
             return self._run_main_loop()
         except (EOFError, KeyboardInterrupt):
@@ -373,7 +397,7 @@ class _MachineClient(_Client):
     """Command line interactions with --style=machine."""
 
     def __init__(self, game: Game) -> None:
-        self.game = game
+        super().__init__(game)
 
     def run(self) -> int:
         """Interpret user commands until stopped by `'quit'`, ^C or ^D.
@@ -383,7 +407,7 @@ class _MachineClient(_Client):
         In contrast with `_HumanClient`, `EOFError` and `KeyboardInterrupt` are
         intentionally not caught and cause a crash.
         """
-        _init_readline()  # Just in case, for manual testing.
+        self._init_readline()  # Just in case, for manual testing.
         exit_code: int | None = None
         while exit_code is None:
             line = input()

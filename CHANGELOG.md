@@ -14,6 +14,11 @@ and this project adheres to
 - `--style=machine` option for `smawg play`.
 - `show-turn` command for `smawg play`.
 
+### Changed
+
+- Autocompletion in `smawg play` became much smarter and appropriately suggests
+    arguments, dry runs or dead ends instead of always suggesting commands.
+
 ## \[0.21.0] - 2023-09-30
 
 ### Added
