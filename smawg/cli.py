@@ -190,12 +190,17 @@ class _Client(ABC):
     I'm lazy, so it also contains common readline initialization code.
     """
 
-    def __init__(self, game: Game) -> None:
-        self.game = game
+    @classmethod
+    @abstractmethod
+    def get_dice_value(cls) -> int:
+        ...
 
     @abstractmethod
     def run(self) -> int:
         ...
+
+    def __init__(self, game: Game) -> None:
+        self.game = game
 
     def _init_readline(self) -> None:
         import readline
@@ -230,18 +235,18 @@ class _Client(ABC):
         readline.set_completer(completer)
 
 
-def _read_dice_with_reenter() -> int:
-    """Get result of a dice roll from an interactive console."""
-    prompt = "Enter the result of the dice roll: "
-    while True:
-        try:
-            return int(input(prompt))
-        except ValueError:
-            prompt = "The result must be an integer, try again: "
-
-
 class _HumanClient(_Client):
     """Command line interactions with --style=human."""
+
+    @classmethod
+    def get_dice_value(cls) -> int:
+        """Retry until we get a valid integer."""
+        prompt = "Enter the result of the dice roll: "
+        while True:
+            try:
+                return int(input(prompt))
+            except ValueError:
+                prompt = "The result must be an integer, try again: "
 
     def __init__(self, game: Game) -> None:
         super().__init__(game)
@@ -395,6 +400,11 @@ class _HumanClient(_Client):
 
 class _MachineClient(_Client):
     """Command line interactions with --style=machine."""
+
+    @classmethod
+    def get_dice_value(cls) -> int:
+        """If the value is not an int, fail with ValueError on purpose."""
+        return int(input())
 
     def __init__(self, game: Game) -> None:
         super().__init__(game)
@@ -574,15 +584,13 @@ def root_command(args: Namespace) -> None:
     client_type: Type[_Client]
     match args.style:
         case "human":
-            roll_dice = _read_dice_with_reenter
             client_type = _HumanClient
         case "machine":
-            roll_dice = lambda: int(input())  # noqa
             client_type = _MachineClient
         case _:
             assert False, "invalid styles should be caught by argparse"
     if args.read_dice:
-        game = Game(assets, rules, dice_roll_func=roll_dice)
+        game = Game(assets, rules, dice_roll_func=client_type.get_dice_value)
     else:
         game = Game(assets, rules)
     client = client_type(game)
