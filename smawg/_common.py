@@ -219,7 +219,7 @@ class Player:
     decline_regions: set[int] = Field(init_var=False, default_factory=set)
     """A set of regions controlled by a single declined race token."""
 
-    def _is_owning(self, region: int) -> bool:
+    def is_owning(self, region: int) -> bool:
         """Check if `Player` owns the given `region`."""
         return region in self.active_regions or region in self.decline_regions
 
@@ -359,7 +359,7 @@ class GameState:
     def owner_of(self, region: int) -> int | None:
         """Return the owner of the given `region` or `None` if there's none."""
         for i, p in enumerate(self.players):
-            if p._is_owning(region):
+            if p.is_owning(region):
                 return i
         return None
 

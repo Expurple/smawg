@@ -11,8 +11,9 @@ and this project adheres to
 
 ### Added
 
-- Public `TurnStage`, `Game.turn_stage` and `GameState.turn_stage` (rules
-    already had to rely on the private version anyway).
+- `TurnStage`, `Game.turn_stage` and `GameState.turn_stage` (rules already had
+    to rely on the private version).
+- `Player.is_owning(region)` helper method.
 
 ## \[0.22.0] - 2023-11-16
 
