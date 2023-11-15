@@ -22,7 +22,7 @@ from pydantic.dataclasses import dataclass
 # When modifying this, don't forget to modify `smawg.__all__`.
 __all__ = [
     "Region", "Ability", "Race", "Map", "Assets", "Combo", "Player",
-    "_TurnStage", "GameState", "RulesViolation", "AbstractRules"
+    "TurnStage", "GameState", "RulesViolation", "AbstractRules"
 ]
 
 
@@ -245,7 +245,7 @@ class Player:
         self.tokens_on_hand = combo.base_n_tokens
 
 
-class _TurnStage(Enum):
+class TurnStage(Enum):
     """The current stage of the player's turn.
 
     Determines, which actions (`Game` method calls) are allowed.
@@ -293,7 +293,7 @@ class GameState:
         self._players = \
             [Player(assets.n_coins_on_start) for _ in range(assets.n_players)]
         self._player_id = 0
-        self._turn_stage = _TurnStage.SELECT_COMBO
+        self._turn_stage = TurnStage.SELECT_COMBO
 
     @property
     def assets(self) -> Assets:
@@ -313,7 +313,7 @@ class GameState:
     @property
     def is_in_redeployment_turn(self) -> bool:
         """Whether the redeployment preudo turn is happening right now."""
-        return self._turn_stage == _TurnStage.REDEPLOYMENT_TURN
+        return self.turn_stage == TurnStage.REDEPLOYMENT_TURN
 
     @property
     def has_ended(self) -> bool:
@@ -347,6 +347,14 @@ class GameState:
     def player(self) -> Player:
         """The current active `Player`."""
         return self.players[self.player_id]
+
+    @property
+    def turn_stage(self) -> TurnStage:
+        """The current stage of the player's turn.
+
+        Determines, which actions (method calls) are allowed.
+        """
+        return self._turn_stage
 
     def owner_of(self, region: int) -> int | None:
         """Return the owner of the given `region` or `None` if there's none."""

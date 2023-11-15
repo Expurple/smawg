@@ -13,7 +13,7 @@ from pydantic import TypeAdapter
 
 from smawg._common import (
     Ability, AbstractRules, Assets, Combo, GameState,
-    Map, Player, Race, Region, RulesViolation, _TurnStage
+    Map, Player, Race, Region, RulesViolation, TurnStage
 )
 from smawg.basic_rules import (
     Abandon, Conquer, ConquerWithDice, Decline, Deploy, EndTurn, SelectCombo,
@@ -26,7 +26,7 @@ __all__ = [
     "Game", "Hooks", "roll_dice", "validate",
     # Re-exported from smawg._common:
     "Region", "Ability", "Race", "Map", "Assets", "Combo", "Player",
-    "GameState", "RulesViolation", "AbstractRules"
+    "TurnStage", "GameState", "RulesViolation", "AbstractRules"
 ]
 
 _VoidAction = Abandon | Conquer | Decline | Deploy | EndTurn | SelectCombo | \
@@ -183,7 +183,7 @@ class Game(GameState):
 
         self.player._decline()
         self._reveal_next_combo()
-        self._turn_stage = _TurnStage.DECLINED
+        self._turn_stage = TurnStage.DECLINED
 
     def select_combo(self, combo_index: int) -> None:
         """Select the combo at specified `combo_index` as active.
@@ -200,7 +200,7 @@ class Game(GameState):
         self._pay_for_combo(combo_index)
         chosen_combo = self.combos.pop(combo_index)
         self.player._set_active(chosen_combo)
-        self._turn_stage = _TurnStage.ACTIVE
+        self._turn_stage = TurnStage.ACTIVE
         self._reveal_next_combo()
 
     def abandon(self, region: int) -> None:
@@ -211,7 +211,7 @@ class Game(GameState):
         for e in self._rules.check_abandon(region):
             raise e
         self.player.tokens_on_hand += self.player.active_regions.pop(region)
-        self._turn_stage = _TurnStage.ACTIVE
+        self._turn_stage = TurnStage.ACTIVE
 
     @overload
     def conquer(self, region: int, *, use_dice: Literal[True]) -> int:
@@ -254,7 +254,7 @@ class Game(GameState):
         for e in self._rules.check_start_redeployment():
             raise e
         self.player._pick_up_tokens()
-        self._turn_stage = _TurnStage.REDEPLOYMENT
+        self._turn_stage = TurnStage.REDEPLOYMENT
 
     def deploy(self, n_tokens: int, region: int) -> None:
         """Deploy `n_tokens` from hand to the specified own `region`.
@@ -265,8 +265,8 @@ class Game(GameState):
             raise e
         self.player.tokens_on_hand -= n_tokens
         self.player.active_regions[region] += n_tokens
-        if self._turn_stage == _TurnStage.CAN_DECLINE:
-            self._turn_stage = _TurnStage.ACTIVE
+        if self.turn_stage == TurnStage.CAN_DECLINE:
+            self._turn_stage = TurnStage.ACTIVE
 
     def end_turn(self) -> None:
         """End turn (full or redeployment) and give control to the next player.
@@ -277,7 +277,7 @@ class Game(GameState):
         """
         for e in self._rules.check_end_turn():
             raise e
-        if self._turn_stage != _TurnStage.REDEPLOYMENT_TURN:
+        if self.turn_stage != TurnStage.REDEPLOYMENT_TURN:
             self.player.coins += self._rules.calculate_turn_reward()
             self._hooks["on_turn_end"](self)
         self._switch_player()
@@ -315,7 +315,7 @@ class Game(GameState):
         self._kick_out_owner(region)
         self.player.tokens_on_hand -= tokens_required
         self.player.active_regions[region] = tokens_required
-        self._turn_stage = _TurnStage.CONQUESTS
+        self._turn_stage = TurnStage.CONQUESTS
 
     def _conquer_with_dice(self, region: int) -> int:
         """Implementation of `conquer()` with `use_dice=True`.
@@ -331,7 +331,7 @@ class Game(GameState):
             self._kick_out_owner(region)
             self.player.tokens_on_hand -= own_tokens_used
             self.player.active_regions[region] = own_tokens_used
-        self._turn_stage = _TurnStage.USED_DICE
+        self._turn_stage = TurnStage.USED_DICE
         self._hooks["on_dice_rolled"](self, dice_value, is_success)
         return dice_value
 
@@ -359,7 +359,7 @@ class Game(GameState):
             need_redeploy = p.tokens_on_hand > 0 and len(p.active_regions) > 0
             if need_redeploy and i != self._next_player_id:
                 self._player_id = i
-                self._turn_stage = _TurnStage.REDEPLOYMENT_TURN
+                self._turn_stage = TurnStage.REDEPLOYMENT_TURN
                 self._hooks["on_redeploy"](self)
                 return
         # This part performs the actual switch to the next turn:
@@ -368,9 +368,9 @@ class Game(GameState):
         if self.player_id == 0:
             self._current_turn += 1
         if self.player.active_race is None:
-            self._turn_stage = _TurnStage.SELECT_COMBO
+            self._turn_stage = TurnStage.SELECT_COMBO
         else:
-            self._turn_stage = _TurnStage.CAN_DECLINE
+            self._turn_stage = TurnStage.CAN_DECLINE
         if self.has_ended:
             self._hooks["on_game_end"](self)
         else:

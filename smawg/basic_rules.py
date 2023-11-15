@@ -14,7 +14,7 @@ from pydantic.dataclasses import dataclass
 
 # Importing directly from `smawg` would cause a circular import.
 from smawg._common import (
-    AbstractRules, GameState, RulesViolation, _TurnStage as _TS
+    AbstractRules, GameState, RulesViolation, TurnStage as _TS
 )
 
 __all__ = [
@@ -342,7 +342,7 @@ class Rules(AbstractRules[Action]):
             yield GameEnded()
         if self._game.player.active_race is None:
             yield NoActiveRace()
-        match self._game._turn_stage:
+        match self._game.turn_stage:
             case _TS.REDEPLOYMENT | _TS.REDEPLOYMENT_TURN:
                 yield ForbiddenDuringRedeployment()
             case _TS.ACTIVE | _TS.CONQUESTS | _TS.USED_DICE:
@@ -371,7 +371,7 @@ class Rules(AbstractRules[Action]):
             yield ValueError(f"combo_index must be between 0 and {n_combos}")
         if self._game.has_ended:
             yield GameEnded()
-        match self._game._turn_stage:
+        match self._game.turn_stage:
             case _TS.REDEPLOYMENT | _TS.REDEPLOYMENT_TURN:
                 yield ForbiddenDuringRedeployment()
             case _TS.DECLINED:
@@ -409,7 +409,7 @@ class Rules(AbstractRules[Action]):
             yield GameEnded()
         if self._game.player.active_race is None:
             yield NoActiveRace()
-        match self._game._turn_stage:
+        match self._game.turn_stage:
             case _TS.REDEPLOYMENT | _TS.REDEPLOYMENT_TURN:
                 yield ForbiddenDuringRedeployment()
             case _TS.CONQUESTS | _TS.USED_DICE:
@@ -467,7 +467,7 @@ class Rules(AbstractRules[Action]):
             yield GameEnded()
         if self._game.player.active_race is None:
             yield NoActiveRace()
-        if self._game._turn_stage in (_TS.REDEPLOYMENT, _TS.REDEPLOYMENT_TURN):
+        if self._game.turn_stage in (_TS.REDEPLOYMENT, _TS.REDEPLOYMENT_TURN):
             yield ForbiddenDuringRedeployment()
         if not self._game.player.active_regions:
             yield NoActiveRegions()
@@ -516,17 +516,17 @@ class Rules(AbstractRules[Action]):
         """
         if self._game.has_ended:
             yield GameEnded()
-        if self._game._turn_stage == _TS.SELECT_COMBO:
+        if self._game.turn_stage == _TS.SELECT_COMBO:
             yield EndBeforeSelect()
         tokens_on_hand = self._game.player.tokens_on_hand
         if tokens_on_hand > 0:
-            if self._game._turn_stage == _TS.USED_DICE \
+            if self._game.turn_stage == _TS.USED_DICE \
                     and len(self._game.player.active_regions) == 0:
                 # The player has no regions and no ability to conquer, so
                 # he can't possibly deploy his tokens. Don't yield the error.
                 pass
             else:
-                can_decline = (self._game._turn_stage == _TS.CAN_DECLINE)
+                can_decline = (self._game.turn_stage == _TS.CAN_DECLINE)
                 yield UndeployedTokens(tokens_on_hand, can_decline=can_decline)
 
     def conquest_cost(self, region: int) -> int:
@@ -576,7 +576,7 @@ class Rules(AbstractRules[Action]):
             yield GameEnded()
         if self._game.player.active_race is None:
             yield NoActiveRace()
-        match self._game._turn_stage:
+        match self._game.turn_stage:
             case _TS.REDEPLOYMENT | _TS.REDEPLOYMENT_TURN:
                 yield ForbiddenDuringRedeployment()
             case _TS.USED_DICE:
