@@ -181,7 +181,7 @@ class Game(GameState):
         if self.player.decline_race is not None:
             self._invisible_races.append(self.player.decline_race)
 
-        self.player._decline()
+        _put_in_decline(self.player)
         self._reveal_next_combo()
         self._turn_stage = TurnStage.DECLINED
 
@@ -199,7 +199,7 @@ class Game(GameState):
             raise e
         self._pay_for_combo(combo_index)
         chosen_combo = self.combos.pop(combo_index)
-        self.player._set_active(chosen_combo)
+        _set_active(chosen_combo, self.player)
         self._turn_stage = TurnStage.ACTIVE
         self._reveal_next_combo()
 
@@ -253,7 +253,7 @@ class Game(GameState):
         """
         for e in self._rules.check_start_redeployment():
             raise e
-        self.player._pick_up_tokens()
+        _pick_up_tokens(self.player)
         self._turn_stage = TurnStage.REDEPLOYMENT
 
     def deploy(self, n_tokens: int, region: int) -> None:
@@ -374,9 +374,32 @@ class Game(GameState):
         if self.has_ended:
             self._hooks["on_game_end"](self)
         else:
-            self.player._pick_up_tokens()
+            _pick_up_tokens(self.player)
             self._hooks["on_turn_start"](self)
 
     def _increment(self, player_id: int) -> int:
         """Increment the given `player_id`, wrapping around if needed."""
         return (player_id + 1) % len(self.players)
+
+
+def _put_in_decline(player: Player) -> None:
+    player.decline_regions = set(player.active_regions)
+    player.active_regions.clear()
+    player.tokens_on_hand = 0
+    player.decline_race = player.active_race
+    player.active_race = None
+    player.active_ability = None
+
+
+def _pick_up_tokens(player: Player) -> None:
+    """Pick up available tokens, leaving 1 token in each owned region."""
+    for region in player.active_regions:
+        player.tokens_on_hand += player.active_regions[region] - 1
+        player.active_regions[region] = 1
+
+
+def _set_active(combo: Combo, player: Player) -> None:
+    """Set `Race` and `Ability` from the given `combo` as active."""
+    player.active_race = combo.race
+    player.active_ability = combo.ability
+    player.tokens_on_hand = combo.base_n_tokens

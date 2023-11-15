@@ -223,27 +223,6 @@ class Player:
         """Check if `Player` owns the given `region`."""
         return region in self.active_regions or region in self.decline_regions
 
-    def _decline(self) -> None:
-        """Put `Player`'s active race in decline state."""
-        self.decline_regions = set(self.active_regions)
-        self.active_regions.clear()
-        self.tokens_on_hand = 0
-        self.decline_race = self.active_race
-        self.active_race = None
-        self.active_ability = None
-
-    def _pick_up_tokens(self) -> None:
-        """Pick up available tokens, leaving 1 token in each owned region."""
-        for region in self.active_regions:
-            self.tokens_on_hand += self.active_regions[region] - 1
-            self.active_regions[region] = 1
-
-    def _set_active(self, combo: Combo) -> None:
-        """Set `Race` and `Ability` from the given `combo` as active."""
-        self.active_race = combo.race
-        self.active_ability = combo.ability
-        self.tokens_on_hand = combo.base_n_tokens
-
 
 class TurnStage(Enum):
     """The current stage of the player's turn.
