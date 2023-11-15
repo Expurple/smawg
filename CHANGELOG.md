@@ -9,6 +9,10 @@ and this project adheres to
 
 ## \[Unreleased]
 
+\-
+
+## \[0.22.0] - 2023-11-16
+
 ### Added
 
 - `--style=machine` option for `smawg play`.
