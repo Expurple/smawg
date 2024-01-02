@@ -71,6 +71,7 @@ _TERRAIN_COLORS = {
 }
 _MARKED_SYMBOLS = {
     "Cavern": "⬛ Cavern",
+    "Lost Tribe": "⬜ Lost Tribe",
     "Magic Source": "🟦 Magic Source",
     "Mine": "🟥 Mine",
 }
@@ -90,8 +91,6 @@ def _build_graph(map: Map) -> Graph:
         style_items = list[str]()
         for symbol in sorted(tile.symbols):
             node_attrs["label"] += f"\\n{_MARKED_SYMBOLS.get(symbol, symbol)}"
-        if tile.has_a_lost_tribe:
-            node_attrs["label"] += "\\n⬜ Lost Tribe"
         if tile.is_at_map_border:
             style_items.append("bold")
         color = _TERRAIN_COLORS.get(tile.terrain, None)

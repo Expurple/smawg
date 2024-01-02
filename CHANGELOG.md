@@ -15,6 +15,11 @@ and this project adheres to
     to rely on the private version).
 - `Player.is_owning(region)` helper method.
 
+### Changed
+
+- In asset files, `"has_a_lost_tribe": true` now must be set as
+    `"symbols": ["Lost Tribe", ...]` instead.
+
 ## \[0.22.0] - 2023-11-16
 
 ### Added

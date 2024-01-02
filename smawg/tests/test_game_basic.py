@@ -582,7 +582,7 @@ class TestGameConquer(BaseGameTest):
     def test_lost_tribe(self) -> None:
         """Test on regions with Lost Tribes."""
         assets = deepcopy(TINY_ASSETS)
-        assets["map"]["tiles"][0]["has_a_lost_tribe"] = True
+        assets["map"]["tiles"][0]["symbols"] = ["Lost Tribe"]
         assets["n_players"] = 1
         game = Game(assets)
         with nullcontext("Player 0, turn 1:"):

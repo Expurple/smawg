@@ -24,7 +24,7 @@ class TestTerrain(BaseGameTest):
         assets["races"][0]["n_tokens"] = 15
         assets["map"]["tiles"][1]["terrain"] = "Mountain"
         assets["map"]["tiles"][2]["terrain"] = "Mountain"
-        assets["map"]["tiles"][2]["has_a_lost_tribe"] = True
+        assets["map"]["tiles"][2]["symbols"] = ["Lost Tribe"]
         assets["map"]["tiles"][3]["terrain"] = "Mountain"
         game = Game(assets)
         game.select_combo(0)

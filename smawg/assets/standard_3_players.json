@@ -186,7 +186,7 @@
             },
             {
                 "terrain": "Forest",
-                "has_a_lost_tribe": true,
+                "symbols": ["Lost Tribe"],
                 "is_at_map_border": true
             },
             {
@@ -196,16 +196,14 @@
             },
             {
                 "terrain": "Farmland",
-                "symbols": ["Magic Source"],
-                "has_a_lost_tribe": true
+                "symbols": ["Lost Tribe", "Magic Source"]
             },
             {
                 "terrain": "Swamp"
             },
             {
                 "terrain": "Hill",
-                "symbols": ["Magic Source"],
-                "has_a_lost_tribe": true
+                "symbols": ["Lost Tribe", "Magic Source"]
             },
             {
                 "terrain": "Mountain",
@@ -213,7 +211,7 @@
             },
             {
                 "terrain": "Farmland",
-                "has_a_lost_tribe": true
+                "symbols": ["Lost Tribe"]
             },
             {
                 "terrain": "Mountain",
@@ -222,7 +220,7 @@
             },
             {
                 "terrain": "Swamp",
-                "has_a_lost_tribe": true
+                "symbols": ["Lost Tribe"]
             },
             {
                 "terrain": "Lake"
@@ -246,25 +244,22 @@
             },
             {
                 "terrain": "Forest",
-                "symbols": ["Cavern"],
-                "has_a_lost_tribe": true
+                "symbols": ["Cavern", "Lost Tribe"]
             },
             {
                 "terrain": "Hill"
             },
             {
                 "terrain": "Swamp",
-                "symbols": ["Magic Source"],
-                "has_a_lost_tribe": true
+                "symbols": ["Lost Tribe", "Magic Source"]
             },
             {
                 "terrain": "Farmland",
-                "has_a_lost_tribe": true
+                "symbols": ["Lost Tribe"]
             },
             {
                 "terrain": "Hill",
-                "symbols": ["Cavern"],
-                "has_a_lost_tribe": true
+                "symbols": ["Cavern", "Lost Tribe"]
             },
             {
                 "terrain": "Sea",
@@ -288,8 +283,7 @@
             },
             {
                 "terrain": "Forest",
-                "symbols": ["Mine"],
-                "has_a_lost_tribe": true,
+                "symbols": ["Lost Tribe", "Mine"],
                 "is_at_map_border": true
             }
         ],

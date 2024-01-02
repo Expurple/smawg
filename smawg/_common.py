@@ -41,11 +41,16 @@ class Region:
     terrain: str = Field(examples=[
         "Farmland", "Forest", "Hill", "Lake", "Sea", "Swamp", "Mountain"
     ])
-    has_a_lost_tribe: bool = False
     is_at_map_border: bool = False
     symbols: frozenset[str] = Field(default_factory=frozenset, examples=[
-        [], ["Cavern"], ["Magic Source"], ["Mine"]
+        [], ["Cavern"], ["Lost Tribe"], ["Magic Source"], ["Mine"]
     ])
+
+    def __post_init__(self) -> None:
+        """Set `has_a_lost_tribe` field based on `symbols`."""
+        self.has_a_lost_tribe = False
+        if "Lost Tribe" in self.symbols:
+            self.has_a_lost_tribe = True
 
 
 @dataclass(frozen=True)
