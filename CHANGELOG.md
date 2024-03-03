@@ -9,6 +9,10 @@ and this project adheres to
 
 ## \[Unreleased]
 
+\-
+
+## \[0.23.0] - 2024-03-03
+
 ### Added
 
 - `TurnStage`, `Game.turn_stage` and `GameState.turn_stage` (rules already had
