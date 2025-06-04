@@ -36,7 +36,7 @@ __all__ = [
 
 @dataclass(frozen=True)
 class Decline:
-    """Put player's active race in decline state."""
+    """Put the player's active race in decline state."""
 
     pass
 
@@ -129,7 +129,7 @@ class NoActiveRace(_RaisesConstMessage):
 
 
 class ForbiddenDuringRedeployment(_RaisesConstMessage):
-    """Player performes an action that's not allowed during redeployment."""
+    """Player performs an action that's not allowed during redeployment."""
 
     MESSAGE = "This action is not allowed during redeployment"
 

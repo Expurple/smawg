@@ -32,7 +32,7 @@ __all__ = [
 class Region:
     """Info about a region from the game map.
 
-    `terrain`, `is_at_map_border` and `symbols` and are immutable.
+    `terrain`, `is_at_map_border` and `symbols` are immutable.
 
     `has_a_lost_tribe` is mutable.
     It becomes `False` after the region is conquered.
