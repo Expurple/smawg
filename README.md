@@ -41,12 +41,13 @@ and easy interoperability with other programming languages.
 ## Releases
 
 See [CHANGELOG.md](./CHANGELOG.md) for the list of releases.
-To get the latest stable release, clone from the `master` branch.
+To get the latest release (with no unreleased changes),
+clone from the `releases` branch.
 
 ## Installation
 
 ```sh
-git clone -b master https://github.com/Expurple/smawg.git
+git clone -b releases https://github.com/Expurple/smawg.git
 cd smawg/
 
 # User wide install if your OS allows it:
