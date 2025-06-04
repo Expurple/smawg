@@ -9,7 +9,9 @@ and this project adheres to
 
 ## \[Unreleased]
 
-\-
+### Changed
+
+- Updated the author's contact email.
 
 ## \[0.23.0] - 2024-03-03
 

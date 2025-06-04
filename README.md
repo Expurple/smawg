@@ -198,7 +198,7 @@ Tests can be run using
 ## Contacts
 
 * **Home page** - [smawg](https://github.com/expurple/smawg)
-* **Author** - Dmitrii Aleksandrov <adk230@yandex.ru\>
+* **Author** - Dmitrii Aleksandrov <adk2300@gmail.com\>
 
 ## License
 
